@@ -32,7 +32,7 @@ public class ClientMain {
 			serverRMI = (ServerRMI) RemoteObject;
 
 			// prova connessione
-			serverRMI.register("test", "");
+			serverRMI.register("test", "test");
 
 		} catch (RemoteException e) {
 			System.out.println("Client remote exception: " + e.getMessage());
