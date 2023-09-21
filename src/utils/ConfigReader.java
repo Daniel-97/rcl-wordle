@@ -15,10 +15,10 @@ public class ConfigReader {
 	 */
 	public static Properties readConfig(String path) {
 
-		Properties properties = new Properties();
 		System.out.println("Tentativo di leggere file di configurazione " + path + " in corso...");
 		//System.out.println(Paths.get(".").toAbsolutePath());
 
+		Properties properties = new Properties();
 		try {
 			FileInputStream file = new FileInputStream(path);
 			properties.load(file);

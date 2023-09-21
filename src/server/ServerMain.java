@@ -13,8 +13,6 @@ import java.util.Properties;
 
 public class ServerMain extends RemoteObject implements ServerRMI {
 
-	private final String appVersion;
-	private final String appName;
 	private final int tcpPort;
 	private final int rmiPort;
 	// Services
@@ -29,6 +27,8 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 	public ServerMain(String configPath) {
 
+		System.out.println("Avvio Wordle game server...");
+
 		if (configPath == null || configPath.isEmpty()) {
 			System.out.println("Nessun file di configurazione trovato, uso file di configurazione di default");
 			configPath = "./src/server/app.config";
@@ -36,14 +36,10 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig(configPath);
-		this.appVersion = properties.getProperty("app.version");
-		this.appName = properties.getProperty("app.name");
 		this.tcpPort = Integer.parseInt(properties.getProperty("app.tcp.port"));
 		this.rmiPort = Integer.parseInt(properties.getProperty("app.rmi.port"));
 
 		this.userService = new UserService();
-
-		System.out.println("Avvio " + this.appName + " v." + this.appVersion);
 	}
 
 	@Override
