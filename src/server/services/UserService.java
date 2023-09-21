@@ -10,7 +10,7 @@ public class UserService {
 	private final ArrayList<User> users;
 
 	public UserService() {
-		System.out.println("Initializing user service...");
+		System.out.println("Avvio servizio utenti...");
 		// Todo caricare utenti da file json per persistance
 		users = new ArrayList<>();
 	}

@@ -5,19 +5,46 @@ import server.exceptions.WordleException;
 import server.interfaces.NotifyEvent;
 import server.interfaces.ServerRMI;
 import server.services.UserService;
+import utils.ConfigReader;
 
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
+import java.util.Properties;
 
 public class ServerMain extends RemoteObject implements ServerRMI {
 
-	private final UserService userService = new UserService();
+	private final String appVersion;
+	private final String appName;
+	private final int tcpPort;
+	private final int rmiPort;
+	// Services
+	private final UserService userService;
 
 	public static void main(String[] argv) {
-		ServerMain server = new ServerMain();
+
+		// Inizializza il server
+		ServerMain server = new ServerMain(null); //TODO prendere path file di configurazione dagli argomenti
 
 	}
 
+	public ServerMain(String configPath) {
+
+		if (configPath == null || configPath.isEmpty()) {
+			System.out.println("Nessun file di configurazione trovato, uso file di configurazione di default");
+			configPath = "./src/server/app.config";
+		}
+
+		// Leggi le configurazioni dal file
+		Properties properties = ConfigReader.readConfig(configPath);
+		this.appVersion = properties.getProperty("app.version");
+		this.appName = properties.getProperty("app.name");
+		this.tcpPort = Integer.parseInt(properties.getProperty("app.tcp.port"));
+		this.rmiPort = Integer.parseInt(properties.getProperty("app.rmi.port"));
+
+		this.userService = new UserService();
+
+		System.out.println("Avvio " + this.appName + " v." + this.appVersion);
+	}
 
 	@Override
 	public int register(String username, String password) throws RemoteException, WordleException {
