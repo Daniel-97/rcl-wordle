@@ -34,6 +34,7 @@ public class UserService {
 
 		if (Files.exists(usersPath)) {
 			// Se il file esiste lo vado a leggere un po alla volta
+			// TODO implementare lettura ottimizzata per file grandi
 			try (BufferedReader br = Files.newBufferedReader(usersPath)) {
 				Type ListOfUserType = new TypeToken<ArrayList<User>>(){}.getType();
 				this.users = gson.fromJson(br, ListOfUserType);
@@ -64,6 +65,7 @@ public class UserService {
 
 		// Scrivo il file
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		//TODO implementare salvataggio per file di grosse dimensioni
 		try (BufferedWriter bw = Files.newBufferedWriter(usersPath)){
 			System.out.println("Salvataggio di users.json in corso");
 			bw.write(gson.toJson(this.users));
