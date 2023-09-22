@@ -81,6 +81,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		// Aggiungo nuovo utente al sistema
 		User user = new User(username, password);
 		this.userService.addUser(user);
+		this.userService.saveUsers();
 
 		return 0;
 	}
