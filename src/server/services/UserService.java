@@ -1,7 +1,5 @@
 package server.services;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import server.entity.User;
 import server.enums.ErrorCodeEnum;
 import server.exceptions.WordleException;
@@ -9,13 +7,10 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class UserService {
-	private static final String USERS_DATA_PATH = "persistence/users.json";
+	private static final String USERS_DATA_PATH = "persistance/users.json";
 	private ArrayList<User> users;
 	public UserService() {
 		System.out.println("Avvio servizio utenti...");
@@ -41,7 +36,6 @@ public class UserService {
 
 		try {
 			JsonService.writeJson(USERS_DATA_PATH, this.users);
-			System.out.println("Salvataggio di users.json comletato!");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

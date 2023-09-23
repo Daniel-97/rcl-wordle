@@ -35,8 +35,9 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				System.out.println("Shutdown server Wordle...");
+				System.out.println("Shutdown Wordle server...");
 				server.userService.saveUsers();
+				server.wordleGameService.saveState();
 			}
 		});
 

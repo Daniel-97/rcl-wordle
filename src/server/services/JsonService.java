@@ -25,6 +25,7 @@ public class JsonService {
 		BufferedReader br = Files.newBufferedReader(jsonPath);
 		parsedObj = gson.fromJson(br, type);
 
+		System.out.println("File " + path + " letto correttamente!");
 		return parsedObj;
 	}
 
@@ -41,7 +42,6 @@ public class JsonService {
 
 		// Se il file non esiste lo devo creare prima (incluse tutte le directory per arrivare al file)
 		if (!Files.exists(jsonPath)) {
-			System.out.println(path + " file non trovato, creazione in corso...");
 			Files.createDirectories(jsonPath.getParent());
 			Files.createFile(jsonPath);
 		}
@@ -50,5 +50,8 @@ public class JsonService {
 		String json = gson.toJson(object);
 		bw.write(json);
 		bw.close();
+
+		int wroteBytes = json.getBytes().length;
+		System.out.println("Salvataggio di " + path + " completato! (" + wroteBytes + " bytes)");
 	}
 }
