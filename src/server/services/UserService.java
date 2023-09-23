@@ -14,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class UserService {
 	private static final String USERS_DATA_PATH = "persistence/users.json";
@@ -44,7 +46,7 @@ public class UserService {
 				throw new RuntimeException(e);
 			}
 
-			System.out.println("Caricati correttamente " + this.users.size() + " utenti da file json");
+			System.out.println("Caricato/i correttamente " + this.users.size() + " utente/i da file json");
 		}
 	}
 
@@ -91,7 +93,12 @@ public class UserService {
 
 		// Se sono arrivato qui l'utente non esiste, posso aggiungerlo
 		this.users.add(user);
+	}
 
-		//Todo salvare utente su file
+	/**
+	 * Ordina la lista di utenti in base alla media di tentativi per indovinare una parola
+	 */
+	public void sortUsers() {
+		this.users.sort((o1, o2) -> o1.getAverageAttempt() - o2.getAverageAttempt());
 	}
 }

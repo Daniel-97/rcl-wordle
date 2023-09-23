@@ -7,10 +7,15 @@ public class User {
 	private final String username;
 	private final String passwordHash; // password hahsata
 	private final Date registeredAt; // Data registrazione utente
-
+	private int gamesPlayed; // Numero di partite giocate
+	private int gamesWon; // Numero di partite vinte
+	private int averageAttempt;
 	public User(String username, String password) {
 		this.username = username;
 		this.passwordHash = this.hashPassword(password);
+		this.gamesPlayed = 0;
+		this.gamesWon = 0;
+		this.averageAttempt = 0;
 		this.registeredAt = new Date();
 	}
 
@@ -35,5 +40,9 @@ public class User {
 
 	public String getUsername() {
 		return this.username;
+	}
+
+	public int getAverageAttempt() {
+		return averageAttempt;
 	}
 }
