@@ -1,5 +1,6 @@
 package server;
 
+import server.entity.User;
 import server.enums.ErrorCodeEnum;
 import server.exceptions.WordleException;
 import server.interfaces.NotifyEvent;
@@ -7,7 +8,6 @@ import server.interfaces.ServerRMI;
 import server.services.UserService;
 import utils.ConfigReader;
 
-import java.net.BindException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;

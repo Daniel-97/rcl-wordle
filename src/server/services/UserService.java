@@ -2,8 +2,7 @@ package server.services;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
-import server.User;
+import server.entity.User;
 import server.enums.ErrorCodeEnum;
 import server.exceptions.WordleException;
 import com.google.gson.reflect.TypeToken;
@@ -14,8 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class UserService {
 	private static final String USERS_DATA_PATH = "persistence/users.json";
@@ -99,6 +96,6 @@ public class UserService {
 	 * Ordina la lista di utenti in base alla media di tentativi per indovinare una parola
 	 */
 	public void sortUsers() {
-		this.users.sort((o1, o2) -> o1.getAverageAttempt() - o2.getAverageAttempt());
+		this.users.sort((o1, o2) -> o1.averageAttempts() - o2.averageAttempts());
 	}
 }
