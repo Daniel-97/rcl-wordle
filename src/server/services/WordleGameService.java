@@ -17,7 +17,7 @@ public class WordleGameService {
 	private static final String DICTIONARY_PATH = "src/dictionary/words.txt";
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	//Dizionario delle parole, non deve essere salvato sul json
-	private final transient ArrayList<String> dictionary = new ArrayList<>();
+	private final ArrayList<String> dictionary = new ArrayList<>();
 
 	public WordleGameService() {
 

@@ -9,10 +9,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Helper generico che consente di scrivere/leggere file json da disco e fare il casting
+ */
 public class JsonService {
 
 	private final static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
+	// TODO migliorare i tipi di questa funzione e renderli generics
 	public static Object readJson(String path, Type type) throws IOException {
 
 		Path jsonPath = Paths.get(path);

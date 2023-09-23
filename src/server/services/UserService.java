@@ -11,10 +11,9 @@ import java.util.ArrayList;
 
 public class UserService {
 	private static final String USERS_DATA_PATH = "persistance/users.json";
-	private ArrayList<User> users;
+	private ArrayList<User> users = new ArrayList<>();
 	public UserService() {
 		System.out.println("Avvio servizio utenti...");
-		users = new ArrayList<>();
 		this.loadUsers();
 	}
 
