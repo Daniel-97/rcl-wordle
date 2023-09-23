@@ -41,6 +41,8 @@ public class ClientMain {
 		} catch (WordleException e) {
 			System.out.println("Wordle exception: " + e.getMessage());
 		}
+
+
 	}
 
 	public ClientMain(String configPath) {
