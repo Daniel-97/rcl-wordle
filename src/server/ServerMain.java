@@ -6,6 +6,7 @@ import server.exceptions.WordleException;
 import server.interfaces.NotifyEvent;
 import server.interfaces.ServerRMI;
 import server.services.UserService;
+import server.services.WordleGameService;
 import utils.ConfigReader;
 
 import java.rmi.AlreadyBoundException;
@@ -23,11 +24,21 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	private final int rmiPort;
 	// Services
 	private final UserService userService;
+	private final WordleGameService wordleGameService;
 
 	public static void main(String[] argv) {
 
 		// Inizializza il server
 		ServerMain server = new ServerMain(null); //TODO prendere path file di configurazione dagli argomenti
+
+		// Thread in ascolto di SIGINT e SIGTERM
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				System.out.println("Shutdown server Wordle...");
+				server.userService.saveUsers();
+			}
+		});
 
 		// Inizializza RMI
 		try {
@@ -52,6 +63,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 		System.out.println("Avvio Wordle game server...");
 
+		//TODO implementare wrapper per leggere le configurazione da un file data un interfaccia
 		if (configPath == null || configPath.isEmpty()) {
 			System.out.println("Nessun file di configurazione trovato, uso file di configurazione di default");
 			configPath = "./src/server/app.config";
@@ -62,7 +74,9 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		this.tcpPort = Integer.parseInt(properties.getProperty("app.tcp.port"));
 		this.rmiPort = Integer.parseInt(properties.getProperty("app.rmi.port"));
 
+		// Inizializzo i servizi
 		this.userService = new UserService();
+		this.wordleGameService = new WordleGameService();
 	}
 
 	@Override
@@ -81,7 +95,6 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		// Aggiungo nuovo utente al sistema
 		User user = new User(username, password);
 		this.userService.addUser(user);
-		this.userService.saveUsers();
 
 		return 0;
 	}

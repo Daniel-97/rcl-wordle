@@ -27,51 +27,24 @@ public class UserService {
 	 * Carica gli utenti dal file user.json se esiste. Se non esiste lo crea
 	 */
 	private void loadUsers() {
-
-		Path usersPath = Paths.get(USERS_DATA_PATH);
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-		if (Files.exists(usersPath)) {
-			// Se il file esiste lo vado a leggere un po alla volta
-			// TODO implementare lettura ottimizzata per file grandi
-			try (BufferedReader br = Files.newBufferedReader(usersPath)) {
-				Type ListOfUserType = new TypeToken<ArrayList<User>>(){}.getType();
-				this.users = gson.fromJson(br, ListOfUserType);
-			} catch (FileNotFoundException e) {
-				throw new RuntimeException(e);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-
+		Type ListOfUserType = new TypeToken<ArrayList<User>>(){}.getType();
+		try {
+			this.users = (ArrayList<User>) JsonService.readJson(USERS_DATA_PATH, ListOfUserType);
 			System.out.println("Caricato/i correttamente " + this.users.size() + " utente/i da file json");
+		} catch (IOException e) {
+			System.out.println("Errore lettura file user.json, creazione nuovo array");
+			this.users = new ArrayList<>();
 		}
 	}
 
 	public void saveUsers() {
 
-		Path usersPath = Paths.get(USERS_DATA_PATH);
-		//TODO migliorare questo try
-		if (!Files.exists(usersPath)) {
-			System.out.println(USERS_DATA_PATH + " file non esiste, lo creo");
-			try {
-				System.out.println(Paths.get(".").toAbsolutePath());
-				Files.createDirectory(usersPath.getParent());
-				Files.createFile(usersPath);
-			} catch (IOException e) {
-				System.out.println("IO exception: " + e);
-			}
-		}
-
-		// Scrivo il file
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		//TODO implementare salvataggio per file di grosse dimensioni
-		try (BufferedWriter bw = Files.newBufferedWriter(usersPath)){
-			System.out.println("Salvataggio di users.json in corso");
-			bw.write(gson.toJson(this.users));
-		}catch (IOException e) {
+		try {
+			JsonService.writeJson(USERS_DATA_PATH, this.users);
+			System.out.println("Salvataggio di users.json comletato!");
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
 
 	/**
