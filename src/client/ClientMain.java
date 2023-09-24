@@ -1,5 +1,7 @@
 package client;
 
+import client.enums.GuestCommand;
+import client.services.CLIHelper;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import utils.ConfigReader;
@@ -9,6 +11,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class ClientMain {
@@ -22,8 +25,8 @@ public class ClientMain {
 		ClientMain client = new ClientMain(null); // Todo prendere config path da argomenti
 
 		// Inizializza RMI
-		ServerRMI serverRMI;
-		Remote RemoteObject;
+		ServerRMI serverRMI = null;
+		Remote RemoteObject = null;
 
 		try {
 			// TODO capire come specificare indirizzo ip remoto del server
@@ -31,17 +34,57 @@ public class ClientMain {
 			RemoteObject = registry.lookup(STUB_NAME);
 			serverRMI = (ServerRMI) RemoteObject;
 
-			// prova connessione
-			serverRMI.register("test", "test");
-
 		} catch (RemoteException e) {
 			System.out.println("Client remote exception: " + e.getMessage());
+			System.exit(-1);
 		} catch (NotBoundException e) {
 			System.out.println("Client not bound exception" + e.getMessage());
-		} catch (WordleException e) {
-			System.out.println("Wordle exception: " + e.getMessage());
+			System.exit(-1);
 		}
 
+		boolean loggedIn = false;
+		while (!loggedIn) {
+
+			CLIHelper.entryMenu();
+			// Utente non ancora loggato
+			String[] input = CLIHelper.parseInput();
+			String cmd = input[0];
+			String[] args = Arrays.copyOfRange(input, 1, input.length);
+
+			GuestCommand gCommand = GuestCommand.fromCommand(cmd);
+			if( gCommand == null ) {
+				System.out.println("Invalid command!");
+				continue;
+			}
+
+			// Eseguo un comando
+			System.out.println("Valid command!");
+			switch (gCommand) {
+				case HELP:
+					CLIHelper.entryMenu();
+					break;
+
+				case QUIT:
+					System.exit(0);
+					break;
+
+				case LOGIN:
+					System.out.println("Not implmented");
+					break;
+
+				case REGISTER:
+					try {
+						//TODO controllare input utente
+						System.out.println(args[0]);
+						System.out.println(args[1]);
+						serverRMI.register(args[0], args[1]);
+					}catch (RemoteException | WordleException e) {
+						throw new RuntimeException(e);
+					}
+
+					break;
+			}
+		}
 
 	}
 
