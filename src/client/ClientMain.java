@@ -40,8 +40,16 @@ public class ClientMain {
 			System.exit(-1);
 		}
 
-		System.out.println("Connesso con il server "+client.serverIP+":"+client.tcpPort);
+		// Thread in ascolto di SIGINT e SIGTERM
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				System.out.println("Shutdown Wordle client...");
+				//socketChannel.close();
+			}
+		});
 
+		System.out.println("Connesso con il server "+client.serverIP+":"+client.tcpPort);
 		Scanner scanner = new Scanner(System.in);
 		boolean loggedIn = false;
 		while (!loggedIn) {
@@ -68,7 +76,13 @@ public class ClientMain {
 					break;
 
 				case QUIT:
-					System.exit(0);
+					try {
+						socketChannel.close();
+					} catch (IOException e) {
+						System.out.println("Errore chiusura socket con server");
+					} finally {
+						System.exit(0);
+					}
 					break;
 
 				case LOGIN:

@@ -160,6 +160,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 					else if (key.isWritable()) {
 						System.out.println("Canale pronto per la scrittura");
 					}
+
 				} catch (IOException ioe) {
 					key.cancel();
 					try {
