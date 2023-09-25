@@ -9,13 +9,22 @@ import server.services.UserService;
 import server.services.WordleGameService;
 import utils.ConfigReader;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 public class ServerMain extends RemoteObject implements ServerRMI {
 
@@ -41,23 +50,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			}
 		});
 
-		// Inizializza RMI
-		try {
-			// Esportazione oggetto
-			ServerRMI stub = (ServerRMI) UnicastRemoteObject.exportObject(server, 0);
-			// Creazione registry
-			LocateRegistry.createRegistry(server.rmiPort);
-			Registry registry = LocateRegistry.getRegistry(server.rmiPort);
-			// Pubblicazione dello stub nel registry
-			registry.bind(ServerMain.STUB_NAME, stub);
-
-			System.out.println("RMI server in ascolto sulla porta " + server.rmiPort);
-		} catch (AlreadyBoundException e){
-			System.out.println("RMI already bind exception: " + e.getMessage());
-		} catch (RemoteException e){
-			System.out.println("RMI remote exception: " + e.getMessage());
-		}
-
+		server.listen();
 	}
 
 	public ServerMain(String configPath) {
@@ -78,10 +71,110 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		// Inizializzo i servizi
 		this.userService = new UserService();
 		this.wordleGameService = new WordleGameService();
+
+		// Inizializza RMI
+		try {
+			// Esportazione oggetto
+			ServerRMI stub = (ServerRMI) UnicastRemoteObject.exportObject(this, 0);
+			// Creazione registry
+			LocateRegistry.createRegistry(this.rmiPort);
+			Registry registry = LocateRegistry.getRegistry(this.rmiPort);
+			// Pubblicazione dello stub nel registry
+			registry.bind(ServerMain.STUB_NAME, stub);
+
+			System.out.println("RMI server in ascolto sulla porta " + this.rmiPort);
+		} catch (AlreadyBoundException e){
+			System.out.println("RMI already bind exception: " + e.getMessage());
+			System.exit(-1);
+		} catch (RemoteException e){
+			System.out.println("RMI remote exception: " + e.getMessage());
+			System.exit(-1);
+		}
+	}
+
+	public void listen() {
+
+		ServerSocket socket = null;
+		ServerSocketChannel socketChannel = null;
+		Selector selector = null;
+
+		//todo Spostare questa parte nel costruttore
+		try {
+
+			//Creo il channel
+			socketChannel = ServerSocketChannel.open();
+			socket = socketChannel.socket();
+			socket.bind(new InetSocketAddress(this.tcpPort));
+			//Configuro il channel in modo da essere non bloccante
+			socketChannel.configureBlocking(false);
+
+			selector = Selector.open();
+			//TODO gestire meglio le eccezioni gestite dalla register
+			SelectionKey key =  socketChannel.register(selector, SelectionKey.OP_ACCEPT, null);
+		} catch (IOException e) {
+			System.exit(-1);
+		}
+
+		// While in ascolto sui socket
+		while (true) {
+
+			try {
+				selector.select(); // Bloccate, si ferma fino a quando almeno un canale non e' pronto
+			} catch (IOException e) {
+				System.out.println("Errore durante la selezione di un canale");
+				break;
+			}
+
+			Set<SelectionKey> selectedKeys = selector.selectedKeys();
+			// Iteratore
+			Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+			// Fino a che ci sono canali pronti continuo a ciclare
+			while (keyIterator.hasNext()) {
+				SelectionKey key = keyIterator.next();
+				// Rimuovo la chiave dall'iteratore, il selector non rimuove automaticamente le chiavi
+				keyIterator.remove();
+
+				try {
+					//Connessione accettata da client
+					if (key.isAcceptable()) {
+						ServerSocketChannel server = (ServerSocketChannel) key.channel();
+						// Accetto la nuova connessione
+						SocketChannel client = server.accept();
+						System.out.println("Accettata nuova connessione da client " + client);
+						client.configureBlocking(false);
+						// Aggiungo il client al selector su operazioni di READ
+						client.register(selector, SelectionKey.OP_READ, null);
+					}
+
+					// Connessione con il client avvenuta
+					else if (key.isConnectable()) {
+						System.out.println("Nuova connessione stabilita con client");
+					}
+
+					// Canale pronto per la lettura
+					else if (key.isReadable()) {
+						System.out.println("Canale pronto per la lettura");
+					}
+
+					// Canale pronto per la scrittura
+					else if (key.isWritable()) {
+						System.out.println("Canale pronto per la scrittura");
+					}
+				} catch (IOException ioe) {
+					key.cancel();
+					try {
+						key.channel().close();
+					} catch (IOException ignored) {}
+				}
+
+			}
+
+		}
+
 	}
 
 	@Override
-	public int register(String username, String password) throws RemoteException, WordleException {
+	public void register(String username, String password) throws RemoteException, WordleException {
 
 		System.out.println("Calling register RMI...");
 		// Controllo parametri
@@ -96,8 +189,6 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		// Aggiungo nuovo utente al sistema
 		User user = new User(username, password);
 		this.userService.addUser(user);
-
-		return 0;
 	}
 
 	@Override

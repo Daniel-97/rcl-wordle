@@ -15,7 +15,7 @@ public interface ServerRMI extends Remote {
 	 * @throws RemoteException
 	 * @throws WordleException
 	 */
-	int register(String username, String password) throws RemoteException, WordleException;
+	void register(String username, String password) throws RemoteException, WordleException;
 
 	/**
 	 * Iscrive un particolare client agli eventi del server
