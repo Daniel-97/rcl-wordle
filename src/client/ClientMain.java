@@ -4,7 +4,8 @@ import client.enums.GuestCommand;
 import client.services.CLIHelper;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
-import utils.ConfigReader;
+import common.utils.ConfigReader;
+import common.utils.SocketUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -25,16 +26,17 @@ public class ClientMain {
 	private final int rmiPort;
 	private final String serverIP;
 	private ServerRMI serverRMI;
+	private SocketChannel socket;
+
 
 	public static void main(String[] argv) {
 
 		ClientMain client = new ClientMain(null); // Todo prendere config path da argomenti
 
-		SocketChannel socketChannel = null;
 		System.out.println("Tenativo di connessione con il server "+client.serverIP+":"+client.tcpPort);
 		try {
-			socketChannel = SocketChannel.open();
-			socketChannel.connect(new InetSocketAddress(client.serverIP, client.tcpPort));
+			client.socket = SocketChannel.open();
+			client.socket.connect(new InetSocketAddress(client.serverIP, client.tcpPort));
 		} catch (IOException e) {
 			System.out.println("Errore durante connessione tcp al server " + client.serverIP + ":"+client.tcpPort);
 			System.exit(-1);
@@ -77,7 +79,7 @@ public class ClientMain {
 
 				case QUIT:
 					try {
-						socketChannel.close();
+						client.socket.close();
 					} catch (IOException e) {
 						System.out.println("Errore chiusura socket con server");
 					} finally {
@@ -86,7 +88,15 @@ public class ClientMain {
 					break;
 
 				case LOGIN:
-					System.out.println("Not implmented");
+					if(args.length < 2) {
+						System.out.println("Comando non completo");
+					} else {
+						try {
+							client.login(args[0], args[1]);
+						} catch (IOException e) {
+							System.out.println("Impossibile effettuare login" + e.getMessage());
+						}
+					}
 					break;
 
 				case REGISTER:
@@ -101,11 +111,17 @@ public class ClientMain {
 
 	}
 
+	public void login(String username, String password) throws IOException {
+		String command = "login " + username + " " + password;
+		SocketUtils.sendRequest(this.socket, command);
+	}
+
 	public void register(String username, String password) {
 
 		try {
 			this.serverRMI.register(username, password);
 		} catch (RemoteException e) {
+			// TODO gestire il caso in cui il server si disconnette
 			throw new RuntimeException(e);
 		} catch (WordleException e) {
 			System.out.println("Errore! " + e.getMessage());

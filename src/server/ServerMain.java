@@ -7,7 +7,8 @@ import server.interfaces.NotifyEvent;
 import server.interfaces.ServerRMI;
 import server.services.UserService;
 import server.services.WordleGameService;
-import utils.ConfigReader;
+import common.utils.ConfigReader;
+import common.utils.SocketUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -72,7 +73,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		this.userService = new UserService();
 		this.wordleGameService = new WordleGameService();
 
-		// Inizializza RMI
+		// Inizializza RMI server
 		try {
 			// Esportazione oggetto
 			ServerRMI stub = (ServerRMI) UnicastRemoteObject.exportObject(this, 0);
@@ -90,6 +91,9 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			System.out.println("RMI remote exception: " + e.getMessage());
 			System.exit(-1);
 		}
+
+		// Inizializza TCP server
+
 	}
 
 	public void listen() {
@@ -140,7 +144,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 						ServerSocketChannel server = (ServerSocketChannel) key.channel();
 						// Accetto la nuova connessione
 						SocketChannel client = server.accept();
-						System.out.println("Accettata nuova connessione da client " + client);
+						System.out.println("Accettata nuova connessione TCP da client " + client.getRemoteAddress());
 						client.configureBlocking(false);
 						// Aggiungo il client al selector su operazioni di READ
 						client.register(selector, SelectionKey.OP_READ, null);
@@ -153,7 +157,20 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 					// Canale pronto per la lettura
 					else if (key.isReadable()) {
-						System.out.println("Canale pronto per la lettura");
+
+						//System.out.println("Canale pronto per la lettura");
+						SocketChannel client = (SocketChannel) key.channel();
+						String clientMessage = SocketUtils.readResponse(client);
+
+						System.out.println("Nuovo messaggio da client: "+ clientMessage);
+						switch (clientMessage.toString()) {
+							case "":
+								System.out.println("Disconnessione forzata del client");
+								client.close();
+								//TODO utente disconnesso
+								break;
+						}
+
 					}
 
 					// Canale pronto per la scrittura
