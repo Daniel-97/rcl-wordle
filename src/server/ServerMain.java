@@ -1,5 +1,6 @@
 package server;
 
+import common.dto.TcpMessageDTO;
 import server.entity.User;
 import server.enums.ErrorCodeEnum;
 import server.exceptions.WordleException;
@@ -160,15 +161,17 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 						//System.out.println("Canale pronto per la lettura");
 						SocketChannel client = (SocketChannel) key.channel();
-						String clientMessage = SocketUtils.readResponse(client);
+						TcpMessageDTO clientMessage = SocketUtils.readTcpResponse(client);
+
+						if (clientMessage == null) {
+							System.out.println("Disconnessione forzata del client " + client.getRemoteAddress());
+							client.close();
+							break;
+						}
 
 						System.out.println("Nuovo messaggio da client: "+ clientMessage);
 						switch (clientMessage.toString()) {
-							case "":
-								System.out.println("Disconnessione forzata del client");
-								client.close();
-								//TODO utente disconnesso
-								break;
+
 						}
 
 					}

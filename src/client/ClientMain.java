@@ -2,6 +2,7 @@ package client;
 
 import client.enums.GuestCommand;
 import client.services.CLIHelper;
+import common.dto.TcpMessageDTO;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
@@ -113,7 +114,8 @@ public class ClientMain {
 
 	public void login(String username, String password) throws IOException {
 		String command = "login " + username + " " + password;
-		SocketUtils.sendRequest(this.socket, command);
+		TcpMessageDTO requestDTO = new TcpMessageDTO(command);
+		SocketUtils.sendTcpRequest(this.socket, requestDTO);
 	}
 
 	public void register(String username, String password) {
