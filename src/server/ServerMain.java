@@ -14,6 +14,7 @@ import common.utils.SocketUtils;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -124,10 +125,11 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		while (true) {
 
 			try {
-				selector.select(); // Bloccate, si ferma fino a quando almeno un canale non e' pronto
+				// Bloccate, si ferma fino a quando almeno un canale non e' pronto
+				selector.select();
 			} catch (IOException e) {
-				System.out.println("Errore durante la selezione di un canale");
-				break;
+				System.out.println("Errore durante la selezione di un canale!");
+				System.exit(-1);
 			}
 
 			Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -161,17 +163,29 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 						//System.out.println("Canale pronto per la lettura");
 						SocketChannel client = (SocketChannel) key.channel();
-						TcpMessageDTO clientMessage = SocketUtils.readTcpResponse(client);
+						TcpMessageDTO clientMessage = SocketUtils.readTcpMessage(client);
+						SocketAddress clientAddress = client.getRemoteAddress();
 
 						if (clientMessage == null) {
-							System.out.println("Disconnessione forzata del client " + client.getRemoteAddress());
+							System.out.println("Disconnessione forzata del client " + clientAddress);
 							client.close();
 							break;
 						}
 
-						System.out.println("Nuovo messaggio da client: "+ clientMessage);
-						switch (clientMessage.toString()) {
+						System.out.println("Nuovo messaggio da client "+clientAddress+":"+ clientMessage);
+						switch (clientMessage.command) {
+							case "login":
+								// TODO controllare se gli argomenti ci sono o meno
+								if (this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1])) {
 
+									SocketUtils.sendTcpMessage(client, );
+								} else {
+
+								}
+								break;
+
+							default:
+								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
 						}
 
 					}

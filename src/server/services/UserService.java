@@ -59,6 +59,41 @@ public class UserService {
 	}
 
 	/**
+	 * Cerca l'utente con lo username specificato
+	 * @param username
+	 * @return
+	 */
+	public User getUser(String username) {
+		for(User user: this.users) {
+			if (user.getUsername().equals(username)) {
+				return user;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Effettua il login di un utente
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public boolean login(String username, String password) {
+
+		User user = getUser(username);
+		if (user == null) {
+			return false;
+		}
+
+		if(user.verifyPassword(password)) {
+			user.online = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
 	 * Ordina la lista di utenti in base alla media di tentativi per indovinare una parola
 	 */
 	public void sortUsers() {

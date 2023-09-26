@@ -10,6 +10,8 @@ public class User {
 	private final String passwordHash; // password hahsata
 	private final Date registeredAt; // Data registrazione utente
 	private final List<WordleGame> games;
+	public transient boolean online = false; // Indica se utente e' online oppure no, da non salvare sul json
+
 	public User(String username, String password) {
 		this.username = username;
 		this.passwordHash = this.hashPassword(password);

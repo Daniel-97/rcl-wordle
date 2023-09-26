@@ -113,9 +113,8 @@ public class ClientMain {
 	}
 
 	public void login(String username, String password) throws IOException {
-		String command = "login " + username + " " + password;
-		TcpMessageDTO requestDTO = new TcpMessageDTO(command);
-		SocketUtils.sendTcpRequest(this.socket, requestDTO);
+		TcpMessageDTO requestDTO = new TcpMessageDTO("login", new String[]{username, password});
+		SocketUtils.sendTcpMessage(this.socket, requestDTO);
 	}
 
 	public void register(String username, String password) {

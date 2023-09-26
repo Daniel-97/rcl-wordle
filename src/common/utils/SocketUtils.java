@@ -17,10 +17,10 @@ public class SocketUtils {
 	/**
 	 * Manda il messaggio sul socket specificato
 	 * @param socket
-	 * @param message
+	 * @param request
 	 * @throws IOException
 	 */
-	public static void sendTcpRequest(SocketChannel socket, TcpMessageDTO request) throws IOException {
+	public static void sendTcpMessage(SocketChannel socket, TcpMessageDTO request) throws IOException {
 
 		String json = gson.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
@@ -33,7 +33,7 @@ public class SocketUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static TcpMessageDTO readTcpResponse(SocketChannel socket) throws IOException {
+	public static TcpMessageDTO readTcpMessage(SocketChannel socket) throws IOException {
 
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
