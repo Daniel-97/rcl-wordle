@@ -21,7 +21,6 @@ public class CLIHelper {
 			"- :help		-> aiuto\n";
 
 	public static void entryMenu() {
-		cls();
 		System.out.println(ENTRY_MENU);
 		printCursor();
 	}
@@ -30,7 +29,9 @@ public class CLIHelper {
 		printCursor();
 	}
 
-	private static void cls() {
+	public static void cls() {
+		System.out.println("Premere un tasto per continuare...");
+		cliScanner.nextLine();
 		for (int i = 0; i<= 100; i++) {
 			System.out.println();
 		}

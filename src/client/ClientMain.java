@@ -29,6 +29,8 @@ public class ClientMain {
 	private final String serverIP;
 	private ServerRMI serverRMI;
 	private SocketChannel socket;
+	private boolean loggedIn = false;
+	private String username = null;
 
 
 	public static void main(String[] argv) {
@@ -54,40 +56,39 @@ public class ClientMain {
 		});
 
 		System.out.println("Connesso con il server "+client.serverIP+":"+client.tcpPort);
-		Scanner scanner = new Scanner(System.in);
 
-		boolean loggedIn = false;
-		String username = null;
+		client.run();
+	}
+
+	public void run() {
+
+		Scanner scanner = new Scanner(System.in);
+		String[] input = null;
 
 		while (true) {
 
 			//Fino a che utente non loggato, mostro il menu iniziale
-			while (!loggedIn) {
-
-				System.out.println("Premere un tasto per continuare...");
-				scanner.nextLine();
+			while (!this.loggedIn) {
 
 				CLIHelper.entryMenu();
 				// Utente non ancora loggato
-				String[] input = CLIHelper.parseInput();
-				String cmd = input[0];
-				String[] args = Arrays.copyOfRange(input, 1, input.length);
+				input = CLIHelper.parseInput();
 
-				GuestCommand gCommand = GuestCommand.fromCommand(cmd);
-				if (gCommand == null) {
+				GuestCommand cmd = GuestCommand.fromCommand(input[0]);
+				if (cmd == null) {
 					System.out.println("Invalid command!");
 					continue;
 				}
 
 				// Eseguo un comando
-				switch (gCommand) {
+				switch (cmd) {
 					case HELP:
 						CLIHelper.entryMenu();
 						break;
 
 					case QUIT:
 						try {
-							client.socket.close();
+							this.socket.close();
 						} catch (IOException e) {
 							System.out.println("Errore chiusura socket con server");
 						} finally {
@@ -96,47 +97,47 @@ public class ClientMain {
 						break;
 
 					case LOGIN:
-						if (args.length < 2) {
+						if (input.length < 3) {
 							System.out.println("Comando non completo");
 						} else {
-							loggedIn = client.login(args[0], args[1]);
-							if(loggedIn) {
-								username = args[0];
+							this.loggedIn = this.login(input[1], input[2]);
+							if(this.loggedIn) {
+								this.username = input[1];
 							}
 						}
 						break;
 
 					case REGISTER:
-						if (args.length < 2) {
+						if (input.length < 3) {
 							System.out.println("Comando non completo");
 						} else {
-							client.register(args[0], args[1]);
+							this.register(input[1], input[2]);
 						}
 						break;
 				}
+
+				CLIHelper.cls();
 			}
 
 			CLIHelper.mainMenu();
-			String[] input = CLIHelper.parseInput();
-			String cmd = input[0];
-			String[] args = Arrays.copyOfRange(input, 1, input.length);
+			input = CLIHelper.parseInput();
 
-			UserCommand uCommand = UserCommand.fromCommand(cmd);
-			if (uCommand == null) {
+			UserCommand cmd = UserCommand.fromCommand(input[0]);
+			if (cmd == null) {
 				System.out.println("Invalid command!");
 				continue;
 			}
 
-			switch (uCommand) {
+			switch (cmd) {
 				case HELP:
 					CLIHelper.mainMenu();
 					break;
 
 				case LOGOUT:
-					boolean success = client.logout(username);
+					boolean success = this.logout(this.username);
 					if (success) {
-						loggedIn = false;
-						username = null;
+						this.loggedIn = false;
+						this.username = null;
 					}
 					break;
 
@@ -146,12 +147,9 @@ public class ClientMain {
 			}
 
 		}
-
-
-
 	}
 
-	public boolean login(String username, String password) {
+	private boolean login(String username, String password) {
 
 		TcpMessageDTO requestDTO = new TcpMessageDTO("login", new String[]{username, password});
 
@@ -172,7 +170,7 @@ public class ClientMain {
 		}
 	}
 
-	public boolean logout(String username) {
+	private boolean logout(String username) {
 
 		TcpMessageDTO request = new TcpMessageDTO("logout", new String[]{username});
 
@@ -193,7 +191,7 @@ public class ClientMain {
 		}
 	}
 
-	public void register(String username, String password) {
+	private void register(String username, String password) {
 
 		try {
 			this.serverRMI.register(username, password);
