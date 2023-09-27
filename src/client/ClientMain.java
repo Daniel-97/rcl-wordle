@@ -6,6 +6,7 @@ import client.enums.UserCommand;
 import client.services.CLIHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import server.exceptions.WordleException;
@@ -173,7 +174,9 @@ public class ClientMain {
 		CLIHelper.printCursor();
 		String[] input = CLIHelper.parseInput();
 
+		TcpServerResponseDTO response = sendWord(input[0]);
 
+		System.out.println();
 
 	}
 
@@ -234,9 +237,15 @@ public class ClientMain {
 		}
 	}
 
-	private void sendWord(String word) {
-		TcpClientRequestDTO request = new TcpClientRequestDTO("sendWord", new String[]{word});
-
+	private TcpServerResponseDTO sendWord(String word) {
+		TcpClientRequestDTO request = new TcpClientRequestDTO("sendWord", new String[]{username, word});
+		try {
+			sendTcpMessage(this.socket, request);
+			return readTcpMessage(this.socket);
+		} catch (IOException e) {
+			System.out.println("Errore durante invio guessed word");
+			return null;
+		}
 	}
 
 	private void register(String username, String password) {

@@ -2,9 +2,11 @@ package server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import server.entity.User;
+import server.entity.WordleGame;
 import server.enums.ErrorCodeEnum;
 import server.exceptions.WordleException;
 import server.interfaces.NotifyEvent;
@@ -196,8 +198,32 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 							}
 
 							case "playWORDLE": {
-								boolean canPlay = this.wordleGameService.canPlay(clientMessage.arguments[0]);
-								sendTcpMessage(client, new TcpServerResponseDTO(canPlay, null));
+								User user = this.userService.getUser(clientMessage.arguments[0]);
+								WordleGame lastGame = user.getLastGame();
+								boolean success = false;
+
+								// Aggiunto gioco al giocatore attuale
+								if(lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
+									user.newGame(wordleGameService.getGameWord());
+									success = true;
+								} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
+									success = true;
+								}
+
+								sendTcpMessage(client, new TcpServerResponseDTO(success, null));
+								break;
+							}
+
+							case "sendWord": {
+								User user = this.userService.getUser(clientMessage.arguments[0]);
+								// TODO controllare che questo utente sia online e che possa giocare al game attuale
+								WordleGame game = user.getLastGame();
+								LetterDTO[] result = wordleGameService.guessWord(clientMessage.arguments[1]);
+								game.attempts++;
+								TcpServerResponseDTO response = new TcpServerResponseDTO(result, game.getRemainingAttempts());
+
+								sendTcpMessage(client, response);
+								break;
 							}
 
 							default:

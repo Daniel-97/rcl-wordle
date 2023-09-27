@@ -1,5 +1,6 @@
 package server.services;
 
+import common.dto.LetterDTO;
 import server.entity.User;
 import server.entity.WordleGame;
 import server.entity.WordleGameState;
@@ -91,19 +92,29 @@ public class WordleGameService {
 		return word;
 	}
 
-	public boolean canPlay(String username) {
-		User user = this.userService.getUser(username);
+	public String getGameWord(){
+		return this.state.actualWord;
+	}
+	public LetterDTO[] guessWord(String word) {
 
-		if (user == null) {
-			return false;
+		LetterDTO[] result = new LetterDTO[word.length()];
+
+		for (int i = 0; i < word.length(); i++) {
+			char guessedLetter = word.toCharArray()[i];
+			char correctLetter = this.state.actualWord.toCharArray()[i];
+
+			result[i].letter = word.toCharArray()[i];
+			if (guessedLetter == correctLetter) {
+				result[i].guessStatus = '+';
+			} else if (this.state.actualWord.contains(String.valueOf(guessedLetter))) {
+				result[i].guessStatus = '?';
+			} else {
+				result[i].guessStatus = 'X';
+			}
 		}
 
-		WordleGame lastGame = user.getLastGame();
-		if (lastGame == null || !lastGame.word.equals(this.state.actualWord) || !lastGame.finished) {
-			return true;
-		} else {
-			return false;
-		}
+		return result;
+
 	}
 
 	public String translateWord(String word) {
