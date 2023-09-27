@@ -36,7 +36,7 @@ public class CLIHelper {
 			System.out.println();
 		}
 	}
-	private static void printCursor() {
+	public static void printCursor() {
 		System.out.print("WORDLE-CLIENT>");
 	}
 

@@ -1,6 +1,9 @@
 package server;
 
-import common.dto.TcpMessageDTO;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import common.dto.TcpClientRequestDTO;
+import common.dto.TcpServerResponseDTO;
 import server.entity.User;
 import server.enums.ErrorCodeEnum;
 import server.exceptions.WordleException;
@@ -9,16 +12,17 @@ import server.interfaces.ServerRMI;
 import server.services.UserService;
 import server.services.WordleGameService;
 import common.utils.ConfigReader;
-import common.utils.SocketUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -32,6 +36,8 @@ import java.util.Set;
 public class ServerMain extends RemoteObject implements ServerRMI {
 
 	private final static String STUB_NAME = "WORDLE-SERVER";
+	private final static Gson gson = new GsonBuilder().create();
+	private final static int BUFFER_SIZE = 1024;
 	private final int tcpPort;
 	private final int rmiPort;
 	// Services
@@ -163,7 +169,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 						//System.out.println("Canale pronto per la lettura");
 						SocketChannel client = (SocketChannel) key.channel();
-						TcpMessageDTO clientMessage = SocketUtils.readTcpMessage(client);
+						TcpClientRequestDTO clientMessage = readTcpMessage(client);
 						SocketAddress clientAddress = client.getRemoteAddress();
 
 						if (clientMessage == null) {
@@ -179,19 +185,19 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 							case "login": {
 								// TODO controllare se gli argomenti ci sono o meno
 								boolean success = this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1]);
-								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(success));
+								sendTcpMessage(client, new TcpServerResponseDTO(success, null));
 								break;
 							}
 
 							case "logout": {
 								boolean success = this.userService.logout(clientMessage.arguments[0]);
-								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(success));
+								sendTcpMessage(client, new TcpServerResponseDTO(success, null));
 								break;
 							}
 
 							case "playWORDLE": {
 								boolean canPlay = this.wordleGameService.canPlay(clientMessage.arguments[0]);
-								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(canPlay));
+								sendTcpMessage(client, new TcpServerResponseDTO(canPlay, null));
 							}
 
 							default:
@@ -244,5 +250,31 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	@Override
 	public void unsubscribeClientToEvent(String username, NotifyEvent event) throws RemoteException {
 
+	}
+
+	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {
+
+		String json = gson.toJson(request);
+		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
+		socket.write(command);
+	}
+
+	public static TcpClientRequestDTO readTcpMessage(SocketChannel socket) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		StringBuilder json = new StringBuilder();
+		int bytesRead = 0;
+
+		while ((bytesRead = socket.read(buffer)) > 0) {
+			// Sposto il buffer il lettura
+			buffer.flip();
+			// Leggo i dati dal buffer
+			json.append(StandardCharsets.UTF_8.decode(buffer));
+			// Pulisco il buffer
+			buffer.clear();
+			// Sposto il buffer in scrittura
+			buffer.flip();
+		}
+
+		return gson.fromJson(json.toString(), TcpClientRequestDTO.class);
 	}
 }

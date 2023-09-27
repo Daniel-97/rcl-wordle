@@ -4,27 +4,31 @@ import client.enums.ClientMode;
 import client.enums.GuestCommand;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
-import common.dto.TcpMessageDTO;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import common.dto.TcpClientRequestDTO;
+import common.dto.TcpServerResponseDTO;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
-import common.utils.SocketUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
 import java.util.Properties;
-import java.util.Scanner;
 
 public class ClientMain {
 
-	private static final String STUB_NAME = "WORDLE-SERVER";
+	private final static String STUB_NAME = "WORDLE-SERVER";
+	private final static int BUFFER_SIZE = 1024;
+	private final static Gson gson = new GsonBuilder().create();
 	private final int tcpPort;
 	private final int rmiPort;
 	private final String serverIP;
@@ -164,18 +168,23 @@ public class ClientMain {
 	}
 
 	private void gameMode() {
-		System.out.println("GAME MODE!");
+
+		System.out.println("Inserisci la parola:");
+		CLIHelper.printCursor();
 		String[] input = CLIHelper.parseInput();
+
+
+
 	}
 
 	private void login(String username, String password) {
 
-		TcpMessageDTO requestDTO = new TcpMessageDTO("login", new String[]{username, password});
+		TcpClientRequestDTO requestDTO = new TcpClientRequestDTO("login", new String[]{username, password});
 
 		try {
-			SocketUtils.sendTcpMessage(this.socket, requestDTO);
+			sendTcpMessage(this.socket, requestDTO);
 
-			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
+			TcpServerResponseDTO response = readTcpMessage(this.socket);
 			if (response.success) {
 				System.out.println("Login completato con successo");
 				this.mode = ClientMode.USER_MODE;
@@ -190,12 +199,12 @@ public class ClientMain {
 
 	private void logout(String username) {
 
-		TcpMessageDTO request = new TcpMessageDTO("logout", new String[]{username});
+		TcpClientRequestDTO request = new TcpClientRequestDTO("logout", new String[]{username});
 
 		try {
-			SocketUtils.sendTcpMessage(this.socket, request);
+			sendTcpMessage(this.socket, request);
 
-			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
+			TcpServerResponseDTO response = readTcpMessage(this.socket);
 			if (response.success) {
 				System.out.println("Logout completato con successo");
 				this.username = null;
@@ -209,11 +218,11 @@ public class ClientMain {
 	}
 
 	private void playWORDLE() {
-		TcpMessageDTO request = new TcpMessageDTO("playWORDLE", new String[]{username});
+		TcpClientRequestDTO request = new TcpClientRequestDTO("playWORDLE", new String[]{username});
 		try {
-			SocketUtils.sendTcpMessage(this.socket, request);
+			sendTcpMessage(this.socket, request);
 
-			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
+			TcpServerResponseDTO response = readTcpMessage(this.socket);
 			if (response.success) {
 				System.out.println("Ok, puoi giocare a Wordle!");
 				this.mode = ClientMode.GAME_MODE;
@@ -223,6 +232,11 @@ public class ClientMain {
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante richiesta di playWORDLE");
 		}
+	}
+
+	private void sendWord(String word) {
+		TcpClientRequestDTO request = new TcpClientRequestDTO("sendWord", new String[]{word});
+
 	}
 
 	private void register(String username, String password) {
@@ -268,5 +282,30 @@ public class ClientMain {
 			System.exit(-1);
 		}
 
+	}
+
+	public static void sendTcpMessage(SocketChannel socket, TcpClientRequestDTO request) throws IOException {
+		String json = gson.toJson(request);
+		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
+		socket.write(command);
+	}
+
+	public static TcpServerResponseDTO readTcpMessage(SocketChannel socket) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		StringBuilder json = new StringBuilder();
+		int bytesRead = 0;
+
+		while ((bytesRead = socket.read(buffer)) > 0) {
+			// Sposto il buffer il lettura
+			buffer.flip();
+			// Leggo i dati dal buffer
+			json.append(StandardCharsets.UTF_8.decode(buffer));
+			// Pulisco il buffer
+			buffer.clear();
+			// Sposto il buffer in scrittura
+			buffer.flip();
+		}
+
+		return gson.fromJson(json.toString(), TcpServerResponseDTO.class);
 	}
 }
