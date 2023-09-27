@@ -46,7 +46,10 @@ public class User {
 	 * Ritorna ultimo game giocato da utente
 	 * @return
 	 */
-	private WordleGame getLastGame() {
+	public WordleGame getLastGame() {
+		if(this.games.size() == 0) {
+			return null;
+		}
 		return this.games.get(this.games.size() - 1);
 	}
 
@@ -57,7 +60,7 @@ public class User {
 	 */
 	public WordleGame newGame(String word) {
 		WordleGame lastGame = getLastGame();
-		WordleGame game = new WordleGame(word, lastGame.getId());
+		WordleGame game = new WordleGame(word, lastGame.id);
 		this.games.add(game);
 		return game;
 	}
@@ -69,7 +72,7 @@ public class User {
 	public int averageAttempts() {
 		int avg = 0;
 		for (WordleGame game: this.games) {
-			avg += game.getAttempts();
+			avg += game.attempts;
 		}
 		return avg / this.games.size();
 	}
@@ -81,7 +84,7 @@ public class User {
 	public int wonGames() {
 		int wonGames = 0;
 		for (WordleGame game: this.games) {
-			wonGames += game.wonGame() ? 1 : 0;
+			wonGames += game.won ? 1 : 0;
 		}
 
 		return  wonGames;

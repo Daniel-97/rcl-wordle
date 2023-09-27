@@ -1,7 +1,8 @@
 package server.services;
 
+import server.entity.User;
+import server.entity.WordleGame;
 import server.entity.WordleGameState;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,9 +20,13 @@ public class WordleGameService {
 	//Dizionario delle parole, non deve essere salvato sul json
 	private final ArrayList<String> dictionary = new ArrayList<>();
 
-	public WordleGameService() {
+	// Services
+	private final UserService userService;
+
+	public WordleGameService(UserService userService) {
 
 		System.out.println("Avvio servizio wordle game...");
+		this.userService = userService;
 		// Carico il dizionario delle parole in memoria
 		// TODO possibile ottimizzazione? Caricarare solo la parola che serve a runtime
 		Path dictionaryPath = Paths.get(DICTIONARY_PATH);
@@ -84,6 +89,21 @@ public class WordleGameService {
 		System.out.println("Nuova parola estratta: " + word);
 
 		return word;
+	}
+
+	public boolean canPlay(String username) {
+		User user = this.userService.getUser(username);
+
+		if (user == null) {
+			return false;
+		}
+
+		WordleGame lastGame = user.getLastGame();
+		if (lastGame == null || !lastGame.word.equals(this.state.actualWord) || !lastGame.finished) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public String translateWord(String word) {

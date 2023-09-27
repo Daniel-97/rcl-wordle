@@ -1,5 +1,6 @@
 package client;
 
+import client.enums.ClientMode;
 import client.enums.GuestCommand;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
@@ -29,8 +30,8 @@ public class ClientMain {
 	private final String serverIP;
 	private ServerRMI serverRMI;
 	private SocketChannel socket;
-	private boolean loggedIn = false;
 	private String username = null;
+	private ClientMode mode = ClientMode.GUEST_MODE;
 
 
 	public static void main(String[] argv) {
@@ -62,94 +63,112 @@ public class ClientMain {
 
 	public void run() {
 
-		Scanner scanner = new Scanner(System.in);
-		String[] input = null;
-
 		while (true) {
 
-			//Fino a che utente non loggato, mostro il menu iniziale
-			while (!this.loggedIn) {
+			switch (this.mode) {
 
-				CLIHelper.entryMenu();
-				// Utente non ancora loggato
-				input = CLIHelper.parseInput();
-
-				GuestCommand cmd = GuestCommand.fromCommand(input[0]);
-				if (cmd == null) {
-					System.out.println("Invalid command!");
-					continue;
-				}
-
-				// Eseguo un comando
-				switch (cmd) {
-					case HELP:
-						CLIHelper.entryMenu();
-						break;
-
-					case QUIT:
-						try {
-							this.socket.close();
-						} catch (IOException e) {
-							System.out.println("Errore chiusura socket con server");
-						} finally {
-							System.exit(0);
-						}
-						break;
-
-					case LOGIN:
-						if (input.length < 3) {
-							System.out.println("Comando non completo");
-						} else {
-							this.loggedIn = this.login(input[1], input[2]);
-							if(this.loggedIn) {
-								this.username = input[1];
-							}
-						}
-						break;
-
-					case REGISTER:
-						if (input.length < 3) {
-							System.out.println("Comando non completo");
-						} else {
-							this.register(input[1], input[2]);
-						}
-						break;
-				}
-
-				CLIHelper.cls();
-			}
-
-			CLIHelper.mainMenu();
-			input = CLIHelper.parseInput();
-
-			UserCommand cmd = UserCommand.fromCommand(input[0]);
-			if (cmd == null) {
-				System.out.println("Invalid command!");
-				continue;
-			}
-
-			switch (cmd) {
-				case HELP:
-					CLIHelper.mainMenu();
+				case GUEST_MODE:
+					this.guestMode();
 					break;
 
-				case LOGOUT:
-					boolean success = this.logout(this.username);
-					if (success) {
-						this.loggedIn = false;
-						this.username = null;
-					}
+				case USER_MODE:
+					this.userMode();
 					break;
 
-				default:
-					System.out.println("Comando sconosciuto");
+				case GAME_MODE:
+					this.gameMode();
+					break;
 
 			}
 
 		}
 	}
 
-	private boolean login(String username, String password) {
+	private void guestMode() {
+
+		CLIHelper.entryMenu();
+		String[] input = CLIHelper.parseInput();
+
+		GuestCommand cmd = GuestCommand.fromCommand(input[0]);
+		if (cmd == null) {
+			System.out.println("Comando non valido!");
+			return;
+		}
+
+		// Eseguo un comando
+		switch (cmd) {
+			case HELP:
+				CLIHelper.entryMenu();
+				break;
+
+			case QUIT:
+				try {
+					this.socket.close();
+				} catch (IOException e) {
+					System.out.println("Errore chiusura socket con server");
+				} finally {
+					System.exit(0);
+				}
+				break;
+
+			case LOGIN:
+				if (input.length < 3) {
+					System.out.println("Comando non valido!");
+				} else {
+					this.login(input[1], input[2]);
+				}
+				break;
+
+			case REGISTER:
+				if (input.length < 3) {
+					System.out.println("Comando non completo");
+				} else {
+					this.register(input[1], input[2]);
+				}
+				break;
+		}
+
+		//CLIHelper.cls();
+	}
+
+	private void userMode() {
+
+		CLIHelper.mainMenu();
+		String[] input = CLIHelper.parseInput();
+
+		UserCommand cmd = UserCommand.fromCommand(input[0]);
+		if (cmd == null) {
+			System.out.println("Invalid command!");
+			return;
+		}
+
+		switch (cmd) {
+			case HELP: {
+				CLIHelper.mainMenu();
+				break;
+			}
+
+			case LOGOUT: {
+				this.logout(this.username);
+				break;
+			}
+
+			case PLAY: {
+				this.playWORDLE();
+				break;
+			}
+			default:
+				System.out.println("Comando sconosciuto");
+
+		}
+	}
+
+	private void gameMode() {
+		System.out.println("GAME MODE!");
+		String[] input = CLIHelper.parseInput();
+	}
+
+	private void login(String username, String password) {
 
 		TcpMessageDTO requestDTO = new TcpMessageDTO("login", new String[]{username, password});
 
@@ -159,18 +178,17 @@ public class ClientMain {
 			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
 			if (response.success) {
 				System.out.println("Login completato con successo");
-				return true;
+				this.mode = ClientMode.USER_MODE;
+				this.username = username;
 			} else {
 				System.out.println("Errore durante il login!");
-				return false;
 			}
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante il login!");
-			return false;
 		}
 	}
 
-	private boolean logout(String username) {
+	private void logout(String username) {
 
 		TcpMessageDTO request = new TcpMessageDTO("logout", new String[]{username});
 
@@ -180,14 +198,30 @@ public class ClientMain {
 			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
 			if (response.success) {
 				System.out.println("Logout completato con successo");
-				return true;
+				this.username = null;
+				this.mode = ClientMode.GUEST_MODE;
 			} else {
 				System.out.println("Errore durante il logut!");
-				return false;
 			}
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante il login");
-			return false;
+		}
+	}
+
+	private void playWORDLE() {
+		TcpMessageDTO request = new TcpMessageDTO("playWORDLE", new String[]{username});
+		try {
+			SocketUtils.sendTcpMessage(this.socket, request);
+
+			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
+			if (response.success) {
+				System.out.println("Ok, puoi giocare a Wordle!");
+				this.mode = ClientMode.GAME_MODE;
+			} else {
+				System.out.println("Errore, non puoi giocare con attuale parola");
+			}
+		} catch (IOException e) {
+			System.out.println("Errore imprevisto durante richiesta di playWORDLE");
 		}
 	}
 

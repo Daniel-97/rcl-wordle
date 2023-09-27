@@ -73,7 +73,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 		// Inizializzo i servizi
 		this.userService = new UserService();
-		this.wordleGameService = new WordleGameService();
+		this.wordleGameService = new WordleGameService(userService);
 
 		// Inizializza RMI server
 		try {
@@ -187,6 +187,11 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 								boolean success = this.userService.logout(clientMessage.arguments[0]);
 								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(success));
 								break;
+							}
+
+							case "playWORDLE": {
+								boolean canPlay = this.wordleGameService.canPlay(clientMessage.arguments[0]);
+								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(canPlay));
 							}
 
 							default:
