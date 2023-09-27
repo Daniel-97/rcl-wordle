@@ -17,6 +17,13 @@ public class TcpMessageDTO {
 		this.code = 0;
 	}
 
+	public TcpMessageDTO(boolean success) {
+		this.command = null;
+		this.arguments = null;
+		this.success = success;
+		this.code = 0;
+	}
+
 	public TcpMessageDTO(String command, String[] arguments, boolean success, int code) {
 		this.command = command;
 		this.arguments = arguments;

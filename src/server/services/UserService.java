@@ -94,6 +94,21 @@ public class UserService {
 	}
 
 	/**
+	 * Logout the current user
+	 * @param username
+	 * @return
+	 */
+	public boolean logout(String username) {
+		User user = getUser(username);
+		if(user == null) {
+			return false;
+		} else {
+			user.online = false;
+			return true;
+		}
+	}
+
+	/**
 	 * Ordina la lista di utenti in base alla media di tentativi per indovinare una parola
 	 */
 	public void sortUsers() {

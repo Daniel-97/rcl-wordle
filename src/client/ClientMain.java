@@ -1,6 +1,7 @@
 package client;
 
 import client.enums.GuestCommand;
+import client.enums.UserCommand;
 import client.services.CLIHelper;
 import common.dto.TcpMessageDTO;
 import server.exceptions.WordleException;
@@ -54,67 +55,142 @@ public class ClientMain {
 
 		System.out.println("Connesso con il server "+client.serverIP+":"+client.tcpPort);
 		Scanner scanner = new Scanner(System.in);
+
 		boolean loggedIn = false;
-		while (!loggedIn) {
+		String username = null;
 
-			System.out.println("Premere un tasto per continuare...");
-			scanner.nextLine();
+		while (true) {
 
-			CLIHelper.entryMenu();
-			// Utente non ancora loggato
+			//Fino a che utente non loggato, mostro il menu iniziale
+			while (!loggedIn) {
+
+				System.out.println("Premere un tasto per continuare...");
+				scanner.nextLine();
+
+				CLIHelper.entryMenu();
+				// Utente non ancora loggato
+				String[] input = CLIHelper.parseInput();
+				String cmd = input[0];
+				String[] args = Arrays.copyOfRange(input, 1, input.length);
+
+				GuestCommand gCommand = GuestCommand.fromCommand(cmd);
+				if (gCommand == null) {
+					System.out.println("Invalid command!");
+					continue;
+				}
+
+				// Eseguo un comando
+				switch (gCommand) {
+					case HELP:
+						CLIHelper.entryMenu();
+						break;
+
+					case QUIT:
+						try {
+							client.socket.close();
+						} catch (IOException e) {
+							System.out.println("Errore chiusura socket con server");
+						} finally {
+							System.exit(0);
+						}
+						break;
+
+					case LOGIN:
+						if (args.length < 2) {
+							System.out.println("Comando non completo");
+						} else {
+							loggedIn = client.login(args[0], args[1]);
+							if(loggedIn) {
+								username = args[0];
+							}
+						}
+						break;
+
+					case REGISTER:
+						if (args.length < 2) {
+							System.out.println("Comando non completo");
+						} else {
+							client.register(args[0], args[1]);
+						}
+						break;
+				}
+			}
+
+			CLIHelper.mainMenu();
 			String[] input = CLIHelper.parseInput();
 			String cmd = input[0];
 			String[] args = Arrays.copyOfRange(input, 1, input.length);
 
-			GuestCommand gCommand = GuestCommand.fromCommand(cmd);
-			if( gCommand == null ) {
+			UserCommand uCommand = UserCommand.fromCommand(cmd);
+			if (uCommand == null) {
 				System.out.println("Invalid command!");
 				continue;
 			}
 
-			// Eseguo un comando
-			switch (gCommand) {
+			switch (uCommand) {
 				case HELP:
-					CLIHelper.entryMenu();
+					CLIHelper.mainMenu();
 					break;
 
-				case QUIT:
-					try {
-						client.socket.close();
-					} catch (IOException e) {
-						System.out.println("Errore chiusura socket con server");
-					} finally {
-						System.exit(0);
+				case LOGOUT:
+					boolean success = client.logout(username);
+					if (success) {
+						loggedIn = false;
+						username = null;
 					}
 					break;
 
-				case LOGIN:
-					if(args.length < 2) {
-						System.out.println("Comando non completo");
-					} else {
-						try {
-							client.login(args[0], args[1]);
-						} catch (IOException e) {
-							System.out.println("Impossibile effettuare login" + e.getMessage());
-						}
-					}
-					break;
+				default:
+					System.out.println("Comando sconosciuto");
 
-				case REGISTER:
-					if(args.length < 2) {
-						System.out.println("Comando non completo");
-					} else {
-						client.register(args[0], args[1]);
-					}
-					break;
 			}
+
 		}
+
+
 
 	}
 
-	public void login(String username, String password) throws IOException {
+	public boolean login(String username, String password) {
+
 		TcpMessageDTO requestDTO = new TcpMessageDTO("login", new String[]{username, password});
-		SocketUtils.sendTcpMessage(this.socket, requestDTO);
+
+		try {
+			SocketUtils.sendTcpMessage(this.socket, requestDTO);
+
+			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
+			if (response.success) {
+				System.out.println("Login completato con successo");
+				return true;
+			} else {
+				System.out.println("Errore durante il login!");
+				return false;
+			}
+		} catch (IOException e) {
+			System.out.println("Errore imprevisto durante il login!");
+			return false;
+		}
+	}
+
+	public boolean logout(String username) {
+
+		TcpMessageDTO request = new TcpMessageDTO("logout", new String[]{username});
+
+		try {
+			SocketUtils.sendTcpMessage(this.socket, request);
+
+			TcpMessageDTO response = SocketUtils.readTcpMessage(this.socket);
+			if (response.success) {
+				System.out.println("Logout completato con successo");
+				return true;
+			} else {
+				System.out.println("Errore durante il logut!");
+				return false;
+			}
+		} catch (IOException e) {
+			System.out.println("Errore imprevisto durante il login");
+			return false;
+		}
 	}
 
 	public void register(String username, String password) {

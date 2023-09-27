@@ -173,16 +173,21 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 						}
 
 						System.out.println("Nuovo messaggio da client "+clientAddress+":"+ clientMessage);
+
 						switch (clientMessage.command) {
-							case "login":
+
+							case "login": {
 								// TODO controllare se gli argomenti ci sono o meno
-								if (this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1])) {
-
-									SocketUtils.sendTcpMessage(client, );
-								} else {
-
-								}
+								boolean success = this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1]);
+								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(success));
 								break;
+							}
+
+							case "logout": {
+								boolean success = this.userService.logout(clientMessage.arguments[0]);
+								SocketUtils.sendTcpMessage(client, new TcpMessageDTO(success));
+								break;
+							}
 
 							default:
 								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
