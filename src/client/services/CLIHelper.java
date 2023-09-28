@@ -1,6 +1,7 @@
 package client.services;
 
 import common.dto.LetterDTO;
+import common.dto.UserStat;
 
 import java.util.Scanner;
 
@@ -17,7 +18,7 @@ public class CLIHelper {
 	private static final String MAIN_MENU =
 			"Opzioni disponibili:\n"+
 			"- :play			-> gioca a wordle\n"+
-			"- :sendword <word>	-> invia una guessed word al server" +
+			"- :sendword <word>	-> invia una guessed word al server\n" +
 			"- :share			-> condividi i risultati sul gruppo sociale\n"+
 			"- :stat			-> aggiorna le statistiche dell'uente\n"+
 			"- :logout			-> logout da Wordle\n"+
@@ -65,6 +66,14 @@ public class CLIHelper {
 			System.out.println();
 		}
 
+	}
+
+	public static void printUserStats(UserStat stat) {
+		System.out.println("Ecco le tue statistiche:");
+		System.out.println("- Partite giocate: "+stat.playedGames);
+		System.out.println("- Percentuale partite vinte: "+stat.wonGamesPercentage+"%");
+		System.out.println("- Ultima serie partite vinte di fila: "+stat.lastStreakWonGames);
+		System.out.println("- Migliore serie partite vinte di fila: "+stat.bestStreakWonGames);
 	}
 
 }

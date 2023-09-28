@@ -1,5 +1,7 @@
 package server.entity;
 
+import common.dto.UserStat;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +12,9 @@ public class User {
 	private final String passwordHash; // password hahsata
 	private final Date registeredAt; // Data registrazione utente
 	private final List<WordleGame> games;
+	// Todo tenere aggiornate queste statistiche
+	private int lastStreak = 0;
+	private int bestStreak = 0;
 	public transient boolean online = false; // Indica se utente e' online oppure no, da non salvare sul json
 
 	public User(String username, String password) {
@@ -94,6 +99,20 @@ public class User {
 		}
 
 		return  wonGames;
+	}
+
+	/**
+	 * Ritorna le statistiche dell'utente
+	 * @return
+	 */
+	public UserStat getStat() {
+		UserStat stat = new UserStat();
+		stat.playedGames = games.size();
+		stat.wonGamesPercentage = wonGames() * 100 / games.size();
+		stat.lastStreakWonGames = lastStreak;
+		stat.bestStreakWonGames = bestStreak;
+
+		return stat;
 	}
 
 	/**

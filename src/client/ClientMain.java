@@ -9,6 +9,7 @@ import com.google.gson.GsonBuilder;
 import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
+import common.dto.UserStat;
 import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
@@ -162,31 +163,55 @@ public class ClientMain {
 			}
 
 			case SEND_WORD:
-				if (!this.canPlayWord) {
-					System.out.println("Errore, richiedi prima al server di poter giocare la parola attuale");
+				if (input.length < 2) {
+					System.out.println("Comando non valido!");
 				} else {
-					this.play(input[1]);
+					this.sendWord(input[1]);
 				}
+
 				break;
+
+			case STAT:
+				this.sendMeStatistics();
+				break;
+
+			case SHARE:
+				break;
+
 			default:
 				System.out.println("Comando sconosciuto");
 
 		}
 	}
 
-	private void play(String word) {
+	private void sendWord(String word) {
 
-		TcpServerResponseDTO response = sendWord(word);
+		if (!this.canPlayWord) {
+			System.out.println("Errore, richiedi prima al server di poter giocare la parola attuale");
+			return;
+		}
+
+		TcpServerResponseDTO response = null;
+		TcpClientRequestDTO request = new TcpClientRequestDTO("sendWord", new String[]{username, word});
+		try {
+			sendTcpMessage(request);
+			response = readTcpMessage();
+		} catch (IOException e) {
+			System.out.println("Errore durante invio guessed word");
+			return;
+		}
 
 		if(response != null) {
 			if (response.code == ResponseCodeEnum.GAME_WON) {
 				System.out.println("Hai indovinato la parola!");
+				this.canPlayWord = false;
 			} else if(response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
 			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
 				System.out.println("Parola non presente nel dizionario, tentativo non valido");
-			} else if(response.code == ResponseCodeEnum.ATTEMPTS_EXAUSTED) {
+			} else if(response.code == ResponseCodeEnum.GAME_LOST) {
 				System.out.println("Tentativi esauriti!");
+				this.canPlayWord = false;
 			} else {
 				CLIHelper.printServerWord(response.userGuess);
 			}
@@ -199,9 +224,9 @@ public class ClientMain {
 		TcpClientRequestDTO requestDTO = new TcpClientRequestDTO("login", new String[]{username, password});
 
 		try {
-			sendTcpMessage(this.socket, requestDTO);
+			sendTcpMessage(requestDTO);
 
-			TcpServerResponseDTO response = readTcpMessage(this.socket);
+			TcpServerResponseDTO response = readTcpMessage();
 			if (response.success) {
 				System.out.println("Login completato con successo");
 				this.mode = ClientMode.USER_MODE;
@@ -219,9 +244,9 @@ public class ClientMain {
 		TcpClientRequestDTO request = new TcpClientRequestDTO("logout", new String[]{username});
 
 		try {
-			sendTcpMessage(this.socket, request);
+			sendTcpMessage(request);
 
-			TcpServerResponseDTO response = readTcpMessage(this.socket);
+			TcpServerResponseDTO response = readTcpMessage();
 			if (response.success) {
 				System.out.println("Logout completato con successo");
 				this.username = null;
@@ -237,28 +262,17 @@ public class ClientMain {
 	private void playWORDLE() {
 		TcpClientRequestDTO request = new TcpClientRequestDTO("playWORDLE", new String[]{username});
 		try {
-			sendTcpMessage(this.socket, request);
+			sendTcpMessage(request);
 
-			TcpServerResponseDTO response = readTcpMessage(this.socket);
+			TcpServerResponseDTO response = readTcpMessage();
 			if (response.success) {
 				System.out.println("Ok, puoi giocare a Wordle!");
 				this.canPlayWord = true;
 			} else {
-				System.out.println("Errore, non puoi giocare con attuale parola");
+				System.out.println("Errore, non puoi giocare con parola attuale");
 			}
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante richiesta di playWORDLE");
-		}
-	}
-
-	private TcpServerResponseDTO sendWord(String word) {
-		TcpClientRequestDTO request = new TcpClientRequestDTO("sendWord", new String[]{username, word});
-		try {
-			sendTcpMessage(this.socket, request);
-			return readTcpMessage(this.socket);
-		} catch (IOException e) {
-			System.out.println("Errore durante invio guessed word");
-			return null;
 		}
 	}
 
@@ -271,6 +285,22 @@ public class ClientMain {
 			throw new RuntimeException(e);
 		} catch (WordleException e) {
 			System.out.println("Errore! " + e.getMessage());
+		}
+	}
+
+	private void sendMeStatistics() {
+		TcpClientRequestDTO request = new TcpClientRequestDTO("stat", new String[]{username});
+		try {
+			sendTcpMessage(request);
+
+			TcpServerResponseDTO response = readTcpMessage();
+			if(response != null && response.stat != null) {
+				CLIHelper.printUserStats(response.stat);
+			} else {
+				System.out.println("Statistiche mancanti!");
+			}
+		} catch (IOException e) {
+			System.out.println("Errore richiesta statistiche");
 		}
 	}
 
@@ -307,18 +337,18 @@ public class ClientMain {
 
 	}
 
-	public static void sendTcpMessage(SocketChannel socket, TcpClientRequestDTO request) throws IOException {
+	public void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
 		String json = gson.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		socket.write(command);
+		this.socket.write(command);
 	}
 
-	public static TcpServerResponseDTO readTcpMessage(SocketChannel socket) throws IOException {
+	public TcpServerResponseDTO readTcpMessage() throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
 		int bytesRead = 0;
 
-		while ((bytesRead = socket.read(buffer)) > 0) {
+		while ((bytesRead = this.socket.read(buffer)) > 0) {
 			// Sposto il buffer il lettura
 			buffer.flip();
 			// Leggo i dati dal buffer

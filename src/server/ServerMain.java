@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
+import common.dto.UserStat;
 import server.entity.User;
 import server.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
@@ -201,17 +202,19 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 							case "playWORDLE": {
 								User user = this.userService.getUser(clientMessage.arguments[0]);
 								WordleGame lastGame = user.getLastGame();
-								boolean success = false;
+								TcpServerResponseDTO response = new TcpServerResponseDTO();
 
 								// Aggiunto gioco al giocatore attuale
 								if(lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
 									user.newGame(wordleGameService.getGameWord());
-									success = true;
+									response.success = true;
 								} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
-									success = true;
+									response.success = true;
+								} else {
+									response.success = false;
 								}
 
-								sendTcpMessage(client, new TcpServerResponseDTO(success, null));
+								sendTcpMessage(client, response);
 								break;
 							}
 
@@ -224,6 +227,8 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 								if(word.length() > WordleGameService.WORD_LENGHT || word.length() < WordleGameService.WORD_LENGHT){
 									response.success = false;
 									response.code = ResponseCodeEnum.INVALID_WORD_LENGHT;
+									sendTcpMessage(client, response);
+									break;
 								}
 
 								WordleGame game = user.getLastGame();
@@ -247,6 +252,17 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 								sendTcpMessage(client, response);
 								break;
+							}
+
+							case "stat": {
+								String username = clientMessage.arguments[0];
+								User user = this.userService.getUser(username);
+								// Todo controllare che utente esista davvero
+								UserStat stat = user.getStat();
+								TcpServerResponseDTO response = new TcpServerResponseDTO();
+								response.stat = stat;
+
+								sendTcpMessage(client, response);
 							}
 
 							default:

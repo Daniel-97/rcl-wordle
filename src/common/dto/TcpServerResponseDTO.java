@@ -7,6 +7,7 @@ public class TcpServerResponseDTO {
 	public LetterDTO[][] userGuess;
 	public int remainingAttempts;
 	public ResponseCodeEnum code; //Codice di risposta
+	public UserStat stat;
 
 	public TcpServerResponseDTO(boolean success, ResponseCodeEnum code) {
 		this.success = success;
