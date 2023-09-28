@@ -9,6 +9,7 @@ import com.google.gson.GsonBuilder;
 import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
+import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
@@ -23,6 +24,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class ClientMain {
@@ -175,9 +177,20 @@ public class ClientMain {
 	private void play(String word) {
 
 		TcpServerResponseDTO response = sendWord(word);
-		System.out.println(response);
 
-		System.out.println();
+		if(response != null) {
+			if (response.code == ResponseCodeEnum.GAME_WON) {
+				System.out.println("Hai indovinato la parola!");
+			} else if(response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
+				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
+			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
+				System.out.println("Parola non presente nel dizionario, tentativo non valido");
+			} else if(response.code == ResponseCodeEnum.ATTEMPTS_EXAUSTED) {
+				System.out.println("Tentativi esauriti!");
+			} else {
+				CLIHelper.printServerWord(response.userGuess);
+			}
+		}
 
 	}
 

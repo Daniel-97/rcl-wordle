@@ -7,7 +7,7 @@ import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import server.entity.User;
 import server.entity.WordleGame;
-import server.enums.ErrorCodeEnum;
+import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import server.interfaces.NotifyEvent;
 import server.interfaces.ServerRMI;
@@ -31,6 +31,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
@@ -215,12 +216,34 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 							}
 
 							case "sendWord": {
-								User user = this.userService.getUser(clientMessage.arguments[0]);
-								// TODO controllare che questo utente sia online e che possa giocare al game attuale
+								String username = clientMessage.arguments[0];
+								String word = clientMessage.arguments[1];
+								User user = this.userService.getUser(username);
+								TcpServerResponseDTO response = new TcpServerResponseDTO();
+
+								if(word.length() > WordleGameService.WORD_LENGHT || word.length() < WordleGameService.WORD_LENGHT){
+									response.success = false;
+									response.code = ResponseCodeEnum.INVALID_WORD_LENGHT;
+								}
+
 								WordleGame game = user.getLastGame();
-								LetterDTO[] result = wordleGameService.guessWord(clientMessage.arguments[1]);
-								game.attempts++;
-								TcpServerResponseDTO response = new TcpServerResponseDTO(result, game.getRemainingAttempts());
+								if(game.getRemainingAttempts() == 0) {
+									response.success = false;
+									response.code = ResponseCodeEnum.GAME_LOST;
+								} else {
+									game.won = word.equals(game.word);
+									game.attempts++;
+									response.success = true;
+
+									if(game.won) {
+										response.code = ResponseCodeEnum.GAME_WON;
+									} else {
+										LetterDTO[] guess = wordleGameService.hintWord(word);
+										System.out.println(Arrays.toString(guess));
+										game.addGuess(guess);
+										response.userGuess = game.guess;
+									}
+								}
 
 								sendTcpMessage(client, response);
 								break;
@@ -256,11 +279,11 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		System.out.println("Calling register RMI...");
 		// Controllo parametri
 		if (username.isEmpty()) {
-			throw new IllegalArgumentException(ErrorCodeEnum.USERNAME_REQUIRED.name());
+			throw new IllegalArgumentException(ResponseCodeEnum.USERNAME_REQUIRED.name());
 		}
 
 		if (password.isEmpty()) {
-			throw new IllegalArgumentException(ErrorCodeEnum.PASSWORD_REQUIRED.name());
+			throw new IllegalArgumentException(ResponseCodeEnum.PASSWORD_REQUIRED.name());
 		}
 
 		// Aggiungo nuovo utente al sistema

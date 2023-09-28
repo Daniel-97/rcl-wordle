@@ -1,7 +1,7 @@
 package server.services;
 
 import server.entity.User;
-import server.enums.ErrorCodeEnum;
+import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import com.google.gson.reflect.TypeToken;
 
@@ -50,7 +50,7 @@ public class UserService {
 		// Controlla se esiste gia' un utente con lo stesso username
 		for(User u:this.users) {
 			if (u.getUsername().equals(user.getUsername())) {
-				throw new WordleException(ErrorCodeEnum.USERNAME_ALREADY_USED);
+				throw new WordleException(ResponseCodeEnum.USERNAME_ALREADY_USED);
 			}
 		}
 

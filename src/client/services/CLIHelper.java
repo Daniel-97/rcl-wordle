@@ -1,5 +1,7 @@
 package client.services;
 
+import common.dto.LetterDTO;
+
 import java.util.Scanner;
 
 public class CLIHelper {
@@ -44,6 +46,25 @@ public class CLIHelper {
 	public static String[] parseInput() {
 		String input = cliScanner.nextLine();
 		return input.split(" ", -1);
+	}
+
+	public static void printServerWord(LetterDTO[][] userGuess) {
+
+		for(LetterDTO[] guess: userGuess) {
+			if (guess == null) {
+				continue;
+			}
+
+			for (LetterDTO letter : guess) {
+				System.out.print(letter.letter + " ");
+			}
+			System.out.println();
+			for (LetterDTO letter : guess) {
+				System.out.print(letter.guessStatus + " ");
+			}
+			System.out.println();
+		}
+
 	}
 
 }

@@ -1,8 +1,6 @@
 package server.services;
 
 import common.dto.LetterDTO;
-import server.entity.User;
-import server.entity.WordleGame;
 import server.entity.WordleGameState;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,6 +15,7 @@ public class WordleGameService {
 
 	private static final String WORDLE_STATE_PATH = "persistance/wordle.json";
 	private static final String DICTIONARY_PATH = "src/dictionary/words.txt";
+	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	//Dizionario delle parole, non deve essere salvato sul json
 	private final ArrayList<String> dictionary = new ArrayList<>();
@@ -97,7 +96,13 @@ public class WordleGameService {
 	public String getGameWord(){
 		return this.state.actualWord;
 	}
-	public LetterDTO[] guessWord(String word) {
+
+	/**
+	 * Ritorna i suggerimenti per la parola passata sotto fomra di array di oggetti
+	 * @param word
+	 * @return
+	 */
+	public LetterDTO[] hintWord(String word) {
 
 		LetterDTO[] result = new LetterDTO[word.length()];
 

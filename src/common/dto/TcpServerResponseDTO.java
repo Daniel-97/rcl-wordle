@@ -1,30 +1,23 @@
 package common.dto;
 
-import java.util.Arrays;
+import common.enums.ResponseCodeEnum;
 
 public class TcpServerResponseDTO {
 	public boolean success;
-	public String message;
-	public LetterDTO[] word;
+	public LetterDTO[][] userGuess;
 	public int remainingAttempts;
+	public ResponseCodeEnum code; //Codice di risposta
 
-	public TcpServerResponseDTO(boolean success, String message) {
+	public TcpServerResponseDTO(boolean success, ResponseCodeEnum code) {
 		this.success = success;
-		this.message = message;
+		this.code = code;
 	}
 
-	public TcpServerResponseDTO(LetterDTO[] word, int remainingAttempts) {
-		this.word = word;
+	public TcpServerResponseDTO(){}
+
+	public TcpServerResponseDTO(LetterDTO[][] userGuess, int remainingAttempts) {
+		this.success = true;
+		this.userGuess = userGuess;
 		this.remainingAttempts = remainingAttempts;
-	}
-
-	@Override
-	public String toString() {
-		return "TcpServerResponseDTO{" +
-				"success=" + success +
-				", message='" + message + '\'' +
-				", word=" + Arrays.toString(word) +
-				", remainingAttempts=" + remainingAttempts +
-				'}';
 	}
 }
