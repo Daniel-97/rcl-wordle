@@ -37,6 +37,7 @@ public class ClientMain {
 	private SocketChannel socket;
 	private String username = null;
 	private ClientMode mode = ClientMode.GUEST_MODE;
+	private boolean canPlayWord = false;
 
 
 	public static void main(String[] argv) {
@@ -79,11 +80,6 @@ public class ClientMain {
 				case USER_MODE:
 					this.userMode();
 					break;
-
-				case GAME_MODE:
-					this.gameMode();
-					break;
-
 			}
 
 		}
@@ -162,19 +158,24 @@ public class ClientMain {
 				this.playWORDLE();
 				break;
 			}
+
+			case SEND_WORD:
+				if (!this.canPlayWord) {
+					System.out.println("Errore, richiedi prima al server di poter giocare la parola attuale");
+				} else {
+					this.play(input[1]);
+				}
+				break;
 			default:
 				System.out.println("Comando sconosciuto");
 
 		}
 	}
 
-	private void gameMode() {
+	private void play(String word) {
 
-		System.out.println("Inserisci la parola:");
-		CLIHelper.printCursor();
-		String[] input = CLIHelper.parseInput();
-
-		TcpServerResponseDTO response = sendWord(input[0]);
+		TcpServerResponseDTO response = sendWord(word);
+		System.out.println(response);
 
 		System.out.println();
 
@@ -228,7 +229,7 @@ public class ClientMain {
 			TcpServerResponseDTO response = readTcpMessage(this.socket);
 			if (response.success) {
 				System.out.println("Ok, puoi giocare a Wordle!");
-				this.mode = ClientMode.GAME_MODE;
+				this.canPlayWord = true;
 			} else {
 				System.out.println("Errore, non puoi giocare con attuale parola");
 			}

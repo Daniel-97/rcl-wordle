@@ -1,5 +1,7 @@
 package common.dto;
 
+import java.util.Arrays;
+
 public class TcpServerResponseDTO {
 	public boolean success;
 	public String message;
@@ -14,5 +16,15 @@ public class TcpServerResponseDTO {
 	public TcpServerResponseDTO(LetterDTO[] word, int remainingAttempts) {
 		this.word = word;
 		this.remainingAttempts = remainingAttempts;
+	}
+
+	@Override
+	public String toString() {
+		return "TcpServerResponseDTO{" +
+				"success=" + success +
+				", message='" + message + '\'' +
+				", word=" + Arrays.toString(word) +
+				", remainingAttempts=" + remainingAttempts +
+				'}';
 	}
 }

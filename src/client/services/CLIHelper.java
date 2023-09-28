@@ -14,11 +14,12 @@ public class CLIHelper {
 
 	private static final String MAIN_MENU =
 			"Opzioni disponibili:\n"+
-			"- :play		-> gioca a wordle\n"+
-			"- :share		-> condividi i risultati sul gruppo sociale\n"+
-			"- :stat		-> aggiorna le statistiche dell'uente\n"+
-			"- :logout		-> logout da Wordle\n"+
-			"- :help		-> aiuto\n";
+			"- :play			-> gioca a wordle\n"+
+			"- :sendword <word>	-> invia una guessed word al server" +
+			"- :share			-> condividi i risultati sul gruppo sociale\n"+
+			"- :stat			-> aggiorna le statistiche dell'uente\n"+
+			"- :logout			-> logout da Wordle\n"+
+			"- :help			-> aiuto\n";
 
 	public static void entryMenu() {
 		System.out.println(ENTRY_MENU);

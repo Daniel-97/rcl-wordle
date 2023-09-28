@@ -62,6 +62,8 @@ public class WordleGameService {
 			this.extractWord();
 		}
 
+		System.out.println("Parola del giorno: " + this.state.actualWord);
+
 	}
 
 	public void saveState() {
@@ -103,6 +105,7 @@ public class WordleGameService {
 			char guessedLetter = word.toCharArray()[i];
 			char correctLetter = this.state.actualWord.toCharArray()[i];
 
+			result[i] = new LetterDTO();
 			result[i].letter = word.toCharArray()[i];
 			if (guessedLetter == correctLetter) {
 				result[i].guessStatus = '+';

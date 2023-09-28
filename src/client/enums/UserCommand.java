@@ -8,6 +8,7 @@ public enum UserCommand {
 	SHARE(":share"),
 	STAT(":stat"),
 	LOGOUT(":logout"),
+	SEND_WORD(":sendword"),
 	HELP(":help");
 
 	private final String command;

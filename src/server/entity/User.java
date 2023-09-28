@@ -60,7 +60,13 @@ public class User {
 	 */
 	public WordleGame newGame(String word) {
 		WordleGame lastGame = getLastGame();
-		WordleGame game = new WordleGame(word, lastGame.id);
+		WordleGame game = null;
+		if (lastGame == null) {
+			game = new WordleGame(word, 0);
+		} else {
+			game = new WordleGame(word, lastGame.id+1);
+		}
+
 		this.games.add(game);
 		return game;
 	}
