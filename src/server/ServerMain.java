@@ -68,7 +68,8 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			}
 		});
 
-		server.listen();
+		// Fa partire il server
+		server.start();
 	}
 
 	public ServerMain(String configPath) {
@@ -113,7 +114,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 	}
 
-	public void listen() {
+	public void start() {
 
 		ServerSocket socket = null;
 		ServerSocketChannel socketChannel = null;
@@ -297,7 +298,6 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	@Override
 	public void register(String username, String password) throws RemoteException, WordleException {
 
-		System.out.println("Calling register RMI...");
 		// Controllo parametri
 		if (username.isEmpty()) {
 			throw new IllegalArgumentException(ResponseCodeEnum.USERNAME_REQUIRED.name());

@@ -238,7 +238,7 @@ public class ClientMain {
 				this.mode = ClientMode.USER_MODE;
 				this.username = username;
 			} else {
-				System.out.println("Errore durante il login!");
+				System.out.println("Nome utente o password errati!");
 			}
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante il login!");

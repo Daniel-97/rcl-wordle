@@ -56,6 +56,7 @@ public class UserService {
 
 		// Se sono arrivato qui l'utente non esiste, posso aggiungerlo
 		this.users.add(user);
+		System.out.println("Nuovo utente aggiunto! "+user.getUsername());
 	}
 
 	/**
