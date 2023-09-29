@@ -50,8 +50,13 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 	public static void main(String[] argv) {
 
+		if (argv == null || argv.length == 0) {
+			System.out.println("Fornisci il path del file di configurazione come argomento!");
+			System.exit(-1);
+		}
+
 		// Inizializza il server
-		ServerMain server = new ServerMain(null); //TODO prendere path file di configurazione dagli argomenti
+		ServerMain server = new ServerMain(argv[0]);
 
 		// Thread in ascolto di SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -73,7 +78,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		//TODO implementare wrapper per leggere le configurazione da un file data un interfaccia
 		if (configPath == null || configPath.isEmpty()) {
 			System.out.println("Nessun file di configurazione trovato, uso file di configurazione di default");
-			configPath = "./src/server/app.config";
+			configPath = "./src/server/server.config";
 		}
 
 		// Leggi le configurazioni dal file

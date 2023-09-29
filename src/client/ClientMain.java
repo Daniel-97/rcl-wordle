@@ -20,6 +20,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -45,7 +47,11 @@ public class ClientMain {
 
 	public static void main(String[] argv) {
 
-		ClientMain client = new ClientMain(null); // Todo prendere config path da argomenti
+		if (argv == null || argv.length == 0) {
+			System.out.println("Fornisci il path del file di configurazione come argomento!");
+			System.exit(-1);
+		}
+		ClientMain client = new ClientMain(argv[0]);
 
 		System.out.println("Tenativo di connessione con il server "+client.serverIP+":"+client.tcpPort);
 		try {
@@ -307,11 +313,6 @@ public class ClientMain {
 	public ClientMain(String configPath) {
 
 		System.out.println("Avvio Wordle game client...");
-
-		if (configPath == null || configPath.isEmpty()) {
-			System.out.println("Nessun file di configurazione trovato, uso file di configurazione di default");
-			configPath = "./src/client/app.config";
-		}
 
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig(configPath);
