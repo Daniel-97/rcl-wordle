@@ -6,10 +6,8 @@ import client.enums.UserCommand;
 import client.services.CLIHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
-import common.dto.UserStat;
 import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
@@ -20,58 +18,58 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
 import java.util.Properties;
 
 public class ClientMain {
 
-	private final static String STUB_NAME = "WORDLE-SERVER";
 	private final static int BUFFER_SIZE = 1024;
 	private final static Gson gson = new GsonBuilder().create();
-	private final int tcpPort;
-	private final int rmiPort;
-	private final String serverIP;
-	private ServerRMI serverRMI;
-	private SocketChannel socket;
-	private String username = null;
+	private static int TCP_PORT;
+	private static int RMI_PORT;
+	private static String STUB_NAME = "WORDLE-SERVER";
+	private static String SERVER_IP;
+	private static ServerRMI serverRMI;
+	private static SocketChannel socket;
+	private static String username = null;
 	private ClientMode mode = ClientMode.GUEST_MODE;
 	private boolean canPlayWord = false;
 
+	private static final String TITLE =
+			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
+			" \\ \\      / / _ \\|  _ \\|  _ \\| |   | ____|  / ___| |   |_ _| ____| \\ | |_   _|\n" +
+			"  \\ \\ /\\ / / | | | |_) | | | | |   |  _|   | |   | |    | ||  _| |  \\| | | |  \n" +
+			"   \\ V  V /| |_| |  _ <| |_| | |___| |___  | |___| |___ | || |___| |\\  | | |  \n" +
+			"    \\_/\\_/  \\___/|_| \\_\\____/|_____|_____|  \\____|_____|___|_____|_| \\_| |_|  ";
 
 	public static void main(String[] argv) {
 
-		if (argv == null || argv.length == 0) {
-			System.out.println("Fornisci il path del file di configurazione come argomento!");
-			System.exit(-1);
-		}
-		ClientMain client = new ClientMain(argv[0]);
+		System.out.println(TITLE);
 
-		System.out.println("Tenativo di connessione con il server "+client.serverIP+":"+client.tcpPort);
-		try {
-			client.socket = SocketChannel.open();
-			client.socket.connect(new InetSocketAddress(client.serverIP, client.tcpPort));
-		} catch (IOException e) {
-			System.out.println("Errore durante connessione tcp al server " + client.serverIP + ":"+client.tcpPort);
+		String configPath = System.getenv("WORDLE_CONFIG");
+		if (configPath == null) {
+			System.out.println("Variabile d'ambiente WORDLE_CONFIG non trovata!");
 			System.exit(-1);
 		}
+
+		ClientMain client = new ClientMain(configPath);
 
 		// Thread in ascolto di SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
 				System.out.println("Shutdown Wordle client...");
-				//socketChannel.close();
+				try {
+					socket.close();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		});
-
-		System.out.println("Connesso con il server "+client.serverIP+":"+client.tcpPort);
 
 		client.run();
 	}
@@ -80,7 +78,7 @@ public class ClientMain {
 
 		while (true) {
 
-			switch (this.mode) {
+			switch (mode) {
 
 				case GUEST_MODE:
 					this.guestMode();
@@ -113,7 +111,7 @@ public class ClientMain {
 
 			case QUIT:
 				try {
-					this.socket.close();
+					socket.close();
 				} catch (IOException e) {
 					System.out.println("Errore chiusura socket con server");
 				} finally {
@@ -159,7 +157,7 @@ public class ClientMain {
 			}
 
 			case LOGOUT: {
-				this.logout(this.username);
+				this.logout(username);
 				break;
 			}
 
@@ -192,7 +190,7 @@ public class ClientMain {
 
 	private void sendWord(String word) {
 
-		if (!this.canPlayWord) {
+		if (!canPlayWord) {
 			System.out.println("Errore, richiedi prima al server di poter giocare la parola attuale");
 			return;
 		}
@@ -210,14 +208,14 @@ public class ClientMain {
 		if(response != null) {
 			if (response.code == ResponseCodeEnum.GAME_WON) {
 				System.out.println("Hai indovinato la parola!");
-				this.canPlayWord = false;
+				canPlayWord = false;
 			} else if(response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
 			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
 				System.out.println("Parola non presente nel dizionario, tentativo non valido");
 			} else if(response.code == ResponseCodeEnum.GAME_LOST) {
 				System.out.println("Tentativi esauriti!");
-				this.canPlayWord = false;
+				canPlayWord = false;
 			} else {
 				CLIHelper.printServerWord(response.userGuess);
 			}
@@ -235,8 +233,8 @@ public class ClientMain {
 			TcpServerResponseDTO response = readTcpMessage();
 			if (response.success) {
 				System.out.println("Login completato con successo");
-				this.mode = ClientMode.USER_MODE;
-				this.username = username;
+				mode = ClientMode.USER_MODE;
+				ClientMain.username = username;
 			} else {
 				System.out.println("Nome utente o password errati!");
 			}
@@ -273,7 +271,7 @@ public class ClientMain {
 			TcpServerResponseDTO response = readTcpMessage();
 			if (response.success) {
 				System.out.println("Ok, puoi giocare a Wordle!");
-				this.canPlayWord = true;
+				canPlayWord = true;
 			} else {
 				System.out.println("Errore, non puoi giocare con parola attuale");
 			}
@@ -285,12 +283,13 @@ public class ClientMain {
 	private void register(String username, String password) {
 
 		try {
-			this.serverRMI.register(username, password);
+			serverRMI.register(username, password);
+			System.out.println("Complimenti! Registrazione completata con successo!");
 		} catch (RemoteException e) {
 			// TODO gestire il caso in cui il server si disconnette
 			throw new RuntimeException(e);
 		} catch (WordleException e) {
-			System.out.println("Errore! " + e.getMessage());
+			System.out.println("Errore durante la registrazione! " + e.getMessage());
 		}
 	}
 
@@ -314,42 +313,54 @@ public class ClientMain {
 
 		System.out.println("Avvio Wordle game client...");
 
-		// Leggi le configurazioni dal file
+		// Leggo file di configurazione
 		Properties properties = ConfigReader.readConfig(configPath);
-		this.tcpPort = Integer.parseInt(properties.getProperty("app.tcp.port"));
-		this.rmiPort = Integer.parseInt(properties.getProperty("app.rmi.port"));
-		this.serverIP = properties.getProperty("app.tcp.ip");
+		RMI_PORT = Integer.parseInt(properties.getProperty("app.rmi.port"));
+		TCP_PORT = Integer.parseInt(properties.getProperty("app.tcp.port"));
+		SERVER_IP = properties.getProperty("app.tcp.ip");
 
 		// Inizializza RMI
-		Remote RemoteObject = null;
 		try {
 			// TODO capire come specificare indirizzo ip remoto del server
-			Registry registry = LocateRegistry.getRegistry(this.rmiPort);
-			RemoteObject = registry.lookup(STUB_NAME);
-			this.serverRMI = (ServerRMI) RemoteObject;
+			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
+			Remote RemoteObject = registry.lookup(STUB_NAME);
+			serverRMI = (ServerRMI) RemoteObject;
 
 		} catch (RemoteException e) {
 			System.out.println("Client remote exception: " + e.getMessage());
 			System.exit(-1);
+
 		} catch (NotBoundException e) {
 			System.out.println("Client not bound exception" + e.getMessage());
 			System.exit(-1);
 		}
 
+		// Inizializza connessione TCP
+		System.out.println("Tentativo di connessione con il server "+SERVER_IP+":"+TCP_PORT);
+		try {
+			socket = SocketChannel.open();
+			socket.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
+		} catch (IOException e) {
+			System.out.println("Errore durante connessione tcp al server " + SERVER_IP + ":"+TCP_PORT);
+			System.exit(-1);
+		}
+
+		System.out.println("Connesso con il server "+SERVER_IP+":"+TCP_PORT);
+
 	}
 
-	public void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
+	public static void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
 		String json = gson.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		this.socket.write(command);
+		socket.write(command);
 	}
 
-	public TcpServerResponseDTO readTcpMessage() throws IOException {
+	public static TcpServerResponseDTO readTcpMessage() throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
 		int bytesRead = 0;
 
-		while ((bytesRead = this.socket.read(buffer)) > 0) {
+		while ((bytesRead = socket.read(buffer)) > 0) {
 			// Sposto il buffer il lettura
 			buffer.flip();
 			// Leggo i dati dal buffer

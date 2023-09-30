@@ -9,14 +9,14 @@ public class CLIHelper {
 
 	private static final Scanner cliScanner = new Scanner(System.in);
 	private static  final String ENTRY_MENU =
-			"Necessario login prima di giocare a Wordle. Opzioni disponibili:\n"+
+			"ENTRY MENU:\n"+
 			"- :login	 <username> <password>	-> login\n"+
 			"- :register <username>	<password>	-> registrati a Wordle\n"+
 			"- :help							-> aiuto\n"+
 			"- :quit							-> esci da Wordle\n";
 
 	private static final String MAIN_MENU =
-			"Opzioni disponibili:\n"+
+			"MAIN MENU:\n"+
 			"- :play			-> gioca a wordle\n"+
 			"- :sendword <word>	-> invia una guessed word al server\n" +
 			"- :share			-> condividi i risultati sul gruppo sociale\n"+

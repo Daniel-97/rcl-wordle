@@ -42,21 +42,31 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	private final static String STUB_NAME = "WORDLE-SERVER";
 	private final static Gson gson = new GsonBuilder().create();
 	private final static int BUFFER_SIZE = 1024;
-	private final int tcpPort;
-	private final int rmiPort;
+	private static int TCP_PORT;
+	private static int RMI_PORT;
 	// Services
 	private final UserService userService;
 	private final WordleGameService wordleGameService;
 
+	private static final String TITLE =
+			" __        _____  ____  ____  _     _____   ____  _____ ______     _______ ____  \n" +
+			" \\ \\      / / _ \\|  _ \\|  _ \\| |   | ____| / ___|| ____|  _ \\ \\   / / ____|  _ \\ \n" +
+			"  \\ \\ /\\ / / | | | |_) | | | | |   |  _|   \\___ \\|  _| | |_) \\ \\ / /|  _| | |_) |\n" +
+			"   \\ V  V /| |_| |  _ <| |_| | |___| |___   ___) | |___|  _ < \\ V / | |___|  _ < \n" +
+			"    \\_/\\_/  \\___/|_| \\_\\____/|_____|_____| |____/|_____|_| \\_\\ \\_/  |_____|_| \\_\\";
+
 	public static void main(String[] argv) {
 
-		if (argv == null || argv.length == 0) {
-			System.out.println("Fornisci il path del file di configurazione come argomento!");
+		System.out.println(TITLE);
+
+		String configPath = System.getenv("WORDLE_CONFIG");
+		if (configPath == null) {
+			System.out.println("Variabile d'ambiente WORDLE_CONFIG non trovata!");
 			System.exit(-1);
 		}
 
 		// Inizializza il server
-		ServerMain server = new ServerMain(argv[0]);
+		ServerMain server = new ServerMain(configPath);
 
 		// Thread in ascolto di SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -84,8 +94,8 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig(configPath);
-		this.tcpPort = Integer.parseInt(properties.getProperty("app.tcp.port"));
-		this.rmiPort = Integer.parseInt(properties.getProperty("app.rmi.port"));
+		TCP_PORT = Integer.parseInt(properties.getProperty("app.tcp.port"));
+		RMI_PORT = Integer.parseInt(properties.getProperty("app.rmi.port"));
 
 		// Inizializzo i servizi
 		this.userService = new UserService();
@@ -96,12 +106,12 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			// Esportazione oggetto
 			ServerRMI stub = (ServerRMI) UnicastRemoteObject.exportObject(this, 0);
 			// Creazione registry
-			LocateRegistry.createRegistry(this.rmiPort);
-			Registry registry = LocateRegistry.getRegistry(this.rmiPort);
+			LocateRegistry.createRegistry(RMI_PORT);
+			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
 			// Pubblicazione dello stub nel registry
 			registry.bind(ServerMain.STUB_NAME, stub);
 
-			System.out.println("RMI server in ascolto sulla porta " + this.rmiPort);
+			System.out.println("RMI server in ascolto sulla porta " + RMI_PORT);
 		} catch (AlreadyBoundException e){
 			System.out.println("RMI already bind exception: " + e.getMessage());
 			System.exit(-1);
@@ -126,7 +136,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			//Creo il channel
 			socketChannel = ServerSocketChannel.open();
 			socket = socketChannel.socket();
-			socket.bind(new InetSocketAddress(this.tcpPort));
+			socket.bind(new InetSocketAddress(TCP_PORT));
 			//Configuro il channel in modo da essere non bloccante
 			socketChannel.configureBlocking(false);
 
