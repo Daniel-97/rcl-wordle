@@ -18,18 +18,19 @@ public class ConfigReader {
 			System.exit(-1);
 		}
 
-		System.out.println("Tentativo di leggere file di configurazione " + configPath + " in corso...");
-
 		Properties properties = new Properties();
 		try {
 			FileInputStream file = new FileInputStream(configPath);
 			properties.load(file);
 		} catch (FileNotFoundException e) {
 			System.out.println("File di configurazione " + configPath + " non trovato");
+			System.exit(-1);
 		} catch (IOException e) {
 			System.out.println("Errore caricamento file di configurazione");
+			System.exit(-1);
 		}
 
+		System.out.println("File di configurazione " + configPath + " letto correttamente!");
 		return properties;
 	}
 

@@ -13,6 +13,7 @@ import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -69,6 +70,7 @@ public class ClientMain {
 
 	public void run() {
 
+		CLIHelper.cls();
 		while (true) {
 
 			switch (mode) {
@@ -92,14 +94,15 @@ public class ClientMain {
 
 		GuestCommand cmd = GuestCommand.fromCommand(input[0]);
 		if (cmd == null) {
-			System.out.println("Comando non valido!");
+			System.out.println("Comando non trovato!");
+			CLIHelper.cls();
 			return;
 		}
 
 		// Eseguo un comando
 		switch (cmd) {
 			case HELP:
-				CLIHelper.entryMenu();
+				CLIHelper.cls();
 				break;
 
 			case QUIT:
@@ -107,9 +110,8 @@ public class ClientMain {
 					socket.close();
 				} catch (IOException e) {
 					System.out.println("Errore chiusura socket con server");
-				} finally {
-					System.exit(0);
 				}
+				System.exit(0);
 				break;
 
 			case LOGIN:
@@ -118,6 +120,7 @@ public class ClientMain {
 				} else {
 					this.login(input[1], input[2]);
 				}
+				CLIHelper.cls();
 				break;
 
 			case REGISTER:
@@ -126,10 +129,10 @@ public class ClientMain {
 				} else {
 					this.register(input[1], input[2]);
 				}
+				CLIHelper.cls();
 				break;
 		}
 
-		//CLIHelper.cls();
 	}
 
 	private void userMode() {
@@ -139,12 +142,14 @@ public class ClientMain {
 
 		UserCommand cmd = UserCommand.fromCommand(input[0]);
 		if (cmd == null) {
-			System.out.println("Invalid command!");
+			System.out.println("Comando non trovato!");
+			CLIHelper.cls();
 			return;
 		}
 
 		switch (cmd) {
 			case HELP: {
+				CLIHelper.cls();
 				CLIHelper.mainMenu();
 				break;
 			}
@@ -156,6 +161,7 @@ public class ClientMain {
 
 			case PLAY: {
 				this.playWORDLE();
+				CLIHelper.cls();
 				break;
 			}
 
@@ -165,19 +171,18 @@ public class ClientMain {
 				} else {
 					this.sendWord(input[1]);
 				}
-
+				CLIHelper.cls();
 				break;
 
 			case STAT:
 				this.sendMeStatistics();
+				CLIHelper.cls();
 				break;
 
 			case SHARE:
+				System.out.println("Condivido le statistiche con gli altri utenti");
+				CLIHelper.cls();
 				break;
-
-			default:
-				System.out.println("Comando sconosciuto");
-
 		}
 	}
 
@@ -326,9 +331,10 @@ public class ClientMain {
 			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
 			Remote RemoteObject = registry.lookup(STUB_NAME);
 			serverRMI = (ServerRMI) RemoteObject;
+			System.out.println("Lookup registro RMI server riuscito! Stub: " + STUB_NAME);
 
 		} catch (RemoteException e) {
-			System.out.println("Client remote exception: " + e.getMessage());
+			System.out.println("Errore connessione RMI, controlla che il server sia online: " + e.getMessage());
 			System.exit(-1);
 
 		} catch (NotBoundException e) {
@@ -337,16 +343,14 @@ public class ClientMain {
 		}
 
 		// Inizializza connessione TCP
-		System.out.println("Tentativo di connessione con il server "+SERVER_IP+":"+TCP_PORT);
 		try {
 			socket = SocketChannel.open();
 			socket.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
+			System.out.println("Connessione TCP con il server riuscita! "+SERVER_IP+":"+TCP_PORT);
 		} catch (IOException e) {
-			System.out.println("Errore durante connessione tcp al server " + SERVER_IP + ":"+TCP_PORT);
+			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
 			System.exit(-1);
 		}
-
-		System.out.println("Connesso con il server "+SERVER_IP+":"+TCP_PORT);
 
 	}
 
