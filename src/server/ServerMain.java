@@ -86,6 +86,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.tcp.port"));
 			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
 		} catch (NoSuchFieldException e) {
+			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);
 		} catch (NumberFormatException e) {
 			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
