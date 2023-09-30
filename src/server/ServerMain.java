@@ -72,7 +72,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 			}
 		});
 
-		// Fa partire il server
+		// Server start
 		server.start();
 	}
 
@@ -82,8 +82,15 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig();
-		TCP_PORT = Integer.parseInt(properties.getProperty("app.tcp.port"));
-		RMI_PORT = Integer.parseInt(properties.getProperty("app.rmi.port"));
+		try {
+			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.tcp.port"));
+			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
+		} catch (NoSuchFieldException e) {
+			System.exit(-1);
+		} catch (NumberFormatException e) {
+			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
+			System.exit(-1);
+		}
 
 		// Inizializzo i servizi
 		this.userService = new UserService();

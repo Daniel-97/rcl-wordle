@@ -9,7 +9,6 @@ public class ConfigReader {
 
 	/**
 	 * Legge il file di configurazione dal path specificato nella variabile di ambiente WORDLE_CONFIG
-	 * @param path
 	 */
 	public static Properties readConfig() {
 
@@ -33,4 +32,20 @@ public class ConfigReader {
 
 		return properties;
 	}
+
+	/**
+	 * Legge una configurazione dall'oggetto properties
+	 * @param propertyName
+	 * @return
+	 */
+	public static String readProperty(Properties properties, String propertyName) throws NoSuchFieldException {
+		String property = properties.getProperty(propertyName);
+		if(property == null || property.length() == 0) {
+			throw new NoSuchFieldException(propertyName);
+		} else {
+			return property;
+		}
+	}
+
+
 }

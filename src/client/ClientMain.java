@@ -308,9 +308,16 @@ public class ClientMain {
 
 		// Leggo file di configurazione
 		Properties properties = ConfigReader.readConfig();
-		RMI_PORT = Integer.parseInt(properties.getProperty("app.rmi.port"));
-		TCP_PORT = Integer.parseInt(properties.getProperty("app.tcp.port"));
-		SERVER_IP = properties.getProperty("app.tcp.ip");
+		try {
+			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.rmi.port"));
+			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.port"));
+			SERVER_IP = ConfigReader.readProperty(properties, "app.tcp.ip");
+		} catch (NoSuchFieldException e) {
+			System.exit(-1);
+		} catch (NumberFormatException e) {
+			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
+			System.exit(-1);
+		}
 
 		// Inizializza RMI
 		try {
