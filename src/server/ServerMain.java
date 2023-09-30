@@ -59,14 +59,8 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 		System.out.println(TITLE);
 
-		String configPath = System.getenv("WORDLE_CONFIG");
-		if (configPath == null) {
-			System.out.println("Variabile d'ambiente WORDLE_CONFIG non trovata!");
-			System.exit(-1);
-		}
-
 		// Inizializza il server
-		ServerMain server = new ServerMain(configPath);
+		ServerMain server = new ServerMain();
 
 		// Thread in ascolto di SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -82,18 +76,12 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		server.start();
 	}
 
-	public ServerMain(String configPath) {
+	public ServerMain() {
 
 		System.out.println("Avvio Wordle game server...");
 
-		//TODO implementare wrapper per leggere le configurazione da un file data un interfaccia
-		if (configPath == null || configPath.isEmpty()) {
-			System.out.println("Nessun file di configurazione trovato, uso file di configurazione di default");
-			configPath = "./src/server/server.config";
-		}
-
 		// Leggi le configurazioni dal file
-		Properties properties = ConfigReader.readConfig(configPath);
+		Properties properties = ConfigReader.readConfig();
 		TCP_PORT = Integer.parseInt(properties.getProperty("app.tcp.port"));
 		RMI_PORT = Integer.parseInt(properties.getProperty("app.rmi.port"));
 

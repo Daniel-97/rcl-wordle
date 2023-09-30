@@ -49,14 +49,7 @@ public class ClientMain {
 	public static void main(String[] argv) {
 
 		System.out.println(TITLE);
-
-		String configPath = System.getenv("WORDLE_CONFIG");
-		if (configPath == null) {
-			System.out.println("Variabile d'ambiente WORDLE_CONFIG non trovata!");
-			System.exit(-1);
-		}
-
-		ClientMain client = new ClientMain(configPath);
+		ClientMain client = new ClientMain();
 
 		// Thread in ascolto di SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -309,12 +302,12 @@ public class ClientMain {
 		}
 	}
 
-	public ClientMain(String configPath) {
+	public ClientMain() {
 
 		System.out.println("Avvio Wordle game client...");
 
 		// Leggo file di configurazione
-		Properties properties = ConfigReader.readConfig(configPath);
+		Properties properties = ConfigReader.readConfig();
 		RMI_PORT = Integer.parseInt(properties.getProperty("app.rmi.port"));
 		TCP_PORT = Integer.parseInt(properties.getProperty("app.tcp.port"));
 		SERVER_IP = properties.getProperty("app.tcp.ip");
