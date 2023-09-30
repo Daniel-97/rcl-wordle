@@ -11,7 +11,7 @@ public class User {
 	private final String username;
 	private final String passwordHash; // password hahsata
 	private final Date registeredAt; // Data registrazione utente
-	private final List<WordleGame> games;
+	private List<WordleGame> games;
 	// Todo tenere aggiornate queste statistiche
 	private int lastStreak = 0;
 	private int bestStreak = 0;
@@ -21,7 +21,6 @@ public class User {
 		this.username = username;
 		this.passwordHash = this.hashPassword(password);
 		this.registeredAt = new Date();
-		this.games = new ArrayList<>();
 	}
 
 	/**
@@ -52,7 +51,7 @@ public class User {
 	 * @return
 	 */
 	public WordleGame getLastGame() {
-		if(this.games.size() == 0) {
+		if(this.games == null || this.games.size() == 0) {
 			return null;
 		}
 		return this.games.get(this.games.size() - 1);
@@ -63,7 +62,7 @@ public class User {
 	 * @param word
 	 * @return
 	 */
-	public WordleGame newGame(String word) {
+	public void newGame(String word) {
 		WordleGame lastGame = getLastGame();
 		WordleGame game = null;
 		if (lastGame == null) {
@@ -72,8 +71,11 @@ public class User {
 			game = new WordleGame(word, lastGame.id+1);
 		}
 
+		if (this.games == null) {
+			this.games = new ArrayList<>();
+		}
+
 		this.games.add(game);
-		return game;
 	}
 
 	/**

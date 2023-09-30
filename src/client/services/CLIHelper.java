@@ -18,7 +18,6 @@ public class CLIHelper {
 	private static final String MAIN_MENU =
 			"MAIN MENU:\n"+
 			"- :play			-> gioca a wordle\n"+
-			"- :sendword <word>	-> invia una guessed word al server\n" +
 			"- :share			-> condividi i risultati sul gruppo sociale\n"+
 			"- :stat			-> aggiorna le statistiche dell'uente\n"+
 			"- :logout			-> logout da Wordle\n"+
@@ -33,13 +32,19 @@ public class CLIHelper {
 		printCursor();
 	}
 
-	public static void cls() {
+
+	public static void pause() {
 		System.out.println("Premere un tasto per continuare...");
 		cliScanner.nextLine();
+		cls();
+	}
+
+	public static void cls() {
 		for (int i = 0; i<= 100; i++) {
 			System.out.println();
 		}
 	}
+
 	public static void printCursor() {
 		System.out.print("WORDLE-CLIENT>");
 	}

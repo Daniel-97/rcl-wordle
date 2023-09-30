@@ -13,7 +13,6 @@ import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -70,7 +69,7 @@ public class ClientMain {
 
 	public void run() {
 
-		CLIHelper.cls();
+		CLIHelper.pause();
 		while (true) {
 
 			switch (mode) {
@@ -81,6 +80,10 @@ public class ClientMain {
 
 				case USER_MODE:
 					this.userMode();
+					break;
+
+				case GAME_MODE:
+					this.gameMode();
 					break;
 			}
 
@@ -95,14 +98,14 @@ public class ClientMain {
 		GuestCommand cmd = GuestCommand.fromCommand(input[0]);
 		if (cmd == null) {
 			System.out.println("Comando non trovato!");
-			CLIHelper.cls();
+			CLIHelper.pause();
 			return;
 		}
 
 		// Eseguo un comando
 		switch (cmd) {
 			case HELP:
-				CLIHelper.cls();
+				CLIHelper.pause();
 				break;
 
 			case QUIT:
@@ -120,7 +123,7 @@ public class ClientMain {
 				} else {
 					this.login(input[1], input[2]);
 				}
-				CLIHelper.cls();
+				CLIHelper.pause();
 				break;
 
 			case REGISTER:
@@ -129,7 +132,7 @@ public class ClientMain {
 				} else {
 					this.register(input[1], input[2]);
 				}
-				CLIHelper.cls();
+				CLIHelper.pause();
 				break;
 		}
 
@@ -143,13 +146,13 @@ public class ClientMain {
 		UserCommand cmd = UserCommand.fromCommand(input[0]);
 		if (cmd == null) {
 			System.out.println("Comando non trovato!");
-			CLIHelper.cls();
+			CLIHelper.pause();
 			return;
 		}
 
 		switch (cmd) {
 			case HELP: {
-				CLIHelper.cls();
+				CLIHelper.pause();
 				CLIHelper.mainMenu();
 				break;
 			}
@@ -160,11 +163,16 @@ public class ClientMain {
 			}
 
 			case PLAY: {
+				// Prima di iniziare il gioco devo chiedere al server se l utente puo iniziare o meno
 				this.playWORDLE();
-				CLIHelper.cls();
+				if(canPlayWord) {
+					this.mode = ClientMode.GAME_MODE;
+				}
+				CLIHelper.pause();
 				break;
 			}
 
+			/*
 			case SEND_WORD:
 				if (input.length < 2) {
 					System.out.println("Comando non valido!");
@@ -173,16 +181,33 @@ public class ClientMain {
 				}
 				CLIHelper.cls();
 				break;
-
+			*/
 			case STAT:
 				this.sendMeStatistics();
-				CLIHelper.cls();
+				CLIHelper.pause();
 				break;
 
 			case SHARE:
 				System.out.println("Condivido le statistiche con gli altri utenti");
-				CLIHelper.cls();
+				CLIHelper.pause();
 				break;
+		}
+	}
+
+	private void gameMode() {
+
+		System.out.println("GAME MODE! Digita in qualsiasi momento :exit per uscire dalla modalita' gioco!");
+		while (true) {
+			System.out.println("Inserisci una parola:");
+			String[] input = CLIHelper.parseInput();
+
+			if(input[0].equals(":exit")) {
+				this.mode = ClientMode.USER_MODE;
+				break;
+			}
+
+			CLIHelper.cls();
+			this.sendWord(input[0]);
 		}
 	}
 
@@ -261,6 +286,9 @@ public class ClientMain {
 		}
 	}
 
+	/**
+	 * Richiedo al server se l'utente puo' iniziare a giocare
+	 */
 	private void playWORDLE() {
 		TcpClientRequestDTO request = new TcpClientRequestDTO("playWORDLE", new String[]{username});
 		try {
