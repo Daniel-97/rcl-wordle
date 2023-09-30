@@ -249,16 +249,15 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 									response.code = ResponseCodeEnum.GAME_LOST;
 								} else {
 									game.won = word.equals(game.word);
-									game.attempts++;
+									LetterDTO[] guess = wordleGameService.hintWord(word);
+									System.out.println(Arrays.toString(guess));
+									game.addGuess(guess);
 									response.success = true;
 
 									if(game.won) {
 										response.code = ResponseCodeEnum.GAME_WON;
 									} else {
-										LetterDTO[] guess = wordleGameService.hintWord(word);
-										System.out.println(Arrays.toString(guess));
-										game.addGuess(guess);
-										response.userGuess = game.guess;
+										response.userGuess = game.getGuess();
 									}
 								}
 
@@ -331,6 +330,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {
 
 		String json = gson.toJson(request);
+		System.out.println(json);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socket.write(command);
 	}

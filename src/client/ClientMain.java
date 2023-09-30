@@ -13,8 +13,12 @@ import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +38,7 @@ public class ClientMain {
 	private static String STUB_NAME = "WORDLE-SERVER";
 	private static String SERVER_IP;
 	private static ServerRMI serverRMI;
-	private static SocketChannel socket;
+	private static SocketChannel socketChannel;
 	private static String username = null;
 	private ClientMode mode = ClientMode.GUEST_MODE;
 	private boolean canPlayWord = false;
@@ -57,7 +61,7 @@ public class ClientMain {
 			public void run() {
 				System.out.println("Shutdown Wordle client...");
 				try {
-					socket.close();
+					socketChannel.close();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -110,7 +114,7 @@ public class ClientMain {
 
 			case QUIT:
 				try {
-					socket.close();
+					socketChannel.close();
 				} catch (IOException e) {
 					System.out.println("Errore chiusura socket con server");
 				}
@@ -372,8 +376,8 @@ public class ClientMain {
 
 		// Inizializza connessione TCP
 		try {
-			socket = SocketChannel.open();
-			socket.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
+			socketChannel = SocketChannel.open();
+			socketChannel.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
 			System.out.println("Connessione TCP con il server riuscita! "+SERVER_IP+":"+TCP_PORT);
 		} catch (IOException e) {
 			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
@@ -385,25 +389,23 @@ public class ClientMain {
 	public static void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
 		String json = gson.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		socket.write(command);
+		socketChannel.write(command);
 	}
 
 	public static TcpServerResponseDTO readTcpMessage() throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-		StringBuilder json = new StringBuilder();
-		int bytesRead = 0;
 
-		while ((bytesRead = socket.read(buffer)) > 0) {
-			// Sposto il buffer il lettura
-			buffer.flip();
-			// Leggo i dati dal buffer
-			json.append(StandardCharsets.UTF_8.decode(buffer));
-			// Pulisco il buffer
-			buffer.clear();
-			// Sposto il buffer in scrittura
-			buffer.flip();
+		ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
+		StringBuilder json = new StringBuilder();
+		Socket socket = socketChannel.socket();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		String line;
+		// TODO sistemare non funziona
+		while((line = reader.readLine()) != null) {
+			json.append(line);
+			System.out.println(line);
 		}
 
+		System.out.println(json);
 		return gson.fromJson(json.toString(), TcpServerResponseDTO.class);
 	}
 }

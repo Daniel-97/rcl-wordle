@@ -2,6 +2,7 @@ package server.entity;
 
 import common.dto.LetterDTO;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -16,7 +17,7 @@ public class WordleGame {
 	public boolean finished;
 	public int attempts;
 	public String word;
-	public LetterDTO[][] guess;
+	private ArrayList<LetterDTO[]> guess;
 
 	public WordleGame(String word, int id) {
 		this.startedAt = new Date();
@@ -25,16 +26,19 @@ public class WordleGame {
 		this.attempts = 0;
 		this.word = word;
 		this.id = id;
+		this.guess = new ArrayList<>();
 	}
 
 	public int getRemainingAttempts() {
 		return MAX_ATTEMPTS - attempts;
 	}
 
-	public void addGuess(LetterDTO[] guess){
-		if (this.guess == null) {
-			this.guess = new LetterDTO[MAX_ATTEMPTS][];
-		}
-		this.guess[attempts++] = guess;
+	public void addGuess(LetterDTO[] guess) {
+		attempts++;
+		this.guess.add(guess);
+	}
+
+	public LetterDTO[][] getGuess() {
+		return this.guess.toArray(new LetterDTO[attempts][]);
 	}
 }
