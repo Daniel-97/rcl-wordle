@@ -256,6 +256,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 									if(game.won) {
 										response.code = ResponseCodeEnum.GAME_WON;
+										game.finished = true;
 									} else {
 										response.userGuess = game.getGuess();
 									}

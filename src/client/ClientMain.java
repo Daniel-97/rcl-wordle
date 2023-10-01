@@ -13,12 +13,8 @@ import server.exceptions.WordleException;
 import server.interfaces.ServerRMI;
 import common.utils.ConfigReader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -97,7 +93,7 @@ public class ClientMain {
 	private void guestMode() {
 
 		CLIHelper.entryMenu();
-		String[] input = CLIHelper.parseInput();
+		String[] input = CLIHelper.waitForInput();
 
 		GuestCommand cmd = GuestCommand.fromCommand(input[0]);
 		if (cmd == null) {
@@ -145,7 +141,7 @@ public class ClientMain {
 	private void userMode() {
 
 		CLIHelper.mainMenu();
-		String[] input = CLIHelper.parseInput();
+		String[] input = CLIHelper.waitForInput();
 
 		UserCommand cmd = UserCommand.fromCommand(input[0]);
 		if (cmd == null) {
@@ -176,16 +172,6 @@ public class ClientMain {
 				break;
 			}
 
-			/*
-			case SEND_WORD:
-				if (input.length < 2) {
-					System.out.println("Comando non valido!");
-				} else {
-					this.sendWord(input[1]);
-				}
-				CLIHelper.cls();
-				break;
-			*/
 			case STAT:
 				this.sendMeStatistics();
 				CLIHelper.pause();
@@ -203,7 +189,7 @@ public class ClientMain {
 		System.out.println("GAME MODE! Digita in qualsiasi momento :exit per uscire dalla modalita' gioco!");
 		while (true) {
 			System.out.println("Inserisci una parola:");
-			String[] input = CLIHelper.parseInput();
+			String[] input = CLIHelper.waitForInput();
 
 			if(input[0].equals(":exit")) {
 				this.mode = ClientMode.USER_MODE;
@@ -234,8 +220,9 @@ public class ClientMain {
 
 		if(response != null) {
 			if (response.code == ResponseCodeEnum.GAME_WON) {
-				System.out.println("Hai indovinato la parola!");
+				System.out.println("Complimenti, hai indovinato la parola!");
 				canPlayWord = false;
+				mode = ClientMode.USER_MODE;
 			} else if(response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
 			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {

@@ -25,11 +25,9 @@ public class CLIHelper {
 
 	public static void entryMenu() {
 		System.out.println(ENTRY_MENU);
-		printCursor();
 	}
 	public static void mainMenu() {
 		System.out.println(MAIN_MENU);
-		printCursor();
 	}
 
 
@@ -49,8 +47,14 @@ public class CLIHelper {
 		System.out.print("WORDLE-CLIENT>");
 	}
 
-	public static String[] parseInput() {
+	public static String[] waitForInput() {
+		printCursor();
 		String input = cliScanner.nextLine();
+		// Se l'input non è valido attendo nuovamente per l'input
+		if(input == null || input.isEmpty() || input.equals("\n")) {
+			waitForInput();
+		}
+
 		return input.split(" ", -1);
 	}
 
