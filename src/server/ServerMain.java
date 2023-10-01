@@ -330,25 +330,28 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {
 
 		String json = gson.toJson(request);
-		System.out.println(json);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
+		System.out.println(command);
 		socket.write(command);
 	}
 
-	public static TcpClientRequestDTO readTcpMessage(SocketChannel socket) throws IOException {
+	public static TcpClientRequestDTO readTcpMessage(SocketChannel socketChannel) throws IOException {
+
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
-		int bytesRead = 0;
+		int bytesRead;
 
-		while ((bytesRead = socket.read(buffer)) > 0) {
-			// Sposto il buffer il lettura
+		while ((bytesRead = socketChannel.read(buffer)) > 0) {
+			// Metto il buffer in modalità lettura
 			buffer.flip();
-			// Leggo i dati dal buffer
 			json.append(StandardCharsets.UTF_8.decode(buffer));
-			// Pulisco il buffer
-			buffer.clear();
-			// Sposto il buffer in scrittura
+			// Metto il buffer in modalità scrittura e lo pulisco
 			buffer.flip();
+			buffer.clear();
+
+			// Se i byte letti sono meno della dimensione del buffer allora termino
+			if(bytesRead < BUFFER_SIZE)
+				break;
 		}
 
 		return gson.fromJson(json.toString(), TcpClientRequestDTO.class);

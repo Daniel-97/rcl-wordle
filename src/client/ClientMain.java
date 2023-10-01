@@ -394,18 +394,23 @@ public class ClientMain {
 
 	public static TcpServerResponseDTO readTcpMessage() throws IOException {
 
-		ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
+		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
-		Socket socket = socketChannel.socket();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		String line;
-		// TODO sistemare non funziona
-		while((line = reader.readLine()) != null) {
-			json.append(line);
-			System.out.println(line);
+		int bytesRead;
+
+		while ((bytesRead = socketChannel.read(buffer)) > 0) {
+			// Metto il buffer in modalità lettura
+			buffer.flip();
+			json.append(StandardCharsets.UTF_8.decode(buffer));
+			// Metto il buffer in modalità scrittura e lo pulisco
+			buffer.flip();
+			buffer.clear();
+
+			// Se i byte letti sono meno della dimensione del buffer allora termino
+			if(bytesRead < BUFFER_SIZE)
+				break;
 		}
 
-		System.out.println(json);
 		return gson.fromJson(json.toString(), TcpServerResponseDTO.class);
 	}
 }
