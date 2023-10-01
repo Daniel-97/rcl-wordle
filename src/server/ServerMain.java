@@ -235,6 +235,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 								String word = clientMessage.arguments[1];
 								User user = this.userService.getUser(username);
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
+								WordleGame game = user.getLastGame();
 
 								if(word.length() > WordleGameService.WORD_LENGHT || word.length() < WordleGameService.WORD_LENGHT){
 									response.success = false;
@@ -243,7 +244,6 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 									break;
 								}
 
-								WordleGame game = user.getLastGame();
 								if(game.getRemainingAttempts() == 0) {
 									response.success = false;
 									response.code = ResponseCodeEnum.GAME_LOST;
