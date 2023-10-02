@@ -125,6 +125,18 @@ public class WordleGameService {
 
 	}
 
+	/**
+	 * Questa funzione controlla se la parola specificata e' presente nel dizionario delle parole
+	 * @param word
+	 * @return
+	 */
+	public boolean isWordInDict(String word) {
+		for (int i = 0; i < this.dictionary.size(); i++) {
+			if (this.dictionary.get(i).equals(word))
+				return true;
+		}
+		return false;
+	}
 	public String translateWord(String word) {
 		// TODO chiamare https://mymemory.translated.net/doc/spec.php
 		return word;

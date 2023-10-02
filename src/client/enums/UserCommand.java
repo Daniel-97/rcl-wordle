@@ -4,11 +4,14 @@ package client.enums;
  * Comandi utente loggato
  */
 public enum UserCommand {
+	LOGIN(":login"),
+	REGISTER(":register"),
 	PLAY(":play"),
 	SHARE(":share"),
 	STAT(":stat"),
 	LOGOUT(":logout"),
-	HELP(":help");
+	HELP(":help"),
+	QUIT(":quit");
 
 	private final String command;
 	UserCommand(String command) {

@@ -1,7 +1,6 @@
 package client;
 
 import client.enums.ClientMode;
-import client.enums.GuestCommand;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
 import com.google.gson.Gson;
@@ -38,6 +37,7 @@ public class ClientMain {
 	private static String username = null;
 	private ClientMode mode = ClientMode.GUEST_MODE;
 	private boolean canPlayWord = false;
+	private int remainingAttempts;
 
 	private static final String TITLE =
 			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
@@ -95,7 +95,7 @@ public class ClientMain {
 		CLIHelper.entryMenu();
 		String[] input = CLIHelper.waitForInput();
 
-		GuestCommand cmd = GuestCommand.fromCommand(input[0]);
+		UserCommand cmd = UserCommand.fromCommand(input[0]);
 		if (cmd == null) {
 			System.out.println("Comando non trovato!");
 			CLIHelper.pause();
@@ -109,11 +109,6 @@ public class ClientMain {
 				break;
 
 			case QUIT:
-				try {
-					socketChannel.close();
-				} catch (IOException e) {
-					System.out.println("Errore chiusura socket con server");
-				}
 				System.exit(0);
 				break;
 
@@ -181,6 +176,9 @@ public class ClientMain {
 				System.out.println("Condivido le statistiche con gli altri utenti");
 				CLIHelper.pause();
 				break;
+
+			case QUIT:
+				System.exit(0);
 		}
 	}
 
@@ -188,7 +186,7 @@ public class ClientMain {
 
 		System.out.println("GAME MODE! Digita in qualsiasi momento :exit per uscire dalla modalita' gioco!");
 		while (true) {
-			System.out.println("Inserisci una parola:");
+			System.out.println("Hai ancora " + remainingAttempts + " tentativi rimasti. Inserisci una parola:");
 			String[] input = CLIHelper.waitForInput();
 
 			if(input[0].equals(":exit")) {
@@ -228,12 +226,17 @@ public class ClientMain {
 			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
 				System.out.println("Parola non presente nel dizionario, tentativo non valido");
 			} else if(response.code == ResponseCodeEnum.GAME_LOST) {
-				System.out.println("Tentativi esauriti!");
+				System.out.println("Tentativi esauriti, hai perso!");
 				canPlayWord = false;
-			} else {
+			} else if(response.code == ResponseCodeEnum.GAME_ALREADY_PLAYED) {
+				System.out.println("Hai gia' giocato a questa parola!");
+			}
+			else {
 				CLIHelper.printServerWord(response.userGuess);
 			}
+			remainingAttempts = response.remainingAttempts;
 		}
+		CLIHelper.pause();
 
 	}
 
@@ -289,8 +292,9 @@ public class ClientMain {
 			if (response.success) {
 				System.out.println("Ok, puoi giocare a Wordle!");
 				canPlayWord = true;
+				remainingAttempts = response.remainingAttempts;
 			} else {
-				System.out.println("Errore, non puoi giocare con parola attuale");
+				System.out.println("Errore, non puoi giocare con parola attuale! " + response.code);
 			}
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante richiesta di playWORDLE");

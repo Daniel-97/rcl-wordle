@@ -216,12 +216,15 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 								WordleGame lastGame = user.getLastGame();
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
 
+								// TODO migliorare questo codice
 								// Aggiunto gioco al giocatore attuale
-								if(lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
+								if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
 									user.newGame(wordleGameService.getGameWord());
 									response.success = true;
+									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
 								} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
 									response.success = true;
+									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
 								} else {
 									response.success = false;
 								}
@@ -232,36 +235,60 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 
 							case "sendWord": {
 								String username = clientMessage.arguments[0];
-								String word = clientMessage.arguments[1];
+								String clientWord = clientMessage.arguments[1];
 								User user = this.userService.getUser(username);
+								WordleGame lastGame = user.getLastGame();
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
-								WordleGame game = user.getLastGame();
 
-								if(word.length() > WordleGameService.WORD_LENGHT || word.length() < WordleGameService.WORD_LENGHT){
+								// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
+								if (!lastGame.word.equals(wordleGameService.getGameWord())) {
+									response.success = false;
+									response.code = ResponseCodeEnum.NEED_TO_START_GAME;
+									sendTcpMessage(client, response);
+									break;
+								}
+
+								// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
+								else if (lastGame.finished) {
+									response.success = false;
+									response.code = ResponseCodeEnum.GAME_ALREADY_PLAYED;
+									sendTcpMessage(client, response);
+									break;
+								}
+
+								// Utente ha inviato parola di lunghezza errata
+								else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT){
 									response.success = false;
 									response.code = ResponseCodeEnum.INVALID_WORD_LENGHT;
 									sendTcpMessage(client, response);
 									break;
 								}
 
-								if(game.getRemainingAttempts() == 0) {
+								// Utente ha mandato parola che non si trova nel dizionario
+								else if (!wordleGameService.isWordInDict(clientWord)) {
 									response.success = false;
-									response.code = ResponseCodeEnum.GAME_LOST;
-								} else {
-									game.won = word.equals(game.word);
-									LetterDTO[] guess = wordleGameService.hintWord(word);
-									System.out.println(Arrays.toString(guess));
-									game.addGuess(guess);
-									response.success = true;
-
-									if(game.won) {
-										response.code = ResponseCodeEnum.GAME_WON;
-										game.finished = true;
-									} else {
-										response.userGuess = game.getGuess();
-									}
+									response.code = ResponseCodeEnum.WORD_NOT_IN_DICTIONARY;
+									sendTcpMessage(client, response);
+									break;
 								}
 
+								// Aggiungo il tentativo effettuato dall'utente
+								LetterDTO[] guess = wordleGameService.hintWord(clientWord);
+								lastGame.addGuess(guess);
+								System.out.println("Aggiunto guess per parola " + clientWord + " dell'utente " + username);
+								// Aggiorno lo status del gioco
+								lastGame.won = clientWord.equals(lastGame.word);
+								lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
+
+								// Se la partita e' finita lo comunico al client
+								if(lastGame.finished) {
+									response.success = true;
+									response.code = lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST;
+									sendTcpMessage(client, response);
+								}
+
+								response.success = true;
+								response.userGuess = lastGame.getGuess();
 								sendTcpMessage(client, response);
 								break;
 							}
