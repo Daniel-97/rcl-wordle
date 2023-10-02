@@ -267,7 +267,8 @@ public class ClientMain {
 				System.out.println("Nome utente o password errati!");
 			}
 		} catch (IOException e) {
-			System.out.println("Errore imprevisto durante il login!");
+			System.out.println("Errore imprevisto durante il login! " + e.getMessage());
+			System.exit(-1);
 		}
 	}
 
@@ -309,7 +310,8 @@ public class ClientMain {
 				System.out.println("Errore, non puoi giocare con parola attuale! " + response.code);
 			}
 		} catch (IOException e) {
-			System.out.println("Errore imprevisto durante richiesta di playWORDLE");
+			System.out.println("Errore imprevisto durante richiesta di playWORDLE! " + e.getMessage());
+			System.exit(-1);
 		}
 	}
 
@@ -323,6 +325,7 @@ public class ClientMain {
 			throw new RuntimeException(e);
 		} catch (WordleException e) {
 			System.out.println("Errore durante la registrazione! " + e.getMessage());
+			System.exit(-1);
 		}
 	}
 
@@ -335,10 +338,11 @@ public class ClientMain {
 			if(response != null && response.stat != null) {
 				CLIHelper.printUserStats(response.stat);
 			} else {
-				System.out.println("Statistiche mancanti!");
+				System.out.println("Nessuna statistica presente!");
 			}
 		} catch (IOException e) {
-			System.out.println("Errore richiesta statistiche");
+			System.out.println("Errore richiesta statistiche! "+e.getMessage());
+			System.exit(-1);
 		}
 	}
 
@@ -414,6 +418,9 @@ public class ClientMain {
 				break;
 		}
 
+		if (json.length() == 0) {
+			throw new IOException("Letti 0 bytes, il server potrebbe essere offline(?)");
+		}
 		return gson.fromJson(json.toString(), TcpServerResponseDTO.class);
 	}
 }
