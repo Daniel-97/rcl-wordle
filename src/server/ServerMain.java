@@ -10,8 +10,8 @@ import server.entity.User;
 import server.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
-import server.interfaces.NotifyEvent;
-import server.interfaces.ServerRMI;
+import common.interfaces.NotifyEventInterface;
+import common.interfaces.ServerRmiInterface;
 import server.services.UserService;
 import server.services.WordleGameService;
 import common.utils.ConfigReader;
@@ -32,16 +32,14 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
-public class ServerMain extends RemoteObject implements ServerRMI {
+public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	private final static String STUB_NAME = "WORDLE-SERVER";
 	private final static Gson gson = new GsonBuilder().create();
 	private final static int BUFFER_SIZE = 1024;
+	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
 	private static int TCP_PORT;
 	private static int RMI_PORT;
 	// Services
@@ -100,7 +98,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 		// Inizializza RMI server
 		try {
 			// Esportazione oggetto
-			ServerRMI stub = (ServerRMI) UnicastRemoteObject.exportObject(this, 0);
+			ServerRmiInterface stub = (ServerRmiInterface) UnicastRemoteObject.exportObject(this, 0);
 			// Creazione registry
 			LocateRegistry.createRegistry(RMI_PORT);
 			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
@@ -349,13 +347,21 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 	}
 
 	@Override
-	public void subscribeClientToEvent(String username, NotifyEvent event) throws RemoteException {
+	public synchronized void subscribeClientToEvent(String username, NotifyEventInterface eventInterface) throws RemoteException {
 
+		if (clients.get(username) != null) {
+			System.out.println("Utente " + username + " gia' registrato agli eventi asincroni!");
+			return;
+		}
+
+		// Aggiungo utente alla lista di utenti che vogliono essere notificati degli eventi asincroni
+		clients.put(username, eventInterface);
+		System.out.println("Utente " + username + " registrato per eventi asincroni!");
 	}
 
 	@Override
-	public void unsubscribeClientToEvent(String username, NotifyEvent event) throws RemoteException {
-
+	public void unsubscribeClientToEvent(String username) throws RemoteException {
+		clients.remove(username);
 	}
 
 	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {

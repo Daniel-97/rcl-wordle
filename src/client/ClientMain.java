@@ -9,8 +9,9 @@ import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import common.enums.ResponseCodeEnum;
+import common.interfaces.NotifyEventInterface;
 import server.exceptions.WordleException;
-import server.interfaces.ServerRMI;
+import common.interfaces.ServerRmiInterface;
 import common.utils.ConfigReader;
 
 import java.io.IOException;
@@ -23,9 +24,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RemoteObject;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
-public class ClientMain {
+public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private final static int BUFFER_SIZE = 1024;
 	private final static Gson gson = new GsonBuilder().create();
@@ -33,7 +36,8 @@ public class ClientMain {
 	private static int RMI_PORT;
 	private static String STUB_NAME = "WORDLE-SERVER";
 	private static String SERVER_IP;
-	private static ServerRMI serverRMI;
+	private static ServerRmiInterface serverRMI;
+	private static NotifyEventInterface stub;
 	private static SocketChannel socketChannel;
 	private static String username = null;
 	private ClientMode mode = ClientMode.GUEST_MODE;
@@ -67,6 +71,56 @@ public class ClientMain {
 		});
 
 		client.run();
+	}
+
+	public ClientMain() {
+
+		super();
+		System.out.println("Avvio Wordle game client...");
+
+		// Leggo file di configurazione
+		Properties properties = ConfigReader.readConfig();
+		try {
+			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.rmi.port"));
+			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.port"));
+			SERVER_IP = ConfigReader.readProperty(properties, "app.tcp.ip");
+		} catch (NoSuchFieldException e) {
+			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
+			System.exit(-1);
+		} catch (NumberFormatException e) {
+			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
+			System.exit(-1);
+		}
+
+		// RMI e callback
+		try {
+			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
+			Remote RemoteObject = registry.lookup(STUB_NAME);
+			serverRMI = (ServerRmiInterface) RemoteObject;
+			System.out.println("Lookup registro RMI server riuscito! Stub: " + STUB_NAME);
+
+			// Callback (esporta oggetto)
+			stub = (NotifyEventInterface) UnicastRemoteObject.exportObject(this, 0);
+
+		} catch (RemoteException e) {
+			System.out.println("Errore connessione RMI, controlla che il server sia online: " + e.getMessage());
+			System.exit(-1);
+
+		} catch (NotBoundException e) {
+			System.out.println("Client not bound exception" + e.getMessage());
+			System.exit(-1);
+		}
+
+		// Inizializza connessione TCP
+		try {
+			socketChannel = SocketChannel.open();
+			socketChannel.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
+			System.out.println("Connessione TCP con il server riuscita! "+SERVER_IP+":"+TCP_PORT);
+		} catch (IOException e) {
+			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
+			System.exit(-1);
+		}
+
 	}
 
 	public void run() {
@@ -263,6 +317,8 @@ public class ClientMain {
 				System.out.println("Login completato con successo");
 				mode = ClientMode.USER_MODE;
 				ClientMain.username = username;
+				// Registra l'utente per le callback dal server
+				serverRMI.subscribeClientToEvent(username, stub);
 			} else {
 				System.out.println("Nome utente o password errati!");
 			}
@@ -346,52 +402,6 @@ public class ClientMain {
 		}
 	}
 
-	public ClientMain() {
-
-		System.out.println("Avvio Wordle game client...");
-
-		// Leggo file di configurazione
-		Properties properties = ConfigReader.readConfig();
-		try {
-			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.rmi.port"));
-			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.port"));
-			SERVER_IP = ConfigReader.readProperty(properties, "app.tcp.ip");
-		} catch (NoSuchFieldException e) {
-			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
-			System.exit(-1);
-		} catch (NumberFormatException e) {
-			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
-			System.exit(-1);
-		}
-
-		// Inizializza RMI
-		try {
-			// TODO capire come specificare indirizzo ip remoto del server
-			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
-			Remote RemoteObject = registry.lookup(STUB_NAME);
-			serverRMI = (ServerRMI) RemoteObject;
-			System.out.println("Lookup registro RMI server riuscito! Stub: " + STUB_NAME);
-
-		} catch (RemoteException e) {
-			System.out.println("Errore connessione RMI, controlla che il server sia online: " + e.getMessage());
-			System.exit(-1);
-
-		} catch (NotBoundException e) {
-			System.out.println("Client not bound exception" + e.getMessage());
-			System.exit(-1);
-		}
-
-		// Inizializza connessione TCP
-		try {
-			socketChannel = SocketChannel.open();
-			socketChannel.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
-			System.out.println("Connessione TCP con il server riuscita! "+SERVER_IP+":"+TCP_PORT);
-		} catch (IOException e) {
-			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
-			System.exit(-1);
-		}
-
-	}
 
 	public static void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
 		String json = gson.toJson(request);
@@ -422,5 +432,10 @@ public class ClientMain {
 			throw new IOException("Letti 0 bytes, il server potrebbe essere offline(?)");
 		}
 		return gson.fromJson(json.toString(), TcpServerResponseDTO.class);
+	}
+
+	@Override
+	public void notifyUsersRank() throws RemoteException {
+		System.out.println("Classifica di gioco aggiornata!");
 	}
 }

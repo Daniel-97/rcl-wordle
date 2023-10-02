@@ -1,11 +1,11 @@
-package server.interfaces;
+package common.interfaces;
 
 import server.exceptions.WordleException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface ServerRMI extends Remote {
+public interface ServerRmiInterface extends Remote {
 
 	/**
 	 * Registra un nuovo utente con le credenziali specificate
@@ -23,15 +23,14 @@ public interface ServerRMI extends Remote {
 	 * @param event
 	 * @throws RemoteException
 	 */
-	void subscribeClientToEvent(String username, NotifyEvent event) throws RemoteException;
+	void subscribeClientToEvent(String username, NotifyEventInterface event) throws RemoteException;
 
 	/**
 	 * Disiscrive un particolare client dagli eventi del server
 	 * @param username
-	 * @param event
 	 * @throws RemoteException
 	 */
-	void unsubscribeClientToEvent(String username, NotifyEvent event) throws RemoteException;
+	void unsubscribeClientToEvent(String username) throws RemoteException;
 
 
 }
