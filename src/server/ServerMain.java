@@ -222,9 +222,11 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 									user.newGame(wordleGameService.getGameWord());
 									response.success = true;
 									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
+									response.userGuess = user.getLastGame().getGuess();
 								} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
 									response.success = true;
 									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
+									response.userGuess = user.getLastGame().getGuess();
 								} else {
 									response.success = false;
 								}
@@ -239,6 +241,7 @@ public class ServerMain extends RemoteObject implements ServerRMI {
 								User user = this.userService.getUser(username);
 								WordleGame lastGame = user.getLastGame();
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
+								response.remainingAttempts = lastGame.getRemainingAttempts();
 
 								// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 								if (!lastGame.word.equals(wordleGameService.getGameWord())) {

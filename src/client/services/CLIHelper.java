@@ -61,19 +61,20 @@ public class CLIHelper {
 
 	public static void printServerWord(LetterDTO[][] userGuess) {
 
+		System.out.println("--------------------");
 		for(LetterDTO[] guess: userGuess) {
 			if (guess == null) {
 				continue;
 			}
 
 			for (LetterDTO letter : guess) {
-				System.out.print(letter.letter + " ");
+				System.out.print(Character.toUpperCase(letter.letter) + " ");
 			}
 			System.out.println();
 			for (LetterDTO letter : guess) {
 				System.out.print(letter.guessStatus + " ");
 			}
-			System.out.println();
+			System.out.println("\n--------------------");
 		}
 
 	}

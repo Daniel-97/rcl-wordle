@@ -5,6 +5,7 @@ import client.enums.UserCommand;
 import client.services.CLIHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import common.enums.ResponseCodeEnum;
@@ -38,6 +39,7 @@ public class ClientMain {
 	private ClientMode mode = ClientMode.GUEST_MODE;
 	private boolean canPlayWord = false;
 	private int remainingAttempts;
+	private LetterDTO[][] guesses;
 
 	private static final String TITLE =
 			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
@@ -185,7 +187,11 @@ public class ClientMain {
 	private void gameMode() {
 
 		System.out.println("GAME MODE! Digita in qualsiasi momento :exit per uscire dalla modalita' gioco!");
-		while (true) {
+		while (mode == ClientMode.GAME_MODE) {
+			if(guesses.length > 0) {
+				System.out.println("I tuoi tentativi:");
+				CLIHelper.printServerWord(guesses);
+			}
 			System.out.println("Hai ancora " + remainingAttempts + " tentativi rimasti. Inserisci una parola:");
 			String[] input = CLIHelper.waitForInput();
 
@@ -221,22 +227,27 @@ public class ClientMain {
 				System.out.println("Complimenti, hai indovinato la parola!");
 				canPlayWord = false;
 				mode = ClientMode.USER_MODE;
+				CLIHelper.pause();
 			} else if(response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
+				CLIHelper.pause();
 			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
 				System.out.println("Parola non presente nel dizionario, tentativo non valido");
+				CLIHelper.pause();
 			} else if(response.code == ResponseCodeEnum.GAME_LOST) {
 				System.out.println("Tentativi esauriti, hai perso!");
+				CLIHelper.pause();
 				canPlayWord = false;
 			} else if(response.code == ResponseCodeEnum.GAME_ALREADY_PLAYED) {
 				System.out.println("Hai gia' giocato a questa parola!");
+				CLIHelper.pause();
 			}
 			else {
-				CLIHelper.printServerWord(response.userGuess);
+				System.out.println("Parola non indovinata!");
+				guesses = response.userGuess;
 			}
 			remainingAttempts = response.remainingAttempts;
 		}
-		CLIHelper.pause();
 
 	}
 
@@ -293,6 +304,7 @@ public class ClientMain {
 				System.out.println("Ok, puoi giocare a Wordle!");
 				canPlayWord = true;
 				remainingAttempts = response.remainingAttempts;
+				guesses = response.userGuess;
 			} else {
 				System.out.println("Errore, non puoi giocare con parola attuale! " + response.code);
 			}
