@@ -1,8 +1,10 @@
 package client.services;
 
 import common.dto.LetterDTO;
+import common.dto.UserScore;
 import common.dto.UserStat;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class CLIHelper {
@@ -20,6 +22,7 @@ public class CLIHelper {
 			"- :play			-> gioca a wordle\n"+
 			"- :share			-> condividi i risultati sul gruppo sociale\n"+
 			"- :stat			-> aggiorna le statistiche dell'uente\n"+
+			"- :showrank		-> mostra la classifica di gioco\n" +
 			"- :logout			-> logout da Wordle\n"+
 			"- :quit			-> esci da Wordle\n"+
 			"- :help			-> aiuto\n";
@@ -85,6 +88,18 @@ public class CLIHelper {
 		System.out.println("- Percentuale partite vinte: "+stat.wonGamesPercentage+"%");
 		System.out.println("- Ultima serie partite vinte di fila: "+stat.lastStreakWonGames);
 		System.out.println("- Migliore serie partite vinte di fila: "+stat.bestStreakWonGames);
+	}
+
+	public static void printRank(List<UserScore> rank) {
+		if (rank == null || rank.size() == 0){
+			System.out.println("Nessuna classifica presente al momento!");
+			return;
+		}
+
+		System.out.println("CLASSIFICA GIOCATORI");
+		for(int i = 0; i < rank.size(); i++) {
+			System.out.println(i + ")	"+rank.get(i).username + "	" + rank.get(i).score);
+		}
 	}
 
 }

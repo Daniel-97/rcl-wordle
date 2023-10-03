@@ -121,7 +121,7 @@ public class User {
 	 * Calcola il punteggio di un utente
 	 * @return
 	 */
-	public int getRank() {
+	public int getScore() {
 		int wonGames = this.wonGames();
 		int avgAttempts = this.averageAttempts();
 

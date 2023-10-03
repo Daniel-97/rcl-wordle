@@ -1,6 +1,7 @@
 package server.services;
 
 import common.dto.LetterDTO;
+import common.dto.UserScore;
 import server.entity.WordleGameState;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,6 +20,7 @@ public class WordleGameService {
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	//Dizionario delle parole, non deve essere salvato sul json
 	private final ArrayList<String> dictionary = new ArrayList<>();
+	private final ArrayList<UserScore> ranking = new ArrayList<>();
 
 	// Services
 	private final UserService userService;

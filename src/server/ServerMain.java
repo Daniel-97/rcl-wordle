@@ -356,12 +356,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Aggiungo utente alla lista di utenti che vogliono essere notificati degli eventi asincroni
 		clients.put(username, eventInterface);
-		System.out.println("Utente " + username + " registrato per eventi asincroni!");
+		System.out.println("Utente " + username + " iscritto per eventi asincroni!");
 	}
 
 	@Override
 	public void unsubscribeClientToEvent(String username) throws RemoteException {
 		clients.remove(username);
+		System.out.println("Utente " + username + " disiscritto da eventi asincroni!");
 	}
 
 	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {

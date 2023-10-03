@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
+import common.dto.UserScore;
 import common.enums.ResponseCodeEnum;
 import common.interfaces.NotifyEventInterface;
 import server.exceptions.WordleException;
@@ -26,6 +27,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.Properties;
 
 public class ClientMain extends RemoteObject implements NotifyEventInterface {
@@ -44,6 +46,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private boolean canPlayWord = false;
 	private int remainingAttempts;
 	private LetterDTO[][] guesses;
+	private static List<UserScore> rank;
 
 	private static final String TITLE =
 			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
@@ -233,6 +236,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				CLIHelper.pause();
 				break;
 
+			case RANK:
+				CLIHelper.printRank(rank);
+				CLIHelper.pause();
+				break;
+
 			case QUIT:
 				System.exit(0);
 		}
@@ -317,7 +325,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				System.out.println("Login completato con successo");
 				mode = ClientMode.USER_MODE;
 				ClientMain.username = username;
-				// Registra l'utente per le callback dal server
+				// Iscrive l'utente alle callback dal server
 				serverRMI.subscribeClientToEvent(username, stub);
 			} else {
 				System.out.println("Nome utente o password errati!");
@@ -340,6 +348,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				System.out.println("Logout completato con successo");
 				this.username = null;
 				this.mode = ClientMode.GUEST_MODE;
+				// Disiscrive l'utente alle callback dal server
+				serverRMI.unsubscribeClientToEvent(username);
 			} else {
 				System.out.println("Errore durante il logut!");
 			}
@@ -435,7 +445,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	}
 
 	@Override
-	public void notifyUsersRank() throws RemoteException {
+	public void notifyUsersRank(List<UserScore> newRank) throws RemoteException {
 		System.out.println("Classifica di gioco aggiornata!");
+		rank = newRank;
 	}
 }
