@@ -446,7 +446,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	@Override
 	public void notifyUsersRank(List<UserScore> newRank) throws RemoteException {
-		System.out.println("Classifica di gioco aggiornata!");
+		System.out.println("Ricevuta classifica di gioco dal server!");
 		rank = newRank;
 	}
 }

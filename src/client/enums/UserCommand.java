@@ -9,7 +9,7 @@ public enum UserCommand {
 	PLAY(":play"),
 	SHARE(":share"),
 	STAT(":stat"),
-	RANK(":showrank"),
+	RANK(":rank"),
 	LOGOUT(":logout"),
 	HELP(":help"),
 	QUIT(":quit");

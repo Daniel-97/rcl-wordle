@@ -22,7 +22,7 @@ public class CLIHelper {
 			"- :play			-> gioca a wordle\n"+
 			"- :share			-> condividi i risultati sul gruppo sociale\n"+
 			"- :stat			-> aggiorna le statistiche dell'uente\n"+
-			"- :showrank		-> mostra la classifica di gioco\n" +
+			"- :rank			-> mostra la classifica di gioco\n" +
 			"- :logout			-> logout da Wordle\n"+
 			"- :quit			-> esci da Wordle\n"+
 			"- :help			-> aiuto\n";

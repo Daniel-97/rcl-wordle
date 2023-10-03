@@ -2,10 +2,7 @@ package server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import common.dto.LetterDTO;
-import common.dto.TcpClientRequestDTO;
-import common.dto.TcpServerResponseDTO;
-import common.dto.UserStat;
+import common.dto.*;
 import server.entity.User;
 import server.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
@@ -286,6 +283,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 									response.success = true;
 									response.code = lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST;
 									sendTcpMessage(client, response);
+									// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
+									notifyRankToClient(userService.getRank());
 								}
 
 								response.success = true;
@@ -349,18 +348,20 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	@Override
 	public synchronized void subscribeClientToEvent(String username, NotifyEventInterface eventInterface) throws RemoteException {
 
+		// Se utente gia' presente elimino vecchia subscription
 		if (clients.get(username) != null) {
-			System.out.println("Utente " + username + " gia' registrato agli eventi asincroni!");
-			return;
+			clients.remove(username);
 		}
 
 		// Aggiungo utente alla lista di utenti che vogliono essere notificati degli eventi asincroni
 		clients.put(username, eventInterface);
 		System.out.println("Utente " + username + " iscritto per eventi asincroni!");
+		// Invio al client la classifica attuale
+		eventInterface.notifyUsersRank(this.userService.getRank());
 	}
 
 	@Override
-	public void unsubscribeClientToEvent(String username) throws RemoteException {
+	public synchronized void unsubscribeClientToEvent(String username) throws RemoteException {
 		clients.remove(username);
 		System.out.println("Utente " + username + " disiscritto da eventi asincroni!");
 	}
@@ -393,5 +394,18 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		}
 
 		return gson.fromJson(json.toString(), TcpClientRequestDTO.class);
+	}
+
+	/**
+	 * Notifica la classifica attuale di gioco ai vari client che si sono iscritti
+	 */
+	private static void notifyRankToClient(List<UserScore> rank) {
+		for(Map.Entry<String, NotifyEventInterface> client: clients.entrySet()) {
+			try {
+				client.getValue().notifyUsersRank(rank);
+			} catch (RemoteException e) {
+				System.out.println("Errore durante invio aggiornamento classifica a utente "+client.getKey()+". " + e.getMessage());
+			}
+		}
 	}
 }
