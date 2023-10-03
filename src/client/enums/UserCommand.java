@@ -10,6 +10,7 @@ public enum UserCommand {
 	SHARE(":share"),
 	STAT(":stat"),
 	RANK(":rank"),
+	SHARING(":sharing"),
 	LOGOUT(":logout"),
 	HELP(":help"),
 	QUIT(":quit");

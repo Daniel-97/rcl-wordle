@@ -19,7 +19,7 @@ public class User {
 
 	public User(String username, String password) {
 		this.username = username;
-		this.passwordHash = this.hashPassword(password);
+		this.passwordHash = hashPassword(password);
 		this.registeredAt = new Date();
 	}
 
@@ -28,7 +28,7 @@ public class User {
 	 * @param password
 	 * @return
 	 */
-	private String hashPassword(String password) {
+	private static String hashPassword(String password) {
 		//TODO implement the password hash with modern algotithm
 		return password;
 	}
@@ -39,7 +39,7 @@ public class User {
 	 * @return
 	 */
 	public boolean verifyPassword(String password) {
-		return this.passwordHash.equals(this.hashPassword(password));
+		return this.passwordHash.equals(hashPassword(password));
 	}
 
 	public String getUsername() {

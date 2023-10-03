@@ -236,6 +236,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				CLIHelper.pause();
 				break;
 
+			case SHARING:
+				// TODO implementare. Da mostrare le partite condivise dagli altri giocatori
+				break;
+
 			case RANK:
 				CLIHelper.printRank(rank);
 				CLIHelper.pause();
