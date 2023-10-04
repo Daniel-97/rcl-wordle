@@ -1,4 +1,4 @@
-package server.entity;
+package common.entity;
 
 import common.dto.LetterDTO;
 
@@ -11,14 +11,15 @@ import java.util.Date;
 public class WordleGame {
 
 	private static int MAX_ATTEMPTS = 12;
-	public final Date startedAt;
-	public final int id; // Id univoco del gioco relativo all utente
+	public Date startedAt;
+	public int id; // Id univoco del gioco relativo all utente
 	public boolean won;
 	public boolean finished;
 	public int attempts;
 	public String word;
 	private ArrayList<LetterDTO[]> guess;
 
+	public WordleGame(){}
 	public WordleGame(String word, int id) {
 		this.startedAt = new Date();
 		this.won = false;

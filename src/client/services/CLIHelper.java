@@ -3,9 +3,11 @@ package client.services;
 import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
+import common.entity.WordleGame;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.StreamSupport;
 
 public class CLIHelper {
 
@@ -100,6 +102,20 @@ public class CLIHelper {
 		System.out.println("CLASSIFICA GIOCATORI");
 		for(int i = 0; i < rank.size(); i++) {
 			System.out.println(i + ")	"+rank.get(i).username + "	" + rank.get(i).score);
+		}
+	}
+
+	/**
+	 * Mostra a video tutte le partite giocate dai vari gioactori
+	 * @param games
+	 */
+	public static void printUsersGames(List<WordleGame> games) {
+		System.out.println("Elenco partite condivise dagli altri giocatori:");
+		for(int i = 0; i < games.size(); i++) {
+			WordleGame game = games.get(i);
+			System.out.println(i + ") <username> alle " + game.startedAt.toString());
+			System.out.println("Vittoria: "+(game.won?"si":"no")+", Tentativi: " + game.attempts);
+			System.out.println();
 		}
 	}
 

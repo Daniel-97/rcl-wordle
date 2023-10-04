@@ -10,6 +10,7 @@ import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import common.dto.UserScore;
+import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
 import common.interfaces.NotifyEventInterface;
 import server.exceptions.WordleException;
@@ -30,6 +31,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -54,6 +56,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private int remainingAttempts;
 	private LetterDTO[][] guesses;
 	private static List<UserScore> rank;
+	private static List<WordleGame> sharedGames = new ArrayList<>();
 
 	private static final String TITLE =
 			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
@@ -133,7 +136,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			System.exit(-1);
 		}
 
-		// Inizzializza multicast
+		// Inizializza multicast socket
 		try {
 			multicastSocket = new MulticastSocket(MULTICAST_PORT);
 			InetAddress multicastAddress = InetAddress.getByName(MULTICAST_IP);
@@ -145,7 +148,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 
 		// Creo e avvio il thread che rimane in ascolto dei pacchetti multicast in arrivo
-		MulticastWorker multicastWorker = new MulticastWorker(multicastSocket);
+		MulticastWorker multicastWorker = new MulticastWorker(multicastSocket, sharedGames);
 		multicastThread = new Thread(multicastWorker);
 		multicastThread.start();
 
@@ -263,7 +266,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				break;
 
 			case SOCIAL:
-				// TODO implementare. Da mostrare le partite condivise dagli altri giocatori
+				CLIHelper.printUsersGames(sharedGames);
+				CLIHelper.pause();
 				break;
 
 			case RANK:

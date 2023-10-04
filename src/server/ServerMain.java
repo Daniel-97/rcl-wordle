@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import common.dto.*;
 import server.entity.User;
-import server.entity.WordleGame;
+import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import common.interfaces.NotifyEventInterface;
@@ -14,9 +14,7 @@ import server.services.WordleGameService;
 import common.utils.ConfigReader;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -41,6 +39,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	private static int RMI_PORT;
 	private static String MULTICAST_IP;
 	private static int MULTICAST_PORT;
+	private static MulticastSocket multicastSocket;
 	// Services
 	private final UserService userService;
 	private final WordleGameService wordleGameService;
@@ -116,6 +115,14 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		}
 
 		// Inizializza TCP server
+
+		// Inizializza multicast socket
+		try {
+			multicastSocket = new MulticastSocket(MULTICAST_PORT);
+		} catch (IOException e) {
+			System.out.println("Errore durante inizializzazione multicast! " + e.getMessage());
+			System.exit(-1);
+		}
 
 	}
 
@@ -316,7 +323,12 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 								// Invio ultima partita dell'utente su gruppo multicast
 								System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
-								//TODO implementare
+								// Invio solamente le informazioni che mi interessano non tutto l'oggetto
+								WordleGame game = new WordleGame();
+								game.attempts = lastGame.attempts;
+								game.startedAt = lastGame.startedAt;
+								String json = gson.toJson(game);
+								sendMulticastMessage(json);
 								sendTcpMessage(client, new TcpServerResponseDTO(true));
 								break;
 							}
@@ -409,6 +421,18 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		}
 
 		return gson.fromJson(json.toString(), TcpClientRequestDTO.class);
+	}
+
+	/**
+	 * Invia il messaggio specificato sul gruppo di multicast
+	 * @param message
+	 */
+	public static void sendMulticastMessage(String message) throws IOException {
+
+		byte[] data = message.getBytes(StandardCharsets.UTF_8);
+		InetAddress multicastAddress = InetAddress.getByName(MULTICAST_IP);
+		DatagramPacket packet = new DatagramPacket(data, data.length, multicastAddress, MULTICAST_PORT);
+		multicastSocket.send(packet);
 	}
 
 	/**

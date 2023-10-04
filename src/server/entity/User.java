@@ -1,6 +1,7 @@
 package server.entity;
 
 import common.dto.UserStat;
+import common.entity.WordleGame;
 
 import java.util.ArrayList;
 import java.util.Date;
