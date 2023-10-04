@@ -9,12 +9,16 @@ public class TcpServerResponseDTO {
 	public ResponseCodeEnum code; //Codice di risposta
 	public UserStat stat;
 
+	public TcpServerResponseDTO(){}
+
+	public TcpServerResponseDTO(boolean success){
+		this.success = success;
+	}
+
 	public TcpServerResponseDTO(boolean success, ResponseCodeEnum code) {
 		this.success = success;
 		this.code = code;
 	}
-
-	public TcpServerResponseDTO(){}
 
 	public TcpServerResponseDTO(LetterDTO[][] userGuess, int remainingAttempts) {
 		this.success = true;

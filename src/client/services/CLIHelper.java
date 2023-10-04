@@ -21,7 +21,8 @@ public class CLIHelper {
 			"MAIN MENU:\n"+
 			"- :play			-> gioca a wordle\n"+
 			"- :share			-> condividi i risultati sul gruppo sociale\n"+
-			"- :stat			-> aggiorna le statistiche dell'uente\n"+
+			"- :social			-> mostra i risultati pubblicati sul gruppo sociale\n"+
+			"- :stat			-> mostra le tue statistiche\n"+
 			"- :rank			-> mostra la classifica di gioco\n" +
 			"- :logout			-> logout da Wordle\n"+
 			"- :quit			-> esci da Wordle\n"+

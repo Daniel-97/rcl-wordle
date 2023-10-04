@@ -240,33 +240,25 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 								// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 								if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-									response.success = false;
-									response.code = ResponseCodeEnum.NEED_TO_START_GAME;
-									sendTcpMessage(client, response);
+									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.NEED_TO_START_GAME));
 									break;
 								}
 
 								// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
 								else if (lastGame.finished) {
-									response.success = false;
-									response.code = ResponseCodeEnum.GAME_ALREADY_PLAYED;
-									sendTcpMessage(client, response);
+									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.GAME_ALREADY_PLAYED));
 									break;
 								}
 
 								// Utente ha inviato parola di lunghezza errata
 								else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT){
-									response.success = false;
-									response.code = ResponseCodeEnum.INVALID_WORD_LENGHT;
-									sendTcpMessage(client, response);
+									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_WORD_LENGHT));
 									break;
 								}
 
 								// Utente ha mandato parola che non si trova nel dizionario
 								else if (!wordleGameService.isWordInDict(clientWord)) {
-									response.success = false;
-									response.code = ResponseCodeEnum.WORD_NOT_IN_DICTIONARY;
-									sendTcpMessage(client, response);
+									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.WORD_NOT_IN_DICTIONARY));
 									break;
 								}
 
@@ -280,11 +272,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 								// Se la partita e' finita lo comunico al client
 								if(lastGame.finished) {
-									response.success = true;
-									response.code = lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST;
-									sendTcpMessage(client, response);
+									sendTcpMessage(client, new TcpServerResponseDTO(true, lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST));
 									// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
 									notifyRankToClient(userService.getRank());
+									break;
 								}
 
 								response.success = true;
@@ -300,10 +291,31 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								UserStat stat = user.getStat();
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
 								response.stat = stat;
-
 								sendTcpMessage(client, response);
+								break;
 							}
 
+							case "share": {
+								String username = clientMessage.arguments[0];
+								User user = this.userService.getUser(username);
+
+								if (user == null) {
+									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_USERNAME));
+									break;
+								}
+
+								WordleGame lastGame = user.getLastGame();
+								if (lastGame == null) {
+									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.NO_GAME_TO_SHARE));
+									break;
+								}
+
+								// Invio ultima partita dell'utente su gruppo multicast
+								System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
+								//TODO implementare
+								sendTcpMessage(client, new TcpServerResponseDTO(true));
+								break;
+							}
 							default:
 								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
 						}
@@ -370,7 +382,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		String json = gson.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		System.out.println(command);
 		socket.write(command);
 	}
 

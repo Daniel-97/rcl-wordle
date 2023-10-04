@@ -233,10 +233,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case SHARE:
 				System.out.println("Condivido le statistiche con gli altri utenti");
+				this.share();
 				CLIHelper.pause();
 				break;
 
-			case SHARING:
+			case SOCIAL:
 				// TODO implementare. Da mostrare le partite condivise dagli altri giocatori
 				break;
 
@@ -412,6 +413,23 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 		} catch (IOException e) {
 			System.out.println("Errore richiesta statistiche! "+e.getMessage());
+			System.exit(-1);
+		}
+	}
+
+	/**
+	 * Richiede al server di condividere i risultati dell ultima partita del client sul gruppo sociale
+	 */
+	private void share() {
+		TcpClientRequestDTO request = new TcpClientRequestDTO("share", new String[]{username});
+		try {
+			sendTcpMessage(request);
+			TcpServerResponseDTO response = readTcpMessage();
+			if (response.success) {
+				System.out.println("Statistiche condivise con successo sul gruppo sociale!");
+			}
+		} catch (IOException e) {
+			System.out.println("Errore richiesta condivisione ultima partita! "+e.getMessage());
 			System.exit(-1);
 		}
 	}
