@@ -39,6 +39,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
 	private static int TCP_PORT;
 	private static int RMI_PORT;
+	private static String MULTICAST_IP;
+	private static int MULTICAST_PORT;
 	// Services
 	private final UserService userService;
 	private final WordleGameService wordleGameService;
@@ -80,6 +82,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		try {
 			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.tcp.port"));
 			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
+			MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
+			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
 		} catch (NoSuchFieldException e) {
 			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);

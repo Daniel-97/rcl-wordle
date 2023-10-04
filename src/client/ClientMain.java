@@ -3,6 +3,7 @@ package client;
 import client.enums.ClientMode;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
+import client.worker.MulticastWorker;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import common.dto.LetterDTO;
@@ -16,7 +17,9 @@ import common.interfaces.ServerRmiInterface;
 import common.utils.ConfigReader;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -34,13 +37,17 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private final static int BUFFER_SIZE = 1024;
 	private final static Gson gson = new GsonBuilder().create();
+	private static String STUB_NAME = "WORDLE-SERVER";
 	private static int TCP_PORT;
 	private static int RMI_PORT;
-	private static String STUB_NAME = "WORDLE-SERVER";
 	private static String SERVER_IP;
+	private static String MULTICAST_IP;
+	private static int MULTICAST_PORT;
 	private static ServerRmiInterface serverRMI;
 	private static NotifyEventInterface stub;
 	private static SocketChannel socketChannel;
+	private static MulticastSocket multicastSocket;
+	private static Thread multicastThread;
 	private static String username = null;
 	private ClientMode mode = ClientMode.GUEST_MODE;
 	private boolean canPlayWord = false;
@@ -87,6 +94,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.rmi.port"));
 			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.port"));
 			SERVER_IP = ConfigReader.readProperty(properties, "app.tcp.ip");
+			MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
+			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
 		} catch (NoSuchFieldException e) {
 			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);
@@ -123,6 +132,22 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
 			System.exit(-1);
 		}
+
+		// Inizzializza multicast
+		try {
+			multicastSocket = new MulticastSocket(MULTICAST_PORT);
+			InetAddress multicastAddress = InetAddress.getByName(MULTICAST_IP);
+			multicastSocket.joinGroup(multicastAddress);
+			System.out.println("Join a gruppo multicast " + MULTICAST_IP + " avvenuta con successo!");
+		} catch (IOException e) {
+			System.out.println("Errore durante inizializzazione multicast! " + e.getMessage());
+			System.exit(-1);
+		}
+
+		// Creo e avvio il thread che rimane in ascolto dei pacchetti multicast in arrivo
+		MulticastWorker multicastWorker = new MulticastWorker(multicastSocket);
+		multicastThread = new Thread(multicastWorker);
+		multicastThread.start();
 
 	}
 
