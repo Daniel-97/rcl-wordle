@@ -1,7 +1,5 @@
 package server;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import common.dto.*;
 import server.entity.User;
 import common.entity.WordleGame;
@@ -9,6 +7,7 @@ import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
+import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
 import common.utils.ConfigReader;
@@ -31,15 +30,17 @@ import java.util.*;
 
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
+	// Configuration
 	private final static String STUB_NAME = "WORDLE-SERVER";
-	private final static Gson gson = new GsonBuilder().create();
-	private final static int BUFFER_SIZE = 1024;
-	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
 	private static int TCP_PORT;
 	private static int RMI_PORT;
 	private static String MULTICAST_IP;
 	private static int MULTICAST_PORT;
+	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
+	private static Selector selector;
+	private static ServerSocketChannel socketChannel;
 	private static MulticastSocket multicastSocket;
+
 	// Services
 	private final UserService userService;
 	private final WordleGameService wordleGameService;
@@ -65,6 +66,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				System.out.println("Shutdown Wordle server...");
 				server.userService.saveUsers();
 				server.wordleGameService.saveState();
+				multicastSocket.close();
+				try {socketChannel.close();} catch (IOException ignore) {}
 			}
 		});
 
@@ -75,6 +78,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	public ServerMain() {
 
 		System.out.println("Avvio Wordle game server...");
+
+		// Inizializzo i servizi
+		this.userService = new UserService();
+		this.wordleGameService = new WordleGameService(userService);
 
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig();
@@ -90,10 +97,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
 			System.exit(-1);
 		}
-
-		// Inizializzo i servizi
-		this.userService = new UserService();
-		this.wordleGameService = new WordleGameService(userService);
 
 		// Inizializza RMI server
 		try {
@@ -115,6 +118,19 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		}
 
 		// Inizializza TCP server
+		try {
+			//Creo il channel
+			socketChannel = ServerSocketChannel.open();
+			ServerSocket socket = socketChannel.socket();
+			socket.bind(new InetSocketAddress(TCP_PORT));
+			//Configuro il channel in modo da essere non bloccante
+			socketChannel.configureBlocking(false);
+
+			selector = Selector.open();
+			socketChannel.register(selector, SelectionKey.OP_ACCEPT, null);
+		} catch (IOException e) {
+			System.exit(-1);
+		}
 
 		// Inizializza multicast socket
 		try {
@@ -127,27 +143,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	}
 
 	public void start() {
-
-		ServerSocket socket = null;
-		ServerSocketChannel socketChannel = null;
-		Selector selector = null;
-
-		//todo Spostare questa parte nel costruttore
-		try {
-
-			//Creo il channel
-			socketChannel = ServerSocketChannel.open();
-			socket = socketChannel.socket();
-			socket.bind(new InetSocketAddress(TCP_PORT));
-			//Configuro il channel in modo da essere non bloccante
-			socketChannel.configureBlocking(false);
-
-			selector = Selector.open();
-			//TODO gestire meglio le eccezioni gestite dalla register
-			SelectionKey key =  socketChannel.register(selector, SelectionKey.OP_ACCEPT, null);
-		} catch (IOException e) {
-			System.exit(-1);
-		}
 
 		// While in ascolto sui socket
 		while (true) {
@@ -327,7 +322,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								WordleGame game = new WordleGame();
 								game.attempts = lastGame.attempts;
 								game.startedAt = lastGame.startedAt;
-								sendMulticastMessage(gson.toJson(game));
+								sendMulticastMessage(JsonService.toJson(game));
 								sendTcpMessage(client, new TcpServerResponseDTO(true));
 								break;
 							}
@@ -395,13 +390,14 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {
 
-		String json = gson.toJson(request);
+		String json = JsonService.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socket.write(command);
 	}
 
 	public static TcpClientRequestDTO readTcpMessage(SocketChannel socketChannel) throws IOException {
 
+		final int BUFFER_SIZE = 1024;
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
 		int bytesRead;
@@ -419,7 +415,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				break;
 		}
 
-		return gson.fromJson(json.toString(), TcpClientRequestDTO.class);
+		return JsonService.fromJson(json.toString(), TcpClientRequestDTO.class);
 	}
 
 	/**

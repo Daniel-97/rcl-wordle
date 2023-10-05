@@ -16,7 +16,14 @@ public class JsonService {
 
 	private final static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-	// TODO migliorare i tipi di questa funzione e renderli generics
+	public static String toJson(Object src) {
+		return gson.toJson(src);
+	}
+
+	public static <T> T fromJson(String json, Class<T> type){
+		return gson.fromJson(json, type);
+	}
+
 	public static Object readJson(String path, Type type) throws IOException {
 
 		Path jsonPath = Paths.get(path);
