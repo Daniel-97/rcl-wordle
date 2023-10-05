@@ -278,7 +278,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 								// Se la partita e' finita lo comunico al client
 								if(lastGame.finished) {
-									sendTcpMessage(client, new TcpServerResponseDTO(true, lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST));
+									TcpServerResponseDTO res = new TcpServerResponseDTO();
+									res.success = true;
+									res.code = lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST;
+									res.wordTranslation = wordleGameService.getWordTranslation();
+									sendTcpMessage(client, res);
 									// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
 									notifyRankToClient(userService.getRank());
 									break;

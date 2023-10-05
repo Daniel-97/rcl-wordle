@@ -1,10 +1,13 @@
 package server.services;
 
 import common.dto.LetterDTO;
+import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
 import server.entity.WordleGameState;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,9 +21,9 @@ public class WordleGameService {
 	private static final String DICTIONARY_PATH = "src/dictionary/words.txt";
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
-	//Dizionario delle parole, non deve essere salvato sul json
-	private final ArrayList<String> dictionary = new ArrayList<>();
-	private final ArrayList<UserScore> ranking = new ArrayList<>();
+	private String wordTranslation; // Traduzione della parola in italiano
+	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
+	private final ArrayList<UserScore> ranking = new ArrayList<>(); // Contiene la classifica degli utenti
 
 	// Services
 	private final UserService userService;
@@ -29,8 +32,8 @@ public class WordleGameService {
 
 		System.out.println("Avvio servizio wordle game...");
 		this.userService = userService;
+
 		// Carico il dizionario delle parole in memoria
-		// TODO possibile ottimizzazione? Caricarare solo la parola che serve a runtime
 		Path dictionaryPath = Paths.get(DICTIONARY_PATH);
 		try (
 				BufferedReader br = new BufferedReader(Files.newBufferedReader(dictionaryPath));
@@ -63,7 +66,8 @@ public class WordleGameService {
 			this.extractWord();
 		}
 
-		System.out.println("Parola del giorno: " + this.state.actualWord);
+		wordTranslation = this.translateWord(this.state.actualWord);
+		System.out.println("Parola del giorno: " + this.state.actualWord + ", traduzione: "+wordTranslation);
 
 	}
 
@@ -139,8 +143,39 @@ public class WordleGameService {
 		}
 		return false;
 	}
-	public String translateWord(String word) {
-		// TODO chiamare https://mymemory.translated.net/doc/spec.php
-		return word;
+
+	/**
+	 * Questo metodo contatta le API di mymemory per tradurre una parola da inglese a italiano
+	 * @param word
+	 * @return
+	 */
+	private String translateWord(String word) {
+
+		try {
+			URL url = new URL("https://api.mymemory.translated.net/get?q="+word+"&langpair=en|it");
+			BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+			String inputLine;
+			StringBuilder json = new StringBuilder();
+
+			while ((inputLine = in.readLine()) != null) {
+				json.append(inputLine);
+			}
+
+			MyMemoryResponse response = JsonService.fromJson(json.toString(), MyMemoryResponse.class);
+			if(response != null && response.responseData != null && response.responseData.translatedText != null) {
+				return response.responseData.translatedText;
+			} else {
+				return null;
+			}
+
+		} catch (IOException e) {
+			System.out.println("Errore durante traduzione parola "+word+": "+e.getMessage());
+		}
+
+		return null;
+	}
+
+	public String getWordTranslation() {
+		return wordTranslation;
 	}
 }

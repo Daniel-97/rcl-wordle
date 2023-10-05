@@ -320,7 +320,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		if(response != null) {
 			if (response.code == ResponseCodeEnum.GAME_WON) {
-				System.out.println("Complimenti, hai indovinato la parola!");
+				System.out.println("Complimenti, hai indovinato la parola! Traduzione: " + response.wordTranslation);
 				canPlayWord = false;
 				mode = ClientMode.USER_MODE;
 				CLIHelper.pause();

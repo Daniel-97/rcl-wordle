@@ -9,6 +9,8 @@ public class TcpServerResponseDTO {
 	public ResponseCodeEnum code; //Codice di risposta
 	public UserStat stat;
 
+	public String wordTranslation;
+
 	public TcpServerResponseDTO(){}
 
 	public TcpServerResponseDTO(boolean success){
