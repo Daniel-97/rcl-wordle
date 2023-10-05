@@ -36,6 +36,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	private static int RMI_PORT;
 	private static String MULTICAST_IP;
 	private static int MULTICAST_PORT;
+	private static int WORD_TIME_MINUTES;
 	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
@@ -79,10 +80,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		System.out.println("Avvio Wordle game server...");
 
-		// Inizializzo i servizi
-		this.userService = new UserService();
-		this.wordleGameService = new WordleGameService(userService);
-
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig();
 		try {
@@ -90,6 +87,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
 			MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
 			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
+			WORD_TIME_MINUTES = Integer.parseInt(ConfigReader.readProperty(properties, "app.wordle.word.time.minutes"));
 		} catch (NoSuchFieldException e) {
 			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);
@@ -97,6 +95,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
 			System.exit(-1);
 		}
+
+		// Inizializzo i servizi
+		this.userService = new UserService();
+		this.wordleGameService = new WordleGameService(userService, WORD_TIME_MINUTES);
 
 		// Inizializza RMI server
 		try {

@@ -11,6 +11,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -22,15 +23,17 @@ public class WordleGameService {
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	private String wordTranslation; // Traduzione della parola in italiano
+	private final int wordExpireTimeMinutes;
 	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
 	private final ArrayList<UserScore> ranking = new ArrayList<>(); // Contiene la classifica degli utenti
 
 	// Services
 	private final UserService userService;
 
-	public WordleGameService(UserService userService) {
+	public WordleGameService(UserService userService, int wordExpireMinutes) {
 
 		System.out.println("Avvio servizio wordle game...");
+		this.wordExpireTimeMinutes = wordExpireMinutes;
 		this.userService = userService;
 
 		// Carico il dizionario delle parole in memoria
@@ -62,6 +65,7 @@ public class WordleGameService {
 
 		// Devo estrarre una nuova parola
 		//TODO controlare anche se la parola e' scaduta
+
 		if (this.state.actualWord == null) {
 			this.extractWord();
 		}
@@ -173,6 +177,16 @@ public class WordleGameService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Ritorna true se la parola attuale e' scaduta
+	 * @return
+	 */
+	private boolean isWordExpired() {
+		// TODO terminare
+		Date now = ;
+		long seconds = (d1.getTime() - d2.getTime())/1000;
 	}
 
 	public String getWordTranslation() {
