@@ -14,21 +14,21 @@ public class CLIHelper {
 	private static final Scanner cliScanner = new Scanner(System.in);
 	private static  final String ENTRY_MENU =
 			"ENTRY MENU:\n"+
-			"- :login	 <username> <password>	-> login\n"+
-			"- :register <username>	<password>	-> registrati a Wordle\n"+
-			"- :help							-> aiuto\n"+
-			"- :quit							-> esci da Wordle\n";
+			"- :login <username> <password>      -> login\n"+
+			"- :register <username>	<password>  -> registrati a Wordle\n"+
+			"- :help                             -> aiuto\n"+
+			"- :quit                             -> esci da Wordle\n";
 
 	private static final String MAIN_MENU =
 			"MAIN MENU:\n"+
-			"- :play			-> gioca a wordle\n"+
-			"- :share			-> condividi i risultati sul gruppo sociale\n"+
-			"- :social			-> mostra i risultati pubblicati sul gruppo sociale\n"+
-			"- :stat			-> mostra le tue statistiche\n"+
-			"- :rank			-> mostra la classifica di gioco\n" +
-			"- :logout			-> logout da Wordle\n"+
-			"- :quit			-> esci da Wordle\n"+
-			"- :help			-> aiuto\n";
+			"- :play    -> gioca a wordle\n"+
+			"- :share   -> condividi i risultati sul gruppo sociale\n"+
+			"- :social  -> mostra i risultati pubblicati sul gruppo sociale\n"+
+			"- :stat    -> mostra le tue statistiche\n"+
+			"- :rank    -> mostra la classifica di gioco\n" +
+			"- :logout  -> logout da Wordle\n"+
+			"- :quit    -> esci da Wordle\n"+
+			"- :help    -> aiuto\n";
 
 	public static void entryMenu() {
 		System.out.println(ENTRY_MENU);
@@ -55,12 +55,13 @@ public class CLIHelper {
 	}
 
 	public static String[] waitForInput() {
-		printCursor();
-		String input = cliScanner.nextLine();
-		// Se l'input non è valido attendo nuovamente per l'input
-		if(input == null || input.isEmpty() || input.equals("\n")) {
-			return waitForInput();
+		String input;
+		// Continuo a ciclare fino a che non ottengo un input valido
+		do{
+			printCursor();
+			input = cliScanner.nextLine();
 		}
+		while (input == null || input.isEmpty() || input.equals("\n"));
 
 		return input.split(" ", -1);
 	}

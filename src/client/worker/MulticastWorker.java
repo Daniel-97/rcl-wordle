@@ -29,7 +29,7 @@ public class MulticastWorker implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println("Multicast worker in ascolto di messaggi multicast...");
+		System.out.println("Multicast worker in ascolto...");
 		byte[] buffer = new byte[BUFFER_SIZE];
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 

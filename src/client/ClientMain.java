@@ -155,9 +155,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	}
 
+	/**
+	 * Loop sulle varie modalita' del client
+	 */
 	public void run() {
 
-		CLIHelper.pause();
 		while (true) {
 
 			switch (mode) {
@@ -193,7 +195,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		// Eseguo un comando
 		switch (cmd) {
 			case HELP:
-				CLIHelper.pause();
 				break;
 
 			case QUIT:
@@ -235,8 +236,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		switch (cmd) {
 			case HELP: {
-				CLIHelper.pause();
-				CLIHelper.mainMenu();
 				break;
 			}
 
