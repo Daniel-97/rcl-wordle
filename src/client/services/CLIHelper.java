@@ -59,7 +59,7 @@ public class CLIHelper {
 		String input = cliScanner.nextLine();
 		// Se l'input non è valido attendo nuovamente per l'input
 		if(input == null || input.isEmpty() || input.equals("\n")) {
-			waitForInput();
+			return waitForInput();
 		}
 
 		return input.split(" ", -1);
@@ -113,8 +113,8 @@ public class CLIHelper {
 		System.out.println("Elenco partite condivise dagli altri giocatori:");
 		for(int i = 0; i < games.size(); i++) {
 			WordleGame game = games.get(i);
-			System.out.println(i + ") <username> alle " + game.startedAt.toString());
-			System.out.println("Vittoria: "+(game.won?"si":"no")+", Tentativi: " + game.attempts);
+			System.out.print(i + ") <username> " + game.startedAt.toString());
+			System.out.println(", vittoria: "+(game.won?"si":"no")+", tentativi: " + game.attempts);
 			System.out.println();
 		}
 	}

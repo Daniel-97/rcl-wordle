@@ -8,7 +8,6 @@ import common.entity.WordleGame;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +17,7 @@ public class MulticastWorker implements Runnable {
 	private static final Gson gson = new GsonBuilder().create();
 
 	private final MulticastSocket multicastSocket;
-	private final int BUFFER_SIZE = 2048;
+	private final int BUFFER_SIZE = 8192;
 	private final List<WordleGame> userGames;
 
 	public MulticastWorker(MulticastSocket ms, List<WordleGame> userGames) {
@@ -38,9 +37,8 @@ public class MulticastWorker implements Runnable {
 
 			try {
 				this.multicastSocket.receive(dp);
-				String json = new String(dp.getData());
-				System.out.println(json);
-				// TODO sistemare, qui da eccezione
+				String json = new String(dp.getData(), 0, dp.getLength());
+
 				try {
 					WordleGame wordleGame = gson.fromJson(json, WordleGame.class);
 					this.userGames.add(wordleGame);

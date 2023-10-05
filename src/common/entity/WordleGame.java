@@ -4,6 +4,7 @@ import common.dto.LetterDTO;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Questa classe rappresenta una partita giocata da un utente
@@ -17,7 +18,7 @@ public class WordleGame {
 	public boolean finished;
 	public int attempts;
 	public String word;
-	private ArrayList<LetterDTO[]> guess;
+	private List<LetterDTO[]> guess;
 
 	public WordleGame(){}
 	public WordleGame(String word, int id) {

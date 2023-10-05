@@ -77,6 +77,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				System.out.println("Shutdown Wordle client...");
 				try {
 					socketChannel.close();
+					multicastSocket.leaveGroup(InetAddress.getByName(MULTICAST_IP));
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}

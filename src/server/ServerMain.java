@@ -327,8 +327,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								WordleGame game = new WordleGame();
 								game.attempts = lastGame.attempts;
 								game.startedAt = lastGame.startedAt;
-								String json = gson.toJson(game);
-								sendMulticastMessage(json);
+								sendMulticastMessage(gson.toJson(game));
 								sendTcpMessage(client, new TcpServerResponseDTO(true));
 								break;
 							}
