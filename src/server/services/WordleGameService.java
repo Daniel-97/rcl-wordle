@@ -12,9 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 public class WordleGameService {
 
@@ -64,9 +62,8 @@ public class WordleGameService {
 		}
 
 		// Devo estrarre una nuova parola
-		//TODO controlare anche se la parola e' scaduta
-
-		if (this.state.actualWord == null) {
+		if (this.state.actualWord == null || isWordExpired()) {
+			System.out.println("Parola scaduta! Ne estraggo un altra");
 			this.extractWord();
 		}
 
@@ -184,9 +181,15 @@ public class WordleGameService {
 	 * @return
 	 */
 	private boolean isWordExpired() {
-		// TODO terminare
-		Date now = ;
-		long seconds = (d1.getTime() - d2.getTime())/1000;
+
+		Calendar cal = GregorianCalendar.getInstance();
+		cal.setTime(this.state.extractedAt);
+		cal.add(GregorianCalendar.MINUTE, wordExpireTimeMinutes);
+
+		//long seconds = (cal.getTime().getTime() - new Date().getTime())/1000;
+		//System.out.println(new Date());
+		//System.out.println(cal.getTime());
+		return cal.getTime().getTime() < new Date().getTime();
 	}
 
 	public String getWordTranslation() {
