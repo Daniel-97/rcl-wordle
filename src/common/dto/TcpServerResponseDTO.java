@@ -8,7 +8,6 @@ public class TcpServerResponseDTO {
 	public int remainingAttempts;
 	public ResponseCodeEnum code; //Codice di risposta
 	public UserStat stat;
-
 	public String wordTranslation;
 
 	public TcpServerResponseDTO(){}

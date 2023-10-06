@@ -250,8 +250,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case PLAY: {
 				// Prima di iniziare il gioco devo chiedere al server se l utente puo iniziare o meno
+				// TODO capire se fare comando separato per giocare a wordle
 				this.playWORDLE();
-				if(canPlayWord) {
+				if (canPlayWord) {
 					this.mode = ClientMode.GAME_MODE;
 				}
 				break;
@@ -320,41 +321,77 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(request);
 			response = readTcpMessage();
 		} catch (IOException e) {
-			System.out.println("Errore durante invio guessed word");
+			System.out.println("Errore durante invio/ricezione guessed word: "+e.getMessage());
 			return;
 		}
 
-		if(response != null) {
-			if (response.code == ResponseCodeEnum.GAME_WON) {
+		remainingAttempts = response.remainingAttempts;
+
+		switch (response.code) {
+
+			case GAME_WON:
 				System.out.println("Complimenti, hai indovinato la parola! Traduzione: " + response.wordTranslation);
-				canPlayWord = false;
 				mode = ClientMode.USER_MODE;
-				CLIHelper.pause();
-			} else if (response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
+				break;
+
+			case INVALID_WORD_LENGHT:
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
-				CLIHelper.pause();
-			} else if (response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
-				System.out.println("Parola non presente nel dizionario, tentativo non valido");
-				CLIHelper.pause();
-			} else if (response.code == ResponseCodeEnum.GAME_LOST) {
+				break;
+
+			case WORD_NOT_IN_DICTIONARY:
+				System.out.println("Parola "+word+" non presente nel dizionario, tentativo non valido");
+				break;
+
+			case GAME_LOST:
 				System.out.println("Tentativi esauriti, hai perso!");
-				CLIHelper.pause();
-				canPlayWord = false;
-			} else if (response.code == ResponseCodeEnum.GAME_ALREADY_PLAYED) {
+				mode = ClientMode.USER_MODE;
+				break;
+
+			case GAME_ALREADY_PLAYED:
 				System.out.println("Hai gia' giocato a questa parola!");
-				CLIHelper.pause();
-			} else if (response.code == ResponseCodeEnum.NEED_TO_START_GAME) {
+				break;
+
+			case NEED_TO_START_GAME:
 				System.out.println("Parola cambiata! Devi ripartire da capo!");
 				mode = ClientMode.USER_MODE;
-				CLIHelper.pause();
-			}
+				break;
 
-			else {
+			default:
 				System.out.println("Parola non indovinata!");
 				guesses = response.userGuess;
-			}
-			remainingAttempts = response.remainingAttempts;
+
 		}
+		CLIHelper.pause();
+
+		/**
+		if (response.code == ResponseCodeEnum.GAME_WON) {
+			System.out.println("Complimenti, hai indovinato la parola! Traduzione: " + response.wordTranslation);
+			canPlayWord = false;
+			mode = ClientMode.USER_MODE;
+			CLIHelper.pause();
+		} else if (response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
+			System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
+			CLIHelper.pause();
+		} else if (response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
+			System.out.println("Parola non presente nel dizionario, tentativo non valido");
+			CLIHelper.pause();
+		} else if (response.code == ResponseCodeEnum.GAME_LOST) {
+			System.out.println("Tentativi esauriti, hai perso!");
+			CLIHelper.pause();
+			canPlayWord = false;
+		} else if (response.code == ResponseCodeEnum.GAME_ALREADY_PLAYED) {
+			System.out.println("Hai gia' giocato a questa parola!");
+			CLIHelper.pause();
+		} else if (response.code == ResponseCodeEnum.NEED_TO_START_GAME) {
+			System.out.println("Parola cambiata! Devi ripartire da capo!");
+			mode = ClientMode.USER_MODE;
+			CLIHelper.pause();
+		}
+
+		else {
+			System.out.println("Parola non indovinata!");
+			guesses = response.userGuess;
+		} **/
 
 	}
 
