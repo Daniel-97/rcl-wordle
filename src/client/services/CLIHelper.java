@@ -1,13 +1,15 @@
 package client.services;
 
+import client.enums.UserCommand;
 import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
 import common.entity.WordleGame;
+import javafx.util.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.StreamSupport;
 
 public class CLIHelper {
 
@@ -54,7 +56,12 @@ public class CLIHelper {
 		System.out.print("WORDLE-CLIENT>");
 	}
 
-	public static String[] waitForInput() {
+	/**
+	 * Funzione che fa il paring dell input e ritorna il comando con i relativi argomenti
+	 * @return
+	 * @throws IllegalArgumentException
+	 */
+	public static Pair<UserCommand, String[]> waitForCommand() {
 		String input;
 		// Continuo a ciclare fino a che non ottengo un input valido
 		do{
@@ -63,7 +70,14 @@ public class CLIHelper {
 		}
 		while (input == null || input.isEmpty() || input.equals("\n"));
 
-		return input.split(" ", -1);
+		String[] cmdSplit = input.split(" ", -1);
+		UserCommand cmd = null;
+		try {
+			cmd = UserCommand.valueOf(cmdSplit[0].replace(":","").toUpperCase());
+		} catch (IllegalArgumentException ignored) {}
+		String[] args = Arrays.copyOfRange(cmdSplit, 1, cmdSplit.length);
+
+		return new Pair<>(cmd, args);
 	}
 
 	public static void printServerWord(LetterDTO[][] userGuess) {

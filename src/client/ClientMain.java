@@ -14,6 +14,7 @@ import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
 import common.enums.ServerTCPCommand;
 import common.interfaces.NotifyEventInterface;
+import javafx.util.Pair;
 import server.exceptions.WordleException;
 import common.interfaces.ServerRmiInterface;
 import common.utils.ConfigReader;
@@ -184,9 +185,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private void guestMode() {
 
 		CLIHelper.entryMenu();
-		String[] input = CLIHelper.waitForInput();
+		Pair<UserCommand, String[]> parsedCmd = CLIHelper.waitForCommand();
+		UserCommand cmd = parsedCmd.getKey();
+		String[] args = parsedCmd.getValue();
 
-		UserCommand cmd = UserCommand.fromCommand(input[0]);
 		if (cmd == null) {
 			System.out.println("Comando non trovato!");
 			CLIHelper.pause();
@@ -203,19 +205,19 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				break;
 
 			case LOGIN:
-				if (input.length < 3) {
+				if (args.length < 2) {
 					System.out.println("Comando non valido!");
 				} else {
-					this.login(input[1], input[2]);
+					this.login(args[0], args[1]);
 				}
 				CLIHelper.pause();
 				break;
 
 			case REGISTER:
-				if (input.length < 3) {
+				if (args.length < 3) {
 					System.out.println("Comando non completo");
 				} else {
-					this.register(input[1], input[2]);
+					this.register(args[0], args[0]);
 				}
 				CLIHelper.pause();
 				break;
@@ -226,9 +228,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private void userMode() {
 
 		CLIHelper.mainMenu();
-		String[] input = CLIHelper.waitForInput();
+		UserCommand cmd = CLIHelper.waitForCommand().getKey();
 
-		UserCommand cmd = UserCommand.fromCommand(input[0]);
 		if (cmd == null) {
 			System.out.println("Comando non trovato!");
 			CLIHelper.pause();
@@ -278,6 +279,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case QUIT:
 				System.exit(0);
+
+			default:
+				System.out.println("Comando non trovato!");
+				CLIHelper.pause();
 		}
 	}
 
@@ -290,15 +295,17 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				CLIHelper.printServerWord(guesses);
 			}
 			System.out.println("Hai ancora " + remainingAttempts + " tentativi rimasti. Inserisci una parola:");
-			String[] input = CLIHelper.waitForInput();
+			Pair<UserCommand, String[]> parsedCmd = CLIHelper.waitForCommand();
+			UserCommand cmd = parsedCmd.getKey();
+			String[] args = parsedCmd.getValue();
 
-			if(input[0].equals(":exit")) {
+			if(cmd == UserCommand.QUIT) {
 				this.mode = ClientMode.USER_MODE;
 				break;
 			}
 
 			CLIHelper.cls();
-			this.sendWord(input[0]);
+			this.sendWord(args[0]);
 		}
 	}
 
