@@ -198,7 +198,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		// Eseguo un comando
 		switch (cmd) {
 			case HELP:
-				break;
+				CLIHelper.entryMenu();
+				return;
 
 			case QUIT:
 				System.exit(0);
@@ -210,7 +211,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				} else {
 					this.login(args[0], args[1]);
 				}
-				CLIHelper.pause();
 				break;
 
 			case REGISTER:
@@ -219,9 +219,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				} else {
 					this.register(args[0], args[0]);
 				}
-				CLIHelper.pause();
 				break;
 		}
+
+		CLIHelper.pause();
 
 	}
 
@@ -238,7 +239,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		switch (cmd) {
 			case HELP: {
-				break;
+				CLIHelper.mainMenu();
+				return;
 			}
 
 			case LOGOUT: {
@@ -252,29 +254,24 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				if(canPlayWord) {
 					this.mode = ClientMode.GAME_MODE;
 				}
-				CLIHelper.pause();
 				break;
 			}
 
 			case STAT:
 				this.sendMeStatistics();
-				CLIHelper.pause();
 				break;
 
 			case SHARE:
 				System.out.println("Condivido le statistiche con gli altri utenti");
 				this.share();
-				CLIHelper.pause();
 				break;
 
 			case SOCIAL:
 				CLIHelper.printUsersGames(sharedGames);
-				CLIHelper.pause();
 				break;
 
 			case RANK:
 				CLIHelper.printRank(rank);
-				CLIHelper.pause();
 				break;
 
 			case QUIT:
@@ -282,8 +279,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			default:
 				System.out.println("Comando non trovato!");
-				CLIHelper.pause();
 		}
+
+		CLIHelper.pause();
 	}
 
 	private void gameMode() {
