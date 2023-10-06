@@ -12,6 +12,7 @@ import common.dto.TcpServerResponseDTO;
 import common.dto.UserScore;
 import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
+import common.enums.ServerTCPCommand;
 import common.interfaces.NotifyEventInterface;
 import server.exceptions.WordleException;
 import common.interfaces.ServerRmiInterface;
@@ -309,7 +310,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 
 		TcpServerResponseDTO response = null;
-		TcpClientRequestDTO request = new TcpClientRequestDTO("sendWord", new String[]{username, word});
+		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.VERIFY_WORD, new String[]{username, word});
 		try {
 			sendTcpMessage(request);
 			response = readTcpMessage();
@@ -354,7 +355,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void login(String username, String password) {
 
-		TcpClientRequestDTO requestDTO = new TcpClientRequestDTO("login", new String[]{username, password});
+		TcpClientRequestDTO requestDTO = new TcpClientRequestDTO(ServerTCPCommand.LOGIN, new String[]{username, password});
 
 		try {
 			sendTcpMessage(requestDTO);
@@ -377,7 +378,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void logout(String username) {
 
-		TcpClientRequestDTO request = new TcpClientRequestDTO("logout", new String[]{username});
+		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.LOGOUT, new String[]{username});
 
 		try {
 			sendTcpMessage(request);
@@ -401,7 +402,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * Richiedo al server se l'utente puo' iniziare a giocare
 	 */
 	private void playWORDLE() {
-		TcpClientRequestDTO request = new TcpClientRequestDTO("playWORDLE", new String[]{username});
+		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.PLAY_WORDLE, new String[]{username});
 		try {
 			sendTcpMessage(request);
 
@@ -435,7 +436,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	}
 
 	private void sendMeStatistics() {
-		TcpClientRequestDTO request = new TcpClientRequestDTO("stat", new String[]{username});
+		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.STAT, new String[]{username});
 		try {
 			sendTcpMessage(request);
 
@@ -455,7 +456,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * Richiede al server di condividere i risultati dell ultima partita del client sul gruppo sociale
 	 */
 	private void share() {
-		TcpClientRequestDTO request = new TcpClientRequestDTO("share", new String[]{username});
+		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.SHARE, new String[]{username});
 		try {
 			sendTcpMessage(request);
 			TcpServerResponseDTO response = readTcpMessage();

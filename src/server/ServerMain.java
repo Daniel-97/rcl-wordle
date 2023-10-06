@@ -202,20 +202,20 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						switch (clientMessage.command) {
 
-							case "login": {
+							case LOGIN: {
 								// TODO controllare se gli argomenti ci sono o meno
 								boolean success = this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1]);
 								writeKey.attach(new TcpServerResponseDTO(success, null));
 								break;
 							}
 
-							case "logout": {
+							case LOGOUT: {
 								boolean success = this.userService.logout(clientMessage.arguments[0]);
 								writeKey.attach(new TcpServerResponseDTO(success, null));
 								break;
 							}
 
-							case "playWORDLE": {
+							case PLAY_WORDLE: {
 								User user = this.userService.getUser(clientMessage.arguments[0]);
 								WordleGame lastGame = user.getLastGame();
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
@@ -239,7 +239,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								break;
 							}
 
-							case "sendWord": {
+							case VERIFY_WORD: {
 								String username = clientMessage.arguments[0];
 								String clientWord = clientMessage.arguments[1];
 								User user = this.userService.getUser(username);
@@ -297,7 +297,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								break;
 							}
 
-							case "stat": {
+							case STAT: {
 								String username = clientMessage.arguments[0];
 								User user = this.userService.getUser(username);
 								// Todo controllare che utente esista davvero
@@ -308,7 +308,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								break;
 							}
 
-							case "share": {
+							case SHARE: {
 								String username = clientMessage.arguments[0];
 								User user = this.userService.getUser(username);
 
