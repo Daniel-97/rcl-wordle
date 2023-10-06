@@ -332,6 +332,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								writeKey.attach(new TcpServerResponseDTO(OK));
 								break;
 							}
+
 							default:
 								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
 						}
