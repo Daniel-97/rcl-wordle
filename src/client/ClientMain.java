@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import static common.enums.ResponseCodeEnum.*;
+
 public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private final static int BUFFER_SIZE = 1024;
@@ -403,7 +405,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(requestDTO);
 
 			TcpServerResponseDTO response = readTcpMessage();
-			if (response.success) {
+			if (response.code == OK) {
 				System.out.println("Login completato con successo");
 				mode = ClientMode.USER_MODE;
 				ClientMain.username = username;
@@ -426,17 +428,17 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(request);
 
 			TcpServerResponseDTO response = readTcpMessage();
-			if (response.success) {
+			if (response.code == OK) {
 				System.out.println("Logout completato con successo");
-				this.username = null;
+				ClientMain.username = null;
 				this.mode = ClientMode.GUEST_MODE;
 				// Disiscrive l'utente alle callback dal server
 				serverRMI.unsubscribeClientToEvent(username);
 			} else {
-				System.out.println("Errore durante il logut!");
+				System.out.println("Errore durante il logout!");
 			}
 		} catch (IOException e) {
-			System.out.println("Errore imprevisto durante il login");
+			System.out.println("Errore imprevisto durante il logout");
 		}
 	}
 
@@ -449,7 +451,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(request);
 
 			TcpServerResponseDTO response = readTcpMessage();
-			if (response.success) {
+			if (response.code == OK) {
 				System.out.println("Ok, puoi giocare a Wordle!");
 				canPlayWord = true;
 				remainingAttempts = response.remainingAttempts;
@@ -502,7 +504,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		try {
 			sendTcpMessage(request);
 			TcpServerResponseDTO response = readTcpMessage();
-			if (response.success) {
+			if (response.code == OK) {
 				System.out.println("Statistiche condivise con successo sul gruppo sociale!");
 			}
 		} catch (IOException e) {

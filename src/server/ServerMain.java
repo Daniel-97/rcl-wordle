@@ -3,7 +3,6 @@ package server;
 import common.dto.*;
 import server.entity.User;
 import common.entity.WordleGame;
-import common.enums.ResponseCodeEnum;
 import server.exceptions.WordleException;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
@@ -27,6 +26,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+
+import static common.enums.ResponseCodeEnum.*;
 
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
@@ -205,13 +206,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 							case LOGIN: {
 								// TODO controllare se gli argomenti ci sono o meno
 								boolean success = this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1]);
-								writeKey.attach(new TcpServerResponseDTO(success, null));
+								writeKey.attach(new TcpServerResponseDTO(success ? OK : INVALID_USERNAME_PASSWORD));
 								break;
 							}
 
 							case LOGOUT: {
 								boolean success = this.userService.logout(clientMessage.arguments[0]);
-								writeKey.attach(new TcpServerResponseDTO(success, null));
+								writeKey.attach(new TcpServerResponseDTO(success ? OK : INVALID_USERNAME));
 								break;
 							}
 
@@ -224,15 +225,15 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								// Aggiunto gioco al giocatore attuale
 								if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
 									user.newGame(wordleGameService.getGameWord());
-									response.success = true;
+									response.code = OK;
 									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
 									response.userGuess = user.getLastGame().getGuess();
 								} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
-									response.success = true;
+									response.code = OK;
 									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
 									response.userGuess = user.getLastGame().getGuess();
 								} else {
-									response.success = false;
+									response.code = GAME_ALREADY_PLAYED;
 								}
 
 								writeKey.attach(response);
@@ -247,25 +248,25 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 								// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 								if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.NEED_TO_START_GAME));
+									writeKey.attach(new TcpServerResponseDTO(NEED_TO_START_GAME));
 									break;
 								}
 
 								// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
 								else if (lastGame.finished) {
-									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.GAME_ALREADY_PLAYED));
+									writeKey.attach(new TcpServerResponseDTO(GAME_ALREADY_PLAYED));
 									break;
 								}
 
 								// Utente ha inviato parola di lunghezza errata
 								else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
-									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_WORD_LENGHT));
+									writeKey.attach(new TcpServerResponseDTO(INVALID_WORD_LENGHT));
 									break;
 								}
 
 								// Utente ha mandato parola che non si trova nel dizionario
 								else if (!wordleGameService.isWordInDict(clientWord)) {
-									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.WORD_NOT_IN_DICTIONARY));
+									writeKey.attach(new TcpServerResponseDTO(WORD_NOT_IN_DICTIONARY));
 									break;
 								}
 
@@ -280,8 +281,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								// Se la partita e' finita lo comunico al client
 								if (lastGame.finished) {
 									TcpServerResponseDTO res = new TcpServerResponseDTO();
-									res.success = true;
-									res.code = lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST;
+									res.code = lastGame.won ? GAME_WON : GAME_LOST;
 									res.wordTranslation = wordleGameService.getWordTranslation();
 									writeKey.attach(res);
 									// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
@@ -291,7 +291,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 								TcpServerResponseDTO res = new TcpServerResponseDTO();
 								res.remainingAttempts = lastGame.getRemainingAttempts();
-								res.success = true;
 								res.userGuess = lastGame.getGuess();
 								writeKey.attach(res);
 								break;
@@ -313,13 +312,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								User user = this.userService.getUser(username);
 
 								if (user == null) {
-									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_USERNAME));
+									writeKey.attach(new TcpServerResponseDTO(INVALID_USERNAME));
 									break;
 								}
 
 								WordleGame lastGame = user.getLastGame();
 								if (lastGame == null) {
-									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.NO_GAME_TO_SHARE));
+									writeKey.attach(new TcpServerResponseDTO(NO_GAME_TO_SHARE));
 									break;
 								}
 
@@ -330,7 +329,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								game.attempts = lastGame.attempts;
 								game.startedAt = lastGame.startedAt;
 								sendMulticastMessage(JsonService.toJson(game));
-								writeKey.attach(new TcpServerResponseDTO(true));
+								writeKey.attach(new TcpServerResponseDTO(OK));
 								break;
 							}
 							default:
@@ -378,11 +377,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Controllo parametri
 		if (username.isEmpty()) {
-			throw new IllegalArgumentException(ResponseCodeEnum.USERNAME_REQUIRED.name());
+			throw new IllegalArgumentException(USERNAME_REQUIRED.name());
 		}
 
 		if (password.isEmpty()) {
-			throw new IllegalArgumentException(ResponseCodeEnum.PASSWORD_REQUIRED.name());
+			throw new IllegalArgumentException(PASSWORD_REQUIRED.name());
 		}
 
 		// Aggiungo nuovo utente al sistema

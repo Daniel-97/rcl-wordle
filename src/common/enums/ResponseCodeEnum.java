@@ -1,6 +1,7 @@
 package common.enums;
 
 public enum ResponseCodeEnum {
+	OK,
 	INVALID_USERNAME_PASSWORD,
 	USERNAME_ALREADY_USED,
 	USERNAME_REQUIRED,
