@@ -324,20 +324,25 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				canPlayWord = false;
 				mode = ClientMode.USER_MODE;
 				CLIHelper.pause();
-			} else if(response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
+			} else if (response.code == ResponseCodeEnum.INVALID_WORD_LENGHT) {
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
 				CLIHelper.pause();
-			} else if(response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
+			} else if (response.code == ResponseCodeEnum.WORD_NOT_IN_DICTIONARY) {
 				System.out.println("Parola non presente nel dizionario, tentativo non valido");
 				CLIHelper.pause();
-			} else if(response.code == ResponseCodeEnum.GAME_LOST) {
+			} else if (response.code == ResponseCodeEnum.GAME_LOST) {
 				System.out.println("Tentativi esauriti, hai perso!");
 				CLIHelper.pause();
 				canPlayWord = false;
-			} else if(response.code == ResponseCodeEnum.GAME_ALREADY_PLAYED) {
+			} else if (response.code == ResponseCodeEnum.GAME_ALREADY_PLAYED) {
 				System.out.println("Hai gia' giocato a questa parola!");
 				CLIHelper.pause();
+			} else if (response.code == ResponseCodeEnum.NEED_TO_START_GAME) {
+				System.out.println("Parola cambiata! Devi ripartire da capo!");
+				mode = ClientMode.USER_MODE;
+				CLIHelper.pause();
 			}
+
 			else {
 				System.out.println("Parola non indovinata!");
 				guesses = response.userGuess;

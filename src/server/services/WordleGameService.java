@@ -11,7 +11,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.*;
 
 public class WordleGameService {
@@ -61,13 +60,7 @@ public class WordleGameService {
 			this.state = new WordleGameState();
 		}
 
-		// Devo estrarre una nuova parola
-		if (this.state.actualWord == null || isWordExpired()) {
-			System.out.println("Parola scaduta! Ne estraggo un altra");
-			this.extractWord();
-		}
-
-		wordTranslation = this.translateWord(this.state.actualWord);
+		this.updateWord();
 		System.out.println("Parola del giorno: " + this.state.actualWord + ", traduzione: "+wordTranslation);
 
 	}
@@ -95,12 +88,18 @@ public class WordleGameService {
 
 		this.state.actualWord = word;
 		this.state.extractedAt = new Date();
-		System.out.println("Nuova parola estratta: " + word);
+		wordTranslation = this.translateWord(this.state.actualWord);
+		System.out.println("Parola scaduta! Nuova parola estratta: " + word + ", traduzione: "+wordTranslation);
 
 		return word;
 	}
 
+	/**
+	 * Ritorna la parola attuale del gioco. Prima di farlo controlla se la parola deve essere aggiornata
+	 * @return
+	 */
 	public String getGameWord(){
+		this.updateWord();
 		return this.state.actualWord;
 	}
 
@@ -177,19 +176,22 @@ public class WordleGameService {
 	}
 
 	/**
-	 * Ritorna true se la parola attuale e' scaduta
+	 * Controlla se la parola attuale e' scaduta e nel caso aggiorna
 	 * @return
 	 */
-	private boolean isWordExpired() {
+	private void updateWord() {
 
-		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(this.state.extractedAt);
-		cal.add(GregorianCalendar.MINUTE, wordExpireTimeMinutes);
+		if (this.state.actualWord == null) {
+			this.extractWord();
+		} else {
+			Calendar cal = GregorianCalendar.getInstance();
+			cal.setTime(this.state.extractedAt);
+			cal.add(GregorianCalendar.MINUTE, wordExpireTimeMinutes);
 
-		//long seconds = (cal.getTime().getTime() - new Date().getTime())/1000;
-		//System.out.println(new Date());
-		//System.out.println(cal.getTime());
-		return cal.getTime().getTime() < new Date().getTime();
+			if (cal.getTime().getTime() < new Date().getTime()) {
+				this.extractWord();
+			}
+		}
 	}
 
 	public String getWordTranslation() {

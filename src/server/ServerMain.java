@@ -190,6 +190,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						SocketChannel client = (SocketChannel) key.channel();
 						TcpClientRequestDTO clientMessage = readTcpMessage(client);
 						SocketAddress clientAddress = client.getRemoteAddress();
+						SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
 
 						if (clientMessage == null) {
 							System.out.println("Disconnessione forzata del client " + clientAddress);
@@ -204,13 +205,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 							case "login": {
 								// TODO controllare se gli argomenti ci sono o meno
 								boolean success = this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1]);
-								sendTcpMessage(client, new TcpServerResponseDTO(success, null));
+								writeKey.attach(new TcpServerResponseDTO(success, null));
 								break;
 							}
 
 							case "logout": {
 								boolean success = this.userService.logout(clientMessage.arguments[0]);
-								sendTcpMessage(client, new TcpServerResponseDTO(success, null));
+								writeKey.attach(new TcpServerResponseDTO(success, null));
 								break;
 							}
 
@@ -234,7 +235,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 									response.success = false;
 								}
 
-								sendTcpMessage(client, response);
+								writeKey.attach(response);
 								break;
 							}
 
@@ -243,30 +244,28 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								String clientWord = clientMessage.arguments[1];
 								User user = this.userService.getUser(username);
 								WordleGame lastGame = user.getLastGame();
-								TcpServerResponseDTO response = new TcpServerResponseDTO();
-								response.remainingAttempts = lastGame.getRemainingAttempts();
 
 								// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 								if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.NEED_TO_START_GAME));
+									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.NEED_TO_START_GAME));
 									break;
 								}
 
 								// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
 								else if (lastGame.finished) {
-									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.GAME_ALREADY_PLAYED));
+									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.GAME_ALREADY_PLAYED));
 									break;
 								}
 
 								// Utente ha inviato parola di lunghezza errata
-								else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT){
-									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_WORD_LENGHT));
+								else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
+									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_WORD_LENGHT));
 									break;
 								}
 
 								// Utente ha mandato parola che non si trova nel dizionario
 								else if (!wordleGameService.isWordInDict(clientWord)) {
-									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.WORD_NOT_IN_DICTIONARY));
+									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.WORD_NOT_IN_DICTIONARY));
 									break;
 								}
 
@@ -279,20 +278,22 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
 
 								// Se la partita e' finita lo comunico al client
-								if(lastGame.finished) {
+								if (lastGame.finished) {
 									TcpServerResponseDTO res = new TcpServerResponseDTO();
 									res.success = true;
 									res.code = lastGame.won ? ResponseCodeEnum.GAME_WON : ResponseCodeEnum.GAME_LOST;
 									res.wordTranslation = wordleGameService.getWordTranslation();
-									sendTcpMessage(client, res);
+									writeKey.attach(res);
 									// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
 									notifyRankToClient(userService.getRank());
 									break;
 								}
 
-								response.success = true;
-								response.userGuess = lastGame.getGuess();
-								sendTcpMessage(client, response);
+								TcpServerResponseDTO res = new TcpServerResponseDTO();
+								res.remainingAttempts = lastGame.getRemainingAttempts();
+								res.success = true;
+								res.userGuess = lastGame.getGuess();
+								writeKey.attach(res);
 								break;
 							}
 
@@ -303,7 +304,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								UserStat stat = user.getStat();
 								TcpServerResponseDTO response = new TcpServerResponseDTO();
 								response.stat = stat;
-								sendTcpMessage(client, response);
+								writeKey.attach(response);
 								break;
 							}
 
@@ -312,13 +313,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								User user = this.userService.getUser(username);
 
 								if (user == null) {
-									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_USERNAME));
+									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.INVALID_USERNAME));
 									break;
 								}
 
 								WordleGame lastGame = user.getLastGame();
 								if (lastGame == null) {
-									sendTcpMessage(client, new TcpServerResponseDTO(false, ResponseCodeEnum.NO_GAME_TO_SHARE));
+									writeKey.attach(new TcpServerResponseDTO(false, ResponseCodeEnum.NO_GAME_TO_SHARE));
 									break;
 								}
 
@@ -329,18 +330,27 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 								game.attempts = lastGame.attempts;
 								game.startedAt = lastGame.startedAt;
 								sendMulticastMessage(JsonService.toJson(game));
-								sendTcpMessage(client, new TcpServerResponseDTO(true));
+								writeKey.attach(new TcpServerResponseDTO(true));
 								break;
 							}
 							default:
 								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
 						}
-
 					}
 
 					// Canale pronto per la scrittura
 					else if (key.isWritable()) {
-						System.out.println("Canale pronto per la scrittura");
+
+						SocketChannel client = (SocketChannel) key.channel();
+						TcpServerResponseDTO response = (TcpServerResponseDTO) key.attachment();
+
+						if (response != null) {
+							sendTcpMessage(client, response);
+							client.register(selector, SelectionKey.OP_READ, null);
+						} else {
+							System.out.println("Impossibile recuperare messaggio da inviare al client da key. Possibile disconnessione client");
+							key.channel().close();
+						}
 					}
 
 				} catch (IOException ioe) {
@@ -356,8 +366,15 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	}
 
+	/**
+	 * Funzione RMI per registrare un nuovo utente
+	 * @param username
+	 * @param password
+	 * @throws RemoteException
+	 * @throws WordleException
+	 */
 	@Override
-	public void register(String username, String password) throws RemoteException, WordleException {
+	public synchronized void register(String username, String password) throws RemoteException, WordleException {
 
 		// Controllo parametri
 		if (username.isEmpty()) {
