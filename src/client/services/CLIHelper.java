@@ -75,7 +75,7 @@ public class CLIHelper {
 		try {
 			cmd = UserCommand.valueOf(cmdSplit[0].replace(":","").toUpperCase());
 		} catch (IllegalArgumentException ignored) {}
-		String[] args = Arrays.copyOfRange(cmdSplit, 1, cmdSplit.length);
+		String[] args = Arrays.copyOfRange(cmdSplit, cmd != null ? 1 : 0, cmdSplit.length);
 
 		return new Pair<>(cmd, args);
 	}

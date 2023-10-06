@@ -288,7 +288,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void gameMode() {
 
-		System.out.println("GAME MODE! Digita in qualsiasi momento :exit per uscire dalla modalita' gioco!");
+		System.out.println("GAME MODE! Digita in qualsiasi momento :quit per uscire dalla modalita' gioco!");
 		while (mode == ClientMode.GAME_MODE) {
 			if(guesses.length > 0) {
 				System.out.println("I tuoi tentativi:");
