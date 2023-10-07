@@ -25,8 +25,6 @@ public class WordleGameService {
 	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
 	private final ArrayList<UserScore> ranking = new ArrayList<>(); // Contiene la classifica degli utenti
 
-	// Services
-	private final UserService userService = UserService.getInstance();
 
 	public synchronized static WordleGameService getInstance() {
 		if(instance == null) {
@@ -188,7 +186,7 @@ public class WordleGameService {
 	 * Controlla se la parola attuale e' scaduta e nel caso aggiorna
 	 * @return
 	 */
-	private void updateWord() {
+	private synchronized void updateWord() {
 
 		if (this.state.actualWord == null) {
 			this.extractWord();

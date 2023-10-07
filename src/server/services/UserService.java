@@ -63,7 +63,7 @@ public class UserService {
 	 * @param user
 	 * @throws WordleException
 	 */
-	public void addUser(User user) throws WordleException {
+	public synchronized void addUser(User user) throws WordleException {
 
 		// Controlla se esiste gia' un utente con lo stesso username
 		for(User u:this.users) {
@@ -97,7 +97,7 @@ public class UserService {
 	 * @param password
 	 * @return
 	 */
-	public boolean login(String username, String password) {
+	public synchronized boolean login(String username, String password) {
 
 		User user = getUser(username);
 		if (user == null) {
@@ -117,7 +117,7 @@ public class UserService {
 	 * @param username
 	 * @return
 	 */
-	public boolean logout(String username) {
+	public synchronized boolean logout(String username) {
 		User user = getUser(username);
 		if(user == null) {
 			return false;
