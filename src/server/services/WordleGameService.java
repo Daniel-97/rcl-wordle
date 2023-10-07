@@ -15,23 +15,32 @@ import java.util.*;
 
 public class WordleGameService {
 
+	private static WordleGameService instance = null;
 	private static final String WORDLE_STATE_PATH = "persistance/wordle.json";
 	private static final String DICTIONARY_PATH = "src/dictionary/words.txt";
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	private String wordTranslation; // Traduzione della parola in italiano
-	private final int wordExpireTimeMinutes;
+	private int wordExpireTimeMinutes;
 	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
 	private final ArrayList<UserScore> ranking = new ArrayList<>(); // Contiene la classifica degli utenti
 
 	// Services
-	private final UserService userService;
+	private final UserService userService = UserService.getInstance();
 
-	public WordleGameService(UserService userService, int wordExpireMinutes) {
+	public synchronized static WordleGameService getInstance() {
+		if(instance == null) {
+			instance = new WordleGameService();
+		}
+		return instance;
+	}
+	public synchronized void init(int wordExpireMinutes) {
+		this.wordExpireTimeMinutes = wordExpireMinutes;
+	}
+
+	private WordleGameService() {
 
 		System.out.println("Avvio servizio wordle game...");
-		this.wordExpireTimeMinutes = wordExpireMinutes;
-		this.userService = userService;
 
 		// Carico il dizionario delle parole in memoria
 		Path dictionaryPath = Paths.get(DICTIONARY_PATH);

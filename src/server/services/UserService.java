@@ -13,14 +13,26 @@ import java.util.Comparator;
 import java.util.List;
 
 public class UserService {
+	private static UserService instance = null;
 	private static final String USERS_DATA_PATH = "persistance/users.json";
 	private List<User> users = new ArrayList<>();
 	private List<UserScore> rank = new ArrayList<>();
 
-	public UserService() {
+	private UserService() {
 		System.out.println("Avvio servizio utenti...");
 		this.loadUsers();
 		this.rank = this.calculateRank();
+	}
+
+	/**
+	 * Singleton, necessario perche' piu thread utilizzano questo metodo, si evitano istante inutili
+	 * @return
+	 */
+	public static synchronized UserService getInstance() {
+		if (instance == null) {
+			instance = new UserService();
+		}
+		return instance;
 	}
 
 	/**

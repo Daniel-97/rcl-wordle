@@ -103,8 +103,9 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		}
 
 		// Inizializzo i servizi
-		this.userService = new UserService();
-		this.wordleGameService = new WordleGameService(userService, WORD_TIME_MINUTES);
+		this.userService = UserService.getInstance();
+		this.wordleGameService = WordleGameService.getInstance();
+		this.wordleGameService.init(WORD_TIME_MINUTES);
 
 		// Inizializza RMI server
 		try {
@@ -191,12 +192,24 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 					// Canale pronto per la lettura
 					else if (key.isReadable()) {
-						/*
+
 						System.out.println("Canale pronto per la lettura!");
 						SocketChannel client = (SocketChannel) key.channel();
-						//SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
-						poolExecutor.submit(new CommandTask(key)); */
+						SocketAddress clientAddress = client.getRemoteAddress();
+						TcpClientRequestDTO clientMessage = ServerMain.readTcpMessage(client);
 
+						if (clientMessage == null) {
+							System.out.println("Disconnessione forzata del client " + clientAddress);
+							client.close();
+							break;
+						}
+
+						System.out.println("Nuovo messaggio da client " + clientAddress + ":" + clientMessage);
+						SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
+						// Submitto la richiesta del client al pool executor
+						poolExecutor.submit(new CommandTask(writeKey, clientMessage));
+
+						/*
 						SocketChannel client = (SocketChannel) key.channel();
 						TcpClientRequestDTO clientMessage = readTcpMessage(client);
 						SocketAddress clientAddress = client.getRemoteAddress();
@@ -344,23 +357,27 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 							default:
 								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
-						}
+						} */
 					}
 
-					// Canale pronto per la scrittura
-					else if (key.isWritable()) {
-						//System.out.println("Canale pronto per la scrittura!");
+					// Canale pronto per la scrittura. Il canale potrebbe essere pronto ma il thread potrebbe non aver
+					// ancora messo nell'attachment la risposta da inviare al client
+					else if (key.isWritable() && key.attachment() != null) {
+						System.out.println("Canale pronto per la scrittura!");
 
 						SocketChannel client = (SocketChannel) key.channel();
 						TcpServerResponseDTO response = (TcpServerResponseDTO) key.attachment();
 
 						if (response != null) {
 							sendTcpMessage(client, response);
+							// Registro nuovamente il client per un operazione di lettura
 							client.register(selector, SelectionKey.OP_READ, null);
-						} else {
-							System.out.println("Impossibile recuperare messaggio da inviare al client da key. Possibile disconnessione client");
-							key.channel().close();
 						}
+						/*
+						else {
+							System.out.println("Impossibile recuperare messaggio da inviare al client da key. Possibile disconnessione client");
+							//key.channel().close();
+						} */
 					}
 
 				} catch (IOException ioe) {
@@ -466,7 +483,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	/**
 	 * Notifica la classifica attuale di gioco ai vari client che si sono iscritti
 	 */
-	private static void notifyRankToClient(List<UserScore> rank) {
+	public static void notifyRankToClient(List<UserScore> rank) {
 		for(Map.Entry<String, NotifyEventInterface> client: clients.entrySet()) {
 			try {
 				client.getValue().notifyUsersRank(rank);
