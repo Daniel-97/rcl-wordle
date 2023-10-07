@@ -10,6 +10,7 @@ import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
 import common.utils.ConfigReader;
+import server.tasks.CommandTask;
 
 import java.io.IOException;
 import java.net.*;
@@ -26,6 +27,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static common.enums.ResponseCodeEnum.*;
 
@@ -38,6 +40,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	private static String MULTICAST_IP;
 	private static int MULTICAST_PORT;
 	private static int WORD_TIME_MINUTES;
+	private static ThreadPoolExecutor poolExecutor;
+	// TODO, non thread safe adesso!
 	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
@@ -66,6 +70,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			@Override
 			public void run() {
 				System.out.println("Shutdown Wordle server...");
+				poolExecutor.shutdown();
 				server.userService.saveUsers();
 				server.wordleGameService.saveState();
 				multicastSocket.close();
@@ -143,6 +148,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			System.exit(-1);
 		}
 
+		// Inizializza thread pool executor
+		int coreCount = Runtime.getRuntime().availableProcessors();
+		System.out.println("Avvio una cached thread pool con dimensione massima " + coreCount*2);
+		poolExecutor = new ThreadPoolExecutor(0, coreCount*2, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+
 	}
 
 	public void start() {
@@ -179,15 +189,14 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						client.register(selector, SelectionKey.OP_READ, null);
 					}
 
-					// Connessione con il client avvenuta
-					else if (key.isConnectable()) {
-						System.out.println("Nuova connessione stabilita con client");
-					}
-
 					// Canale pronto per la lettura
 					else if (key.isReadable()) {
+						/*
+						System.out.println("Canale pronto per la lettura!");
+						SocketChannel client = (SocketChannel) key.channel();
+						//SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
+						poolExecutor.submit(new CommandTask(key)); */
 
-						//System.out.println("Canale pronto per la lettura");
 						SocketChannel client = (SocketChannel) key.channel();
 						TcpClientRequestDTO clientMessage = readTcpMessage(client);
 						SocketAddress clientAddress = client.getRemoteAddress();
@@ -340,6 +349,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 					// Canale pronto per la scrittura
 					else if (key.isWritable()) {
+						//System.out.println("Canale pronto per la scrittura!");
 
 						SocketChannel client = (SocketChannel) key.channel();
 						TcpServerResponseDTO response = (TcpServerResponseDTO) key.attachment();
