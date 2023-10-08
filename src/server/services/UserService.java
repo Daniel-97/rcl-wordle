@@ -1,20 +1,22 @@
 package server.services;
 
+import com.google.gson.JsonSyntaxException;
 import common.dto.UserScore;
 import server.entity.User;
 import common.enums.ResponseCodeEnum;
-import server.exceptions.WordleException;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public class UserService {
 	private static UserService instance = null;
-	private static final String USERS_DATA_PATH = "persistance/users.json";
+	private static final String USERS_DATA_PATH = "data/users.json";
 	private List<User> users = new ArrayList<>();
 	private List<UserScore> rank = new ArrayList<>();
 
@@ -43,7 +45,7 @@ public class UserService {
 		try {
 			this.users = (List<User>) JsonService.readJson(USERS_DATA_PATH, ListOfUserType);
 			System.out.println("Caricato/i correttamente " + this.users.size() + " utente/i da file json");
-		} catch (IOException e) {
+		} catch (IOException | JsonSyntaxException e) {
 			System.out.println("Errore lettura file user.json, creazione nuovo array");
 			this.users = new ArrayList<>();
 		}
@@ -61,14 +63,14 @@ public class UserService {
 	/**
 	 * Aggiunge un nuovo utente
 	 * @param user
-	 * @throws WordleException
+	 * @throws IllegalArgumentException
 	 */
-	public synchronized void addUser(User user) throws WordleException {
+	public synchronized void addUser(User user) throws IllegalArgumentException {
 
 		// Controlla se esiste gia' un utente con lo stesso username
 		for(User u:this.users) {
 			if (u.getUsername().equals(user.getUsername())) {
-				throw new WordleException(ResponseCodeEnum.USERNAME_ALREADY_USED);
+				throw new IllegalArgumentException(ResponseCodeEnum.USERNAME_ALREADY_USED.name());
 			}
 		}
 
@@ -104,10 +106,17 @@ public class UserService {
 			return false;
 		}
 
-		if(user.verifyPassword(password)) {
-			user.online = true;
-			return true;
-		} else {
+
+		try {
+			boolean verified = user.verifyPassword(password);
+			if (verified) {
+				user.online = true;
+				return true;
+			} else {
+				return false;
+			}
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+			System.out.println("Errore verifica password: "+e.getMessage());
 			return false;
 		}
 	}

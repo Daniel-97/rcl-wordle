@@ -40,8 +40,7 @@ public class CommandTask implements Runnable {
 				case LOGIN: {
 					// TODO controllare se gli argomenti ci sono o meno
 					boolean success = this.userService.login(request.arguments[0], request.arguments[1]);
-					key.attach(new TcpServerResponseDTO(ResponseCodeEnum.OK));
-					//ServerMain.sendTcpMessage(client, new TcpServerResponseDTO(ResponseCodeEnum.OK));
+					key.attach(new TcpServerResponseDTO(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD));
 					break;
 				}
 

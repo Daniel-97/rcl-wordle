@@ -2,6 +2,7 @@ package server.services;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -24,7 +25,7 @@ public class JsonService {
 		return gson.fromJson(json, type);
 	}
 
-	public static Object readJson(String path, Type type) throws IOException {
+	public static Object readJson(String path, Type type) throws IOException, JsonSyntaxException {
 
 		Path jsonPath = Paths.get(path);
 		Object parsedObj = null;

@@ -3,14 +3,19 @@ package server.entity;
 import common.dto.UserStat;
 import common.entity.WordleGame;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.*;
 
 public class User {
 
 	private final String username;
 	private final String passwordHash; // password hahsata
+	private String salt; // Password salt
 	private final Date registeredAt; // Data registrazione utente
 	private List<WordleGame> games;
 	// Todo tenere aggiornate queste statistiche
@@ -18,29 +23,47 @@ public class User {
 	private int bestStreak = 0;
 	public transient boolean online = false; // Indica se utente e' online oppure no, da non salvare sul json
 
-	public User(String username, String password) {
+	public User(String username, String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
 		this.username = username;
-		this.passwordHash = hashPassword(password);
 		this.registeredAt = new Date();
+		this.salt = generateRandomSalt();
+		this.passwordHash = hashPassword(password, Base64.getDecoder().decode(this.salt));
 	}
 
 	/**
-	 * Effettua un hashing della password per questioni di sicurezza
+	 * Effettua un hashing della password con algoritmo PBKDF2
 	 * @param password
+	 * @param salt
 	 * @return
 	 */
-	private static String hashPassword(String password) {
-		//TODO implement the password hash with modern algotithm
-		return password;
+	private static String hashPassword(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
+
+		KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+		byte[] hash = factory.generateSecret(spec).getEncoded();
+		return Base64.getEncoder().encodeToString(hash);
 	}
 
 	/**
-	 * Verifica la password dell utente
+	 * Crea un salt causale
+	 * @return
+	 */
+	private static String generateRandomSalt() {
+		// Genero un salt casuale per la password
+		SecureRandom secureRandom = new SecureRandom();
+		byte[] salt = new byte[16];
+		secureRandom.nextBytes(salt);
+
+		return Base64.getEncoder().encodeToString(salt);
+	}
+
+	/**
+	 * Verifica la password dell utente usando il salt salvato
 	 * @param password
 	 * @return
 	 */
-	public boolean verifyPassword(String password) {
-		return this.passwordHash.equals(hashPassword(password));
+	public boolean verifyPassword(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
+		return this.passwordHash.equals(hashPassword(password, Base64.getDecoder().decode(this.salt)));
 	}
 
 	public String getUsername() {
@@ -85,6 +108,9 @@ public class User {
 	 */
 	public int averageAttempts() {
 		int avg = 0;
+		if (this.games == null) {
+			return 0;
+		}
 		for (WordleGame game: this.games) {
 			avg += game.attempts;
 		}
@@ -97,6 +123,9 @@ public class User {
 	 */
 	public int wonGames() {
 		int wonGames = 0;
+		if (this.games == null) {
+			return 0;
+		}
 		for (WordleGame game: this.games) {
 			wonGames += game.won ? 1 : 0;
 		}

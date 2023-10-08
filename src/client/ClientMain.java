@@ -11,11 +11,9 @@ import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
 import common.dto.UserScore;
 import common.entity.WordleGame;
-import common.enums.ResponseCodeEnum;
 import common.enums.ServerTCPCommand;
 import common.interfaces.NotifyEventInterface;
 import javafx.util.Pair;
-import server.exceptions.WordleException;
 import common.interfaces.ServerRmiInterface;
 import common.utils.ConfigReader;
 
@@ -216,10 +214,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				break;
 
 			case REGISTER:
-				if (args.length < 3) {
+				if (args.length < 2) {
 					System.out.println("Comando non completo");
 				} else {
-					this.register(args[0], args[0]);
+					this.register(args[0], args[1]);
 				}
 				break;
 		}
@@ -443,9 +441,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		} catch (RemoteException e) {
 			// TODO gestire il caso in cui il server si disconnette
 			throw new RuntimeException(e);
-		} catch (WordleException e) {
+		} catch (IllegalArgumentException e) {
 			System.out.println("Errore durante la registrazione! " + e.getMessage());
-			System.exit(-1);
 		}
 	}
 

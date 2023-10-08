@@ -1,7 +1,5 @@
 package common.interfaces;
 
-import server.exceptions.WordleException;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -13,9 +11,9 @@ public interface ServerRmiInterface extends Remote {
 	 * @param password
 	 * @return 0 successfully subscribed
 	 * @throws RemoteException
-	 * @throws WordleException
+	 * @throws IllegalArgumentException
 	 */
-	void register(String username, String password) throws RemoteException, WordleException;
+	void register(String username, String password) throws RemoteException, IllegalArgumentException;
 
 	/**
 	 * Iscrive un particolare client agli eventi del server

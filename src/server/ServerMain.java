@@ -2,8 +2,6 @@ package server;
 
 import common.dto.*;
 import server.entity.User;
-import common.entity.WordleGame;
-import server.exceptions.WordleException;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
 import server.services.JsonService;
@@ -26,6 +24,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -398,10 +398,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	 * @param username
 	 * @param password
 	 * @throws RemoteException
-	 * @throws WordleException
+	 * @throws IllegalArgumentException
 	 */
 	@Override
-	public synchronized void register(String username, String password) throws RemoteException, WordleException {
+	public synchronized void register(String username, String password) throws RemoteException, IllegalArgumentException {
 
 		// Controllo parametri
 		if (username.isEmpty()) {
@@ -413,8 +413,12 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		}
 
 		// Aggiungo nuovo utente al sistema
-		User user = new User(username, password);
-		this.userService.addUser(user);
+		try {
+			User user = new User(username, password);
+			this.userService.addUser(user);
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
