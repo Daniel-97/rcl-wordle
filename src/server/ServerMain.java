@@ -40,8 +40,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
 	private static MulticastSocket multicastSocket;
-
-	// Services
 	private final UserService userService;
 	private final WordleGameService wordleGameService;
 

@@ -5,8 +5,6 @@ import client.enums.ClientMode;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
 import client.worker.MulticastWorker;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import common.dto.LetterDTO;
 import common.dto.TcpClientRequestDTO;
 import common.dto.TcpServerResponseDTO;
@@ -16,7 +14,7 @@ import common.enums.ServerTCPCommand;
 import common.interfaces.NotifyEventInterface;
 import javafx.util.Pair;
 import common.interfaces.ServerRmiInterface;
-import common.utils.ConfigReader;
+import server.services.JsonService;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -34,26 +32,24 @@ import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import static common.enums.ResponseCodeEnum.*;
 
 public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private final static int BUFFER_SIZE = 1024;
-	private final static Gson gson = new GsonBuilder().create();
 	private static ServerRmiInterface serverRMI;
 	private static NotifyEventInterface stub;
 	private static SocketChannel socketChannel;
 	private static MulticastSocket multicastSocket;
 	private static Thread multicastThread;
 	private static String username = null;
+	private static List<UserScore> rank;
+	private static final List<WordleGame> sharedGames = new ArrayList<>();
 	private ClientMode mode = ClientMode.GUEST_MODE;
 	private boolean canPlayWord = false;
 	private int remainingAttempts;
 	private LetterDTO[][] guesses;
-	private static List<UserScore> rank;
-	private static List<WordleGame> sharedGames = new ArrayList<>();
 
 	private static final String TITLE =
 			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
@@ -73,8 +69,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			public void run() {
 				System.out.println("Shutdown Wordle client...");
 				try {
+					// Chiudo il socket TCP con il server
 					socketChannel.close();
-					multicastSocket.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
+					// Interrompo worker che gestisce il gruppo multicast
+					multicastThread.interrupt();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -143,7 +141,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	public void run() {
 
 		while (true) {
-
 			switch (mode) {
 
 				case GUEST_MODE:
@@ -158,7 +155,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 					this.gameMode();
 					break;
 			}
-
 		}
 	}
 
@@ -177,6 +173,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		// Eseguo un comando
 		switch (cmd) {
+
 			case HELP:
 				CLIHelper.entryMenu();
 				return;
@@ -221,6 +218,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 
 		switch (cmd) {
+
 			case HELP: {
 				CLIHelper.mainMenu();
 				return;
@@ -465,7 +463,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 
 	public static void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
-		String json = gson.toJson(request);
+		String json = JsonService.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socketChannel.write(command);
 	}
@@ -492,7 +490,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		if (json.length() == 0) {
 			throw new IOException("Letti 0 bytes, il server potrebbe essere offline(?)");
 		}
-		return gson.fromJson(json.toString(), TcpServerResponseDTO.class);
+		return JsonService.fromJson(json.toString(), TcpServerResponseDTO.class);
 	}
 
 	@Override

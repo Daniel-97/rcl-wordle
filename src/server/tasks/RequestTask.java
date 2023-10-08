@@ -44,35 +44,30 @@ public class RequestTask implements Runnable {
 			// Gestisco la richiesta
 			switch (request.command) {
 
-				case LOGIN: {
+				case LOGIN:
 					response = login(request);
 					break;
-				}
 
-				case LOGOUT: {
+				case LOGOUT:
 					response = logout(request);
 					break;
-				}
 
-				case PLAY_WORDLE: {
+				case PLAY_WORDLE:
 					response = playWordle(request);
 					break;
-				}
 
-				case VERIFY_WORD: {
+				case VERIFY_WORD:
 					response = verifyWord(request);
 					break;
-				}
 
-				case STAT: {
+				case STAT:
 					response = stat(request);
 					break;
-				}
 
-				case SHARE: {
+				case SHARE:
 					response = share(request);
 					break;
-				}
+
 				default:
 					response = new TcpServerResponseDTO(BAD_REQUEST);
 
@@ -199,6 +194,7 @@ public class RequestTask implements Runnable {
 	}
 
 	private TcpServerResponseDTO stat(TcpClientRequestDTO request) {
+
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
@@ -217,6 +213,7 @@ public class RequestTask implements Runnable {
 	}
 
 	private TcpServerResponseDTO share(TcpClientRequestDTO request) throws IOException {
+
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpServerResponseDTO(BAD_REQUEST);
 		}

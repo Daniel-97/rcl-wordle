@@ -1,5 +1,6 @@
 package client.worker;
 
+import client.entity.ClientConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -7,6 +8,7 @@ import common.entity.WordleGame;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.List;
 
@@ -49,6 +51,13 @@ public class MulticastWorker implements Runnable {
 			} catch (IOException e) {
 				System.out.println("Errore durante ricezione messaggio multicast!" + e.getMessage());
 			}
+		}
+
+		try {
+			System.out.println("Abbandono il gruppo di multicast...");
+			multicastSocket.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
+		} catch (IOException e) {
+			System.out.println("Impossibile abbandonare gruppo di multicast! "+e.getMessage());
 		}
 	}
 }
