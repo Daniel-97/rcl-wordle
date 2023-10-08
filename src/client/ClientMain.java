@@ -294,7 +294,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		while (mode == ClientMode.GAME_MODE) {
 			if(guesses.length > 0) {
 				System.out.println("I tuoi tentativi:");
-				CLIHelper.printServerWord(guesses);
+				CLIHelper.printServerWord(guesses, true);
 			}
 			System.out.println("Hai ancora " + remainingAttempts + " tentativi rimasti. Inserisci una parola:");
 			Pair<UserCommand, String[]> parsedCmd = CLIHelper.waitForCommand();

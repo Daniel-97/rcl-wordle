@@ -80,18 +80,20 @@ public class CLIHelper {
 		return new Pair<>(cmd, args);
 	}
 
-	public static void printServerWord(LetterDTO[][] userGuess) {
+	public static void printServerWord(LetterDTO[][] userGuess, boolean printLetter) {
 
-		System.out.println("--------------------");
+		System.out.println("\n--------------------");
 		for(LetterDTO[] guess: userGuess) {
 			if (guess == null) {
 				continue;
 			}
 
-			for (LetterDTO letter : guess) {
-				System.out.print(Character.toUpperCase(letter.letter) + " ");
+			if (printLetter) {
+				for (LetterDTO letter : guess) {
+					System.out.print(Character.toUpperCase(letter.letter) + " ");
+				}
+				System.out.println();
 			}
-			System.out.println();
 			for (LetterDTO letter : guess) {
 				System.out.print(letter.guessStatus + " ");
 			}
@@ -128,8 +130,8 @@ public class CLIHelper {
 		System.out.println("Elenco partite condivise dagli altri giocatori:");
 		for(int i = 0; i < games.size(); i++) {
 			WordleGame game = games.get(i);
-			System.out.print((i+1) + ") utente "+game.username+" inizio: " + game.startedAt.toString());
-			System.out.println(", vittoria: "+(game.won?"si":"no")+", tentativi: " + game.attempts);
+				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " + game.attempts + "/" + 12 + " ("+game.username+")");
+				printServerWord(game.getGuess(), false);
 		}
 	}
 

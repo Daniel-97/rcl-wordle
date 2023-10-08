@@ -63,7 +63,7 @@ public class RequestTask implements Runnable {
 					// TODO migliorare questo codice
 					// Aggiunto gioco al giocatore attuale
 					if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
-						user.newGame(wordleGameService.getGameWord());
+						user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
 						response.code = OK;
 						response.remainingAttempts = user.getLastGame().getRemainingAttempts();
 						response.userGuess = user.getLastGame().getGuess();
@@ -173,13 +173,7 @@ public class RequestTask implements Runnable {
 
 					// Invio ultima partita dell'utente su gruppo multicast
 					System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
-					// Invio solamente le informazioni che mi interessano non tutto l'oggetto
-					WordleGame game = new WordleGame();
-					game.attempts = lastGame.attempts;
-					game.startedAt = lastGame.startedAt;
-					game.won = lastGame.won;
-					game.username = lastGame.username;
-					ServerMain.sendMulticastMessage(JsonService.toJson(game));
+					ServerMain.sendMulticastMessage(JsonService.toJson(lastGame));
 					key.attach(new TcpServerResponseDTO(OK));
 					break;
 				}

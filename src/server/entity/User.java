@@ -2,6 +2,7 @@ package server.entity;
 
 import common.dto.UserStat;
 import common.entity.WordleGame;
+import server.services.WordleGameService;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -82,17 +83,18 @@ public class User {
 	}
 
 	/**
-	 * Aggiunge una nuova partita per l utente
+	 * Aggiunge una nuova partita per l utente usando ultima parola uscita
 	 * @param word
 	 * @return
 	 */
-	public void newGame(String word) {
+	public void newGame(String word, int gameNumber) {
 		WordleGame lastGame = getLastGame();
-		WordleGame game = null;
+		WordleGame game;
+
 		if (lastGame == null) {
-			game = new WordleGame(word, 0, this.username);
+			game = new WordleGame(word, 0, this.username, gameNumber);
 		} else {
-			game = new WordleGame(word, lastGame.id+1, this.username);
+			game = new WordleGame(word, lastGame.id+1, this.username, gameNumber);
 		}
 
 		if (this.games == null) {

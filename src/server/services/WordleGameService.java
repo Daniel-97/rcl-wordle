@@ -94,6 +94,7 @@ public class WordleGameService {
 
 		this.state.actualWord = word;
 		this.state.extractedAt = new Date();
+		this.state.gameNumber++;
 		wordTranslation = this.translateWord(this.state.actualWord);
 		System.out.println("Parola scaduta! Nuova parola estratta: " + word + ", traduzione: "+wordTranslation);
 
@@ -107,6 +108,10 @@ public class WordleGameService {
 	public String getGameWord() {
 		this.updateWord();
 		return this.state.actualWord;
+	}
+
+	public int getGameNumber() {
+		return this.state.gameNumber;
 	}
 
 	/**
