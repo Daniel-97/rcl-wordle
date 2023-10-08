@@ -3,6 +3,7 @@ package server.services;
 import common.dto.LetterDTO;
 import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
+import server.entity.ServerConfig;
 import server.entity.WordleGameState;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +22,6 @@ public class WordleGameService {
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	private String wordTranslation; // Traduzione della parola in italiano
-	private int wordExpireTimeMinutes; // Tempo di scadenza di ogni parola
 	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
 
 
@@ -31,14 +31,10 @@ public class WordleGameService {
 		}
 		return instance;
 	}
-	public synchronized void init(int wordExpireMinutes) {
-		this.wordExpireTimeMinutes = wordExpireMinutes;
-	}
 
 	private WordleGameService() {
 
 		System.out.println("Avvio servizio wordle game...");
-
 		// Carico il dizionario delle parole in memoria
 		Path dictionaryPath = Paths.get(DICTIONARY_PATH);
 		try (
@@ -197,7 +193,7 @@ public class WordleGameService {
 		} else {
 			Calendar cal = GregorianCalendar.getInstance();
 			cal.setTime(this.state.extractedAt);
-			cal.add(GregorianCalendar.MINUTE, wordExpireTimeMinutes);
+			cal.add(GregorianCalendar.MINUTE, ServerConfig.WORD_TIME_MINUTES);
 
 			if (cal.getTime().getTime() < new Date().getTime()) {
 				this.extractWord();

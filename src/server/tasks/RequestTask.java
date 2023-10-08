@@ -120,6 +120,7 @@ public class RequestTask implements Runnable {
 
 					List<UserScore> oldRank = userService.getRank();
 					// Aggiorno lo status del gioco
+					userService.updateRank();
 					lastGame.won = clientWord.equals(lastGame.word);
 					lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
 					List<UserScore> newRank = userService.getRank();

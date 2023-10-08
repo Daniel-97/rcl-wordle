@@ -18,12 +18,12 @@ public class UserService {
 	private static UserService instance = null;
 	private static final String USERS_DATA_PATH = "data/users.json";
 	private List<User> users = new ArrayList<>();
-	private List<UserScore> rank = new ArrayList<>();
+	private final List<UserScore> rank;
 
 	private UserService() {
 		System.out.println("Avvio servizio utenti...");
 		this.loadUsers();
-		this.rank = this.calculateRank();
+		this.rank = this.updateRank();
 	}
 
 	/**
@@ -121,7 +121,7 @@ public class UserService {
 	 */
 	public synchronized boolean logout(String username) {
 		User user = getUser(username);
-		// La disicrizione dell utente dalle notifiche di rank viene fatta client side con RMI callback
+		// La disiscrizione dell utente dalle notifiche di rank viene fatta client side con RMI callback
 		return user != null;
 	}
 
@@ -129,7 +129,7 @@ public class UserService {
 	 * Ritorna la classifica attuale del gioco
 	 * @return
 	 */
-	private List<UserScore> calculateRank() {
+	public List<UserScore> updateRank() {
 
 		List<UserScore> rank = new ArrayList<>();
 		for(User user: this.users) {

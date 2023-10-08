@@ -1,6 +1,7 @@
 package server;
 
 import common.dto.*;
+import server.entity.ServerConfig;
 import server.entity.User;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
@@ -35,11 +36,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	// Configuration
 	private final static String STUB_NAME = "WORDLE-SERVER";
-	private static int TCP_PORT;
-	private static int RMI_PORT;
-	private static String MULTICAST_IP;
-	private static int MULTICAST_PORT;
-	private static int WORD_TIME_MINUTES;
+	private static ServerConfig config;
 	private static ThreadPoolExecutor poolExecutor;
 	// TODO, non thread safe adesso!
 	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
@@ -89,11 +86,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Leggi le configurazioni dal file
 		Properties properties = ConfigReader.readConfig();
 		try {
-			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.tcp.port"));
-			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
-			MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
-			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
-			WORD_TIME_MINUTES = Integer.parseInt(ConfigReader.readProperty(properties, "app.wordle.word.time.minutes"));
+			ServerConfig.TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.tcp.port"));
+			ServerConfig.RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
+			ServerConfig.MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
+			ServerConfig.MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
+			ServerConfig.WORD_TIME_MINUTES = Integer.parseInt(ConfigReader.readProperty(properties, "app.wordle.word.time.minutes"));
 		} catch (NoSuchFieldException e) {
 			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);
@@ -105,19 +102,18 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Inizializzo i servizi
 		this.userService = UserService.getInstance();
 		this.wordleGameService = WordleGameService.getInstance();
-		this.wordleGameService.init(WORD_TIME_MINUTES);
 
 		// Inizializza RMI server
 		try {
 			// Esportazione oggetto
 			ServerRmiInterface stub = (ServerRmiInterface) UnicastRemoteObject.exportObject(this, 0);
 			// Creazione registry
-			LocateRegistry.createRegistry(RMI_PORT);
-			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
+			LocateRegistry.createRegistry(ServerConfig.RMI_PORT);
+			Registry registry = LocateRegistry.getRegistry(ServerConfig.RMI_PORT);
 			// Pubblicazione dello stub nel registry
 			registry.bind(ServerMain.STUB_NAME, stub);
 
-			System.out.println("RMI server in ascolto sulla porta " + RMI_PORT);
+			System.out.println("RMI server in ascolto sulla porta " + ServerConfig.RMI_PORT);
 		} catch (AlreadyBoundException e){
 			System.out.println("RMI already bind exception: " + e.getMessage());
 			System.exit(-1);
@@ -131,7 +127,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			//Creo il channel
 			socketChannel = ServerSocketChannel.open();
 			ServerSocket socket = socketChannel.socket();
-			socket.bind(new InetSocketAddress(TCP_PORT));
+			socket.bind(new InetSocketAddress(ServerConfig.TCP_PORT));
 			//Configuro il channel in modo da essere non bloccante
 			socketChannel.configureBlocking(false);
 
@@ -143,7 +139,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Inizializza multicast socket
 		try {
-			multicastSocket = new MulticastSocket(MULTICAST_PORT);
+			multicastSocket = new MulticastSocket(ServerConfig.MULTICAST_PORT);
 		} catch (IOException e) {
 			System.out.println("Errore durante inizializzazione multicast! " + e.getMessage());
 			System.exit(-1);
@@ -327,8 +323,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	public static void sendMulticastMessage(String message) throws IOException {
 
 		byte[] data = message.getBytes(StandardCharsets.UTF_8);
-		InetAddress multicastAddress = InetAddress.getByName(MULTICAST_IP);
-		DatagramPacket packet = new DatagramPacket(data, data.length, multicastAddress, MULTICAST_PORT);
+		InetAddress multicastAddress = InetAddress.getByName(ServerConfig.MULTICAST_IP);
+		DatagramPacket packet = new DatagramPacket(data, data.length, multicastAddress, ServerConfig.MULTICAST_PORT);
 		multicastSocket.send(packet);
 	}
 

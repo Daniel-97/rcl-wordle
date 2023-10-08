@@ -12,15 +12,14 @@ import java.util.List;
 public class WordleGame {
 
 	private static final int MAX_ATTEMPTS = 12;
-	public int gameNumber;
+	public final String word;
+	public final String username;
+	public final int gameNumber;
 	public boolean won;
 	public boolean finished;
-	public int attempts;
-	public String word;
-	public String username;
-	private List<LetterDTO[]> guess;
+	public int attempts; // numero di tentativi fatti
+	private final List<LetterDTO[]> guess;
 
-	public WordleGame(){}
 	public WordleGame(String word, String username, int gameNumber) {
 		this.won = false;
 		this.finished = false;
