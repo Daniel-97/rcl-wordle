@@ -40,38 +40,46 @@ public class RequestTask implements Runnable {
 				return;
 			}
 
+			TcpServerResponseDTO response;
+			// Gestisco la richiesta
 			switch (request.command) {
 
 				case LOGIN: {
-					login(request);
+					response = login(request);
 					break;
 				}
 
 				case LOGOUT: {
-					logout(request);
+					response = logout(request);
 					break;
 				}
 
 				case PLAY_WORDLE: {
-					playWordle(request);
+					response = playWordle(request);
 					break;
 				}
 
 				case VERIFY_WORD: {
-					verifyWord(request);
+					response = verifyWord(request);
 					break;
 				}
 
 				case STAT: {
-					stat(request);
+					response = stat(request);
 					break;
 				}
 
 				case SHARE: {
-					share(request);
+					response = share(request);
 					break;
 				}
+				default:
+					response = new TcpServerResponseDTO(BAD_REQUEST);
+
 			}
+
+			// Copio la risposta nell'allegato della chiave. Verrà usato da Server.main per rispondere al client
+			key.attach(response);
 
 		}catch (IOException e) {
 			System.out.println("Request task IO exception: "+e);
@@ -79,33 +87,30 @@ public class RequestTask implements Runnable {
 
 	}
 
-	private void login(TcpClientRequestDTO request) {
+	private TcpServerResponseDTO login(TcpClientRequestDTO request) {
 
 		if (request.arguments == null || request.arguments.length < 2) {
-			key.attach(new TcpServerResponseDTO(BAD_REQUEST));
-			return;
+			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
 
 		boolean success = this.userService.login(request.arguments[0], request.arguments[1]);
-		key.attach(new TcpServerResponseDTO(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD));
+		return new TcpServerResponseDTO(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
 
-	private void logout(TcpClientRequestDTO request) {
+	private TcpServerResponseDTO logout(TcpClientRequestDTO request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			key.attach(new TcpServerResponseDTO(BAD_REQUEST));
-			return;
+			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
 
 		boolean success = this.userService.logout(request.arguments[0]);
-		key.attach(new TcpServerResponseDTO(success ? OK : INVALID_USERNAME));
+		return new TcpServerResponseDTO(success ? OK : INVALID_USERNAME);
 	}
 
-	private void playWordle(TcpClientRequestDTO request) {
+	private TcpServerResponseDTO playWordle(TcpClientRequestDTO request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			key.attach(new TcpServerResponseDTO(BAD_REQUEST));
-			return;
+			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
 
 		User user = this.userService.getUser(request.arguments[0]);
@@ -127,14 +132,13 @@ public class RequestTask implements Runnable {
 			response.code = GAME_ALREADY_PLAYED;
 		}
 
-		key.attach(response);
+		return response;
 	}
 
-	private void verifyWord(TcpClientRequestDTO request) {
+	private TcpServerResponseDTO verifyWord(TcpClientRequestDTO request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			key.attach(new TcpServerResponseDTO(BAD_REQUEST));
-			return;
+			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
 
 		String username = request.arguments[0];
@@ -147,28 +151,24 @@ public class RequestTask implements Runnable {
 
 		// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 		if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-			key.attach(new TcpServerResponseDTO(NEED_TO_START_GAME));
-			return;
+			return new TcpServerResponseDTO(NEED_TO_START_GAME);
 		}
 
 		// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
 		else if (lastGame.finished) {
-			key.attach(new TcpServerResponseDTO(GAME_ALREADY_PLAYED));
-			return;
+			return new TcpServerResponseDTO(GAME_ALREADY_PLAYED);
 		}
 
 		// Utente ha inviato parola di lunghezza errata
 		else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
 			res.code = INVALID_WORD_LENGHT;
-			key.attach(res);
-			return;
+			return res;
 		}
 
 		// Utente ha mandato parola che non si trova nel dizionario
 		else if (!wordleGameService.isWordInDict(clientWord)) {
 			res.code = WORD_NOT_IN_DICTIONARY;
-			key.attach(res);
-			return;
+			return res;
 		}
 
 		// Aggiungo il tentativo effettuato dall'utente
@@ -187,60 +187,56 @@ public class RequestTask implements Runnable {
 			res.code = lastGame.won ? GAME_WON : GAME_LOST;
 			res.wordTranslation = wordleGameService.getWordTranslation();
 			key.attach(res);
+			//TODO sistemare non funziona
 			if(wordleGameService.isRankChanged(oldRank, newRank)) {
 				ServerMain.notifyRankToClient(userService.getRank());
 			}
-			return;
+			return res;
 		}
 
 		res.userGuess = lastGame.getGuess();
-		key.attach(res);
+		return res;
 	}
 
-	private void stat(TcpClientRequestDTO request) {
+	private TcpServerResponseDTO stat(TcpClientRequestDTO request) {
 		if (request.arguments == null || request.arguments.length < 1) {
-			key.attach(new TcpServerResponseDTO(BAD_REQUEST));
-			return;
+			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
 
 		String username = request.arguments[0];
 		User user = this.userService.getUser(username);
 
 		if (user == null) {
-			key.attach(new TcpServerResponseDTO(INVALID_USERNAME));
-			return;
+			return new TcpServerResponseDTO(INVALID_USERNAME);
 		}
 
 		UserStat stat = user.getStat();
 		TcpServerResponseDTO response = new TcpServerResponseDTO();
 		response.stat = stat;
-		key.attach(response);
+		return response;
 	}
 
-	private void share(TcpClientRequestDTO request) throws IOException {
+	private TcpServerResponseDTO share(TcpClientRequestDTO request) throws IOException {
 		if (request.arguments == null || request.arguments.length < 1) {
-			key.attach(new TcpServerResponseDTO(BAD_REQUEST));
-			return;
+			return new TcpServerResponseDTO(BAD_REQUEST);
 		}
 
 		String username = request.arguments[0];
 		User user = this.userService.getUser(username);
 
 		if (user == null) {
-			key.attach(new TcpServerResponseDTO(INVALID_USERNAME));
-			return;
+			return new TcpServerResponseDTO(INVALID_USERNAME);
 		}
 
 		WordleGame lastGame = user.getLastGame();
 		if (lastGame == null) {
-			key.attach(new TcpServerResponseDTO(NO_GAME_TO_SHARE));
-			return;
+			return new TcpServerResponseDTO(NO_GAME_TO_SHARE);
 		}
 
 		// Invio ultima partita dell'utente su gruppo multicast
 		System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
 		ServerMain.sendMulticastMessage(JsonService.toJson(lastGame));
-		key.attach(new TcpServerResponseDTO(OK));
+		return new TcpServerResponseDTO(OK);
 	}
 
 }
