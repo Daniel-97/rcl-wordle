@@ -34,9 +34,6 @@ import static common.enums.ResponseCodeEnum.*;
 
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
-	// Configuration
-	private final static String STUB_NAME = "WORDLE-SERVER";
-	private static ServerConfig config;
 	private static ThreadPoolExecutor poolExecutor;
 	// TODO, non thread safe adesso!
 	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
@@ -82,22 +79,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	public ServerMain() {
 
 		System.out.println("Avvio Wordle game server...");
-
-		// Leggi le configurazioni dal file
-		Properties properties = ConfigReader.readConfig();
-		try {
-			ServerConfig.TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.tcp.port"));
-			ServerConfig.RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties,"app.rmi.port"));
-			ServerConfig.MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
-			ServerConfig.MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
-			ServerConfig.WORD_TIME_MINUTES = Integer.parseInt(ConfigReader.readProperty(properties, "app.wordle.word.time.minutes"));
-		} catch (NoSuchFieldException e) {
-			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
-			System.exit(-1);
-		} catch (NumberFormatException e) {
-			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
-			System.exit(-1);
-		}
+		// Carico le configurazioni
+		ServerConfig.loadConfig();
 
 		// Inizializzo i servizi
 		this.userService = UserService.getInstance();
@@ -111,7 +94,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			LocateRegistry.createRegistry(ServerConfig.RMI_PORT);
 			Registry registry = LocateRegistry.getRegistry(ServerConfig.RMI_PORT);
 			// Pubblicazione dello stub nel registry
-			registry.bind(ServerMain.STUB_NAME, stub);
+			registry.bind(ServerConfig.STUB_NAME, stub);
 
 			System.out.println("RMI server in ascolto sulla porta " + ServerConfig.RMI_PORT);
 		} catch (AlreadyBoundException e){

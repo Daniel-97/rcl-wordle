@@ -1,5 +1,6 @@
 package client;
 
+import client.entity.ClientConfig;
 import client.enums.ClientMode;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
@@ -41,12 +42,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private final static int BUFFER_SIZE = 1024;
 	private final static Gson gson = new GsonBuilder().create();
-	private static String STUB_NAME = "WORDLE-SERVER";
-	private static int TCP_PORT;
-	private static int RMI_PORT;
-	private static String SERVER_IP;
-	private static String MULTICAST_IP;
-	private static int MULTICAST_PORT;
 	private static ServerRmiInterface serverRMI;
 	private static NotifyEventInterface stub;
 	private static SocketChannel socketChannel;
@@ -79,7 +74,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				System.out.println("Shutdown Wordle client...");
 				try {
 					socketChannel.close();
-					multicastSocket.leaveGroup(InetAddress.getByName(MULTICAST_IP));
+					multicastSocket.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -93,29 +88,14 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		super();
 		System.out.println("Avvio Wordle game client...");
-
-		// Leggo file di configurazione
-		Properties properties = ConfigReader.readConfig();
-		try {
-			RMI_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.rmi.port"));
-			TCP_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.port"));
-			SERVER_IP = ConfigReader.readProperty(properties, "app.tcp.ip");
-			MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
-			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
-		} catch (NoSuchFieldException e) {
-			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
-			System.exit(-1);
-		} catch (NumberFormatException e) {
-			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
-			System.exit(-1);
-		}
+		ClientConfig.loadConfig();
 
 		// RMI e callback
 		try {
-			Registry registry = LocateRegistry.getRegistry(RMI_PORT);
-			Remote RemoteObject = registry.lookup(STUB_NAME);
+			Registry registry = LocateRegistry.getRegistry(ClientConfig.RMI_PORT);
+			Remote RemoteObject = registry.lookup(ClientConfig.STUB_NAME);
 			serverRMI = (ServerRmiInterface) RemoteObject;
-			System.out.println("Lookup registro RMI server riuscito! Stub: " + STUB_NAME);
+			System.out.println("Lookup registro RMI server riuscito! Stub: " + ClientConfig.STUB_NAME);
 
 			// Callback (esporta oggetto)
 			stub = (NotifyEventInterface) UnicastRemoteObject.exportObject(this, 0);
@@ -132,8 +112,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		// Inizializza connessione TCP
 		try {
 			socketChannel = SocketChannel.open();
-			socketChannel.connect(new InetSocketAddress(SERVER_IP, TCP_PORT));
-			System.out.println("Connessione TCP con il server riuscita! "+SERVER_IP+":"+TCP_PORT);
+			socketChannel.connect(new InetSocketAddress(ClientConfig.SERVER_IP, ClientConfig.TCP_PORT));
+			System.out.println("Connessione TCP con il server riuscita! "+ClientConfig.SERVER_IP+":"+ClientConfig.TCP_PORT);
 		} catch (IOException e) {
 			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
 			System.exit(-1);
@@ -141,10 +121,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		// Inizializza multicast socket
 		try {
-			multicastSocket = new MulticastSocket(MULTICAST_PORT);
-			InetAddress multicastAddress = InetAddress.getByName(MULTICAST_IP);
+			multicastSocket = new MulticastSocket(ClientConfig.MULTICAST_PORT);
+			InetAddress multicastAddress = InetAddress.getByName(ClientConfig.MULTICAST_IP);
 			multicastSocket.joinGroup(multicastAddress);
-			System.out.println("Join a gruppo multicast " + MULTICAST_IP + " avvenuta con successo!");
+			System.out.println("Join a gruppo multicast " + ClientConfig.MULTICAST_IP + " avvenuta con successo!");
 		} catch (IOException e) {
 			System.out.println("Errore durante inizializzazione multicast! " + e.getMessage());
 			System.exit(-1);
