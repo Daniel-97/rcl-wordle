@@ -18,13 +18,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import static common.enums.ResponseCodeEnum.*;
 
-public class CommandTask implements Runnable {
+public class RequestTask implements Runnable {
 	private final SelectionKey key;
 	private final TcpClientRequestDTO request;
 	private final UserService userService = UserService.getInstance();
 	private final WordleGameService wordleGameService = WordleGameService.getInstance();
 
-	public CommandTask(SelectionKey key, TcpClientRequestDTO request) {
+	public RequestTask(SelectionKey key, TcpClientRequestDTO request) {
 		this.key = key;
 		this.request = request;
 	}

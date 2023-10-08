@@ -8,7 +8,7 @@ import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
 import common.utils.ConfigReader;
-import server.tasks.CommandTask;
+import server.tasks.RequestTask;
 
 import java.io.IOException;
 import java.net.*;
@@ -181,6 +181,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				try {
 					//Connessione accettata da client
 					if (key.isAcceptable()) {
+
 						ServerSocketChannel server = (ServerSocketChannel) key.channel();
 						// Accetto la nuova connessione
 						SocketChannel client = server.accept();
@@ -206,163 +207,19 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						System.out.println("Nuovo messaggio da client " + clientAddress + ":" + clientMessage);
 						SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
-						// Submitto la richiesta del client al pool executor
-						poolExecutor.submit(new CommandTask(writeKey, clientMessage));
-
-						/*
-						SocketChannel client = (SocketChannel) key.channel();
-						TcpClientRequestDTO clientMessage = readTcpMessage(client);
-						SocketAddress clientAddress = client.getRemoteAddress();
-						SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
-
-						if (clientMessage == null) {
-							System.out.println("Disconnessione forzata del client " + clientAddress);
-							client.close();
-							break;
+						// Faccio gestire la richiesta del client dal pool di thread
+						try {
+							poolExecutor.submit(new RequestTask(writeKey, clientMessage));
+						} catch (RejectedExecutionException e) {
+							System.out.println("Impossibile gestire nuova richiesta, thread pool rejection: "+e.getMessage());
+							writeKey.attach(new TcpServerResponseDTO(INTERNAL_SERVER_ERROR));
 						}
-
-						System.out.println("Nuovo messaggio da client "+clientAddress+":"+ clientMessage);
-
-						switch (clientMessage.command) {
-
-							case LOGIN: {
-								// TODO controllare se gli argomenti ci sono o meno
-								boolean success = this.userService.login(clientMessage.arguments[0], clientMessage.arguments[1]);
-								writeKey.attach(new TcpServerResponseDTO(success ? OK : INVALID_USERNAME_PASSWORD));
-								break;
-							}
-
-							case LOGOUT: {
-								boolean success = this.userService.logout(clientMessage.arguments[0]);
-								writeKey.attach(new TcpServerResponseDTO(success ? OK : INVALID_USERNAME));
-								break;
-							}
-
-							case PLAY_WORDLE: {
-								User user = this.userService.getUser(clientMessage.arguments[0]);
-								WordleGame lastGame = user.getLastGame();
-								TcpServerResponseDTO response = new TcpServerResponseDTO();
-
-								// TODO migliorare questo codice
-								// Aggiunto gioco al giocatore attuale
-								if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
-									user.newGame(wordleGameService.getGameWord());
-									response.code = OK;
-									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-									response.userGuess = user.getLastGame().getGuess();
-								} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
-									response.code = OK;
-									response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-									response.userGuess = user.getLastGame().getGuess();
-								} else {
-									response.code = GAME_ALREADY_PLAYED;
-								}
-
-								writeKey.attach(response);
-								break;
-							}
-
-							case VERIFY_WORD: {
-								String username = clientMessage.arguments[0];
-								String clientWord = clientMessage.arguments[1];
-								User user = this.userService.getUser(username);
-								WordleGame lastGame = user.getLastGame();
-
-								// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
-								if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-									writeKey.attach(new TcpServerResponseDTO(NEED_TO_START_GAME));
-									break;
-								}
-
-								// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
-								else if (lastGame.finished) {
-									writeKey.attach(new TcpServerResponseDTO(GAME_ALREADY_PLAYED));
-									break;
-								}
-
-								// Utente ha inviato parola di lunghezza errata
-								else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
-									writeKey.attach(new TcpServerResponseDTO(INVALID_WORD_LENGHT));
-									break;
-								}
-
-								// Utente ha mandato parola che non si trova nel dizionario
-								else if (!wordleGameService.isWordInDict(clientWord)) {
-									writeKey.attach(new TcpServerResponseDTO(WORD_NOT_IN_DICTIONARY));
-									break;
-								}
-
-								// Aggiungo il tentativo effettuato dall'utente
-								LetterDTO[] guess = wordleGameService.hintWord(clientWord);
-								lastGame.addGuess(guess);
-								System.out.println("Aggiunto guess per parola " + clientWord + " dell'utente " + username);
-								// Aggiorno lo status del gioco
-								lastGame.won = clientWord.equals(lastGame.word);
-								lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
-
-								// Se la partita e' finita lo comunico al client
-								if (lastGame.finished) {
-									TcpServerResponseDTO res = new TcpServerResponseDTO();
-									res.code = lastGame.won ? GAME_WON : GAME_LOST;
-									res.wordTranslation = wordleGameService.getWordTranslation();
-									writeKey.attach(res);
-									// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
-									notifyRankToClient(userService.getRank());
-									break;
-								}
-
-								TcpServerResponseDTO res = new TcpServerResponseDTO();
-								res.remainingAttempts = lastGame.getRemainingAttempts();
-								res.userGuess = lastGame.getGuess();
-								writeKey.attach(res);
-								break;
-							}
-
-							case STAT: {
-								String username = clientMessage.arguments[0];
-								User user = this.userService.getUser(username);
-								// Todo controllare che utente esista davvero
-								UserStat stat = user.getStat();
-								TcpServerResponseDTO response = new TcpServerResponseDTO();
-								response.stat = stat;
-								writeKey.attach(response);
-								break;
-							}
-
-							case SHARE: {
-								String username = clientMessage.arguments[0];
-								User user = this.userService.getUser(username);
-
-								if (user == null) {
-									writeKey.attach(new TcpServerResponseDTO(INVALID_USERNAME));
-									break;
-								}
-
-								WordleGame lastGame = user.getLastGame();
-								if (lastGame == null) {
-									writeKey.attach(new TcpServerResponseDTO(NO_GAME_TO_SHARE));
-									break;
-								}
-
-								// Invio ultima partita dell'utente su gruppo multicast
-								System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
-								// Invio solamente le informazioni che mi interessano non tutto l'oggetto
-								WordleGame game = new WordleGame();
-								game.attempts = lastGame.attempts;
-								game.startedAt = lastGame.startedAt;
-								sendMulticastMessage(JsonService.toJson(game));
-								writeKey.attach(new TcpServerResponseDTO(OK));
-								break;
-							}
-
-							default:
-								System.out.println("Comando sconosciuto("+clientMessage.command+") ricevuto da "+clientAddress);
-						} */
 					}
 
 					// Canale pronto per la scrittura. Il canale potrebbe essere pronto ma il thread potrebbe non aver
 					// ancora messo nell'attachment la risposta da inviare al client
 					else if (key.isWritable() && key.attachment() != null) {
+
 						System.out.println("Canale pronto per la scrittura!");
 
 						SocketChannel client = (SocketChannel) key.channel();
@@ -373,11 +230,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 							// Registro nuovamente il client per un operazione di lettura
 							client.register(selector, SelectionKey.OP_READ, null);
 						}
-						/*
-						else {
-							System.out.println("Impossibile recuperare messaggio da inviare al client da key. Possibile disconnessione client");
-							//key.channel().close();
-						} */
 					}
 
 				} catch (IOException ioe) {
