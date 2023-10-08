@@ -2,7 +2,6 @@ package server.entity;
 
 import common.dto.UserStat;
 import common.entity.WordleGame;
-import server.services.WordleGameService;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -15,20 +14,17 @@ import java.util.*;
 public class User {
 
 	private final String username;
-	private final String passwordHash; // password hahsata
-	private String salt; // Password salt
-	private final Date registeredAt; // Data registrazione utente
+	private final String password; // password hash
+	private final String salt; // Password salt
 	private List<WordleGame> games;
 	// Todo tenere aggiornate queste statistiche
 	private int lastStreak = 0;
 	private int bestStreak = 0;
-	public transient boolean online = false; // Indica se utente e' online oppure no, da non salvare sul json
 
 	public User(String username, String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
 		this.username = username;
-		this.registeredAt = new Date();
 		this.salt = generateRandomSalt();
-		this.passwordHash = hashPassword(password, Base64.getDecoder().decode(this.salt));
+		this.password = hashPassword(password, Base64.getDecoder().decode(this.salt));
 	}
 
 	/**
@@ -64,7 +60,7 @@ public class User {
 	 * @return
 	 */
 	public boolean verifyPassword(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
-		return this.passwordHash.equals(hashPassword(password, Base64.getDecoder().decode(this.salt)));
+		return this.password.equals(hashPassword(password, Base64.getDecoder().decode(this.salt)));
 	}
 
 	public String getUsername() {
@@ -88,14 +84,7 @@ public class User {
 	 * @return
 	 */
 	public void newGame(String word, int gameNumber) {
-		WordleGame lastGame = getLastGame();
-		WordleGame game;
-
-		if (lastGame == null) {
-			game = new WordleGame(word, 0, this.username, gameNumber);
-		} else {
-			game = new WordleGame(word, lastGame.id+1, this.username, gameNumber);
-		}
+		WordleGame game = new WordleGame(word, this.username, gameNumber);
 
 		if (this.games == null) {
 			this.games = new ArrayList<>();

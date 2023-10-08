@@ -12,8 +12,6 @@ import java.util.List;
 public class WordleGame {
 
 	private static final int MAX_ATTEMPTS = 12;
-	public Date startedAt;
-	public int id; // Id univoco del gioco relativo all utente
 	public int gameNumber;
 	public boolean won;
 	public boolean finished;
@@ -23,13 +21,11 @@ public class WordleGame {
 	private List<LetterDTO[]> guess;
 
 	public WordleGame(){}
-	public WordleGame(String word, int id, String username, int gameNumber) {
-		this.startedAt = new Date();
+	public WordleGame(String word, String username, int gameNumber) {
 		this.won = false;
 		this.finished = false;
 		this.attempts = 0;
 		this.word = word;
-		this.id = id;
 		this.guess = new ArrayList<>();
 		this.username = username;
 		this.gameNumber = gameNumber;
