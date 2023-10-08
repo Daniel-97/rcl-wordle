@@ -90,9 +90,9 @@ public class User {
 		WordleGame lastGame = getLastGame();
 		WordleGame game = null;
 		if (lastGame == null) {
-			game = new WordleGame(word, 0);
+			game = new WordleGame(word, 0, this.username);
 		} else {
-			game = new WordleGame(word, lastGame.id+1);
+			game = new WordleGame(word, lastGame.id+1, this.username);
 		}
 
 		if (this.games == null) {

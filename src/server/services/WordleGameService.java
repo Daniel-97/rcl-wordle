@@ -21,9 +21,8 @@ public class WordleGameService {
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	private String wordTranslation; // Traduzione della parola in italiano
-	private int wordExpireTimeMinutes;
+	private int wordExpireTimeMinutes; // Tempo di scadenza di ogni parola
 	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
-	private final ArrayList<UserScore> ranking = new ArrayList<>(); // Contiene la classifica degli utenti
 
 
 	public synchronized static WordleGameService getInstance() {
@@ -105,7 +104,7 @@ public class WordleGameService {
 	 * Ritorna la parola attuale del gioco. Prima di farlo controlla se la parola deve essere aggiornata
 	 * @return
 	 */
-	public String getGameWord(){
+	public String getGameWord() {
 		this.updateWord();
 		return this.state.actualWord;
 	}
@@ -203,5 +202,30 @@ public class WordleGameService {
 
 	public String getWordTranslation() {
 		return wordTranslation;
+	}
+
+	/**
+	 * Ritorna true se ci sono differenze nelle prime tre posizioni tra la vecchia e la nuova classifica
+	 * @param oldRank
+	 * @param newRank
+	 * @return
+	 */
+	public boolean isRankChanged(List<UserScore> oldRank, List<UserScore> newRank) {
+		// TODO fix
+		for(int i = 0; i < 3; i++) {
+			UserScore oldScore = oldRank.size() < (i+1) ? null : oldRank.get(i);
+			UserScore newScore = newRank.size() < (i+1) ? null : newRank.get(i);
+
+			if (
+				(oldScore != null && newScore == null) ||
+				(oldScore == null && newScore != null) ||
+				(oldScore != null && newScore != null && !newScore.username.equals(oldScore.username))
+			) {
+				System.out.println("Classifica utenti cambiata nei primi 3 posti");
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -153,16 +153,6 @@ public class UserService {
 
 	}
 
-	/**
-	 * Ritorna true se ci sono state variazioni nei primi tre posti della classifica
-	 * @return
-	 */
-	public boolean isRankChanged() {
-		List<UserScore> newRank = calculateRank();
-		// TODO terminare
-		return false;
-	}
-
 	public List<UserScore> getRank() {
 		return this.rank;
 	}

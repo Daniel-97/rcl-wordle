@@ -116,7 +116,7 @@ public class CLIHelper {
 
 		System.out.println("CLASSIFICA GIOCATORI");
 		for(int i = 0; i < rank.size(); i++) {
-			System.out.println(i + ")	"+rank.get(i).username + "	" + rank.get(i).score);
+			System.out.println((i+1) + ")	username: "+rank.get(i).username + ", score: " + rank.get(i).score);
 		}
 	}
 
@@ -128,9 +128,8 @@ public class CLIHelper {
 		System.out.println("Elenco partite condivise dagli altri giocatori:");
 		for(int i = 0; i < games.size(); i++) {
 			WordleGame game = games.get(i);
-			System.out.print(i + ") <username> " + game.startedAt.toString());
+			System.out.print((i+1) + ") utente "+game.username+" inizio: " + game.startedAt.toString());
 			System.out.println(", vittoria: "+(game.won?"si":"no")+", tentativi: " + game.attempts);
-			System.out.println();
 		}
 	}
 

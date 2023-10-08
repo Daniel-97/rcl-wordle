@@ -194,7 +194,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 					// Canale pronto per la lettura
 					else if (key.isReadable()) {
 
-						System.out.println("Canale pronto per la lettura!");
 						SocketChannel client = (SocketChannel) key.channel();
 						SocketAddress clientAddress = client.getRemoteAddress();
 						TcpClientRequestDTO clientMessage = ServerMain.readTcpMessage(client);
@@ -205,7 +204,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 							break;
 						}
 
-						System.out.println("Nuovo messaggio da client " + clientAddress + ":" + clientMessage);
 						SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
 						// Faccio gestire la richiesta del client dal pool di thread
 						try {
@@ -219,8 +217,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 					// Canale pronto per la scrittura. Il canale potrebbe essere pronto ma il thread potrebbe non aver
 					// ancora messo nell'attachment la risposta da inviare al client
 					else if (key.isWritable() && key.attachment() != null) {
-
-						System.out.println("Canale pronto per la scrittura!");
 
 						SocketChannel client = (SocketChannel) key.channel();
 						TcpServerResponseDTO response = (TcpServerResponseDTO) key.attachment();

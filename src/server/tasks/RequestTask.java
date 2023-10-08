@@ -1,9 +1,6 @@
 package server.tasks;
 
-import common.dto.LetterDTO;
-import common.dto.TcpClientRequestDTO;
-import common.dto.TcpServerResponseDTO;
-import common.dto.UserStat;
+import common.dto.*;
 import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
 import server.ServerMain;
@@ -16,6 +13,8 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.List;
+
 import static common.enums.ResponseCodeEnum.*;
 
 public class RequestTask implements Runnable {
@@ -34,6 +33,12 @@ public class RequestTask implements Runnable {
 		try {
 			SocketChannel client = (SocketChannel) key.channel();
 			SocketAddress clientAddress = client.getRemoteAddress();
+			System.out.println("["+Thread.currentThread().getName()+"] Gestisco richiesta da client " + clientAddress +": "+request);
+
+			if (request == null || request.command == null) {
+				key.attach(new TcpServerResponseDTO(INTERNAL_SERVER_ERROR));
+				return;
+			}
 
 			switch (request.command) {
 
@@ -80,6 +85,9 @@ public class RequestTask implements Runnable {
 					User user = this.userService.getUser(username);
 					WordleGame lastGame = user.getLastGame();
 
+					TcpServerResponseDTO res = new TcpServerResponseDTO();
+					res.remainingAttempts = lastGame.getRemainingAttempts();
+
 					// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 					if (!lastGame.word.equals(wordleGameService.getGameWord())) {
 						key.attach(new TcpServerResponseDTO(NEED_TO_START_GAME));
@@ -94,37 +102,39 @@ public class RequestTask implements Runnable {
 
 					// Utente ha inviato parola di lunghezza errata
 					else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
-						key.attach(new TcpServerResponseDTO(INVALID_WORD_LENGHT));
+						res.code = INVALID_WORD_LENGHT;
+						key.attach(res);
 						break;
 					}
 
 					// Utente ha mandato parola che non si trova nel dizionario
 					else if (!wordleGameService.isWordInDict(clientWord)) {
-						key.attach(new TcpServerResponseDTO(WORD_NOT_IN_DICTIONARY));
+						res.code = WORD_NOT_IN_DICTIONARY;
+						key.attach(res);
 						break;
 					}
 
 					// Aggiungo il tentativo effettuato dall'utente
 					LetterDTO[] guess = wordleGameService.hintWord(clientWord);
 					lastGame.addGuess(guess);
-					System.out.println("Aggiunto guess per parola " + clientWord + " dell'utente " + username);
+
+					List<UserScore> oldRank = userService.getRank();
 					// Aggiorno lo status del gioco
 					lastGame.won = clientWord.equals(lastGame.word);
 					lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
+					List<UserScore> newRank = userService.getRank();
 
 					// Se la partita e' finita lo comunico al client
 					if (lastGame.finished) {
-						TcpServerResponseDTO res = new TcpServerResponseDTO();
 						res.code = lastGame.won ? GAME_WON : GAME_LOST;
 						res.wordTranslation = wordleGameService.getWordTranslation();
 						key.attach(res);
-						// TODO notificare questo cambiamento solo se ci sono aggiornamenti nei primi 3 posti della classifica
-						ServerMain.notifyRankToClient(userService.getRank());
+						if(wordleGameService.isRankChanged(oldRank, newRank)) {
+							ServerMain.notifyRankToClient(userService.getRank());
+						}
 						break;
 					}
 
-					TcpServerResponseDTO res = new TcpServerResponseDTO();
-					res.remainingAttempts = lastGame.getRemainingAttempts();
 					res.userGuess = lastGame.getGuess();
 					key.attach(res);
 					break;
@@ -133,7 +143,12 @@ public class RequestTask implements Runnable {
 				case STAT: {
 					String username = request.arguments[0];
 					User user = this.userService.getUser(username);
-					// Todo controllare che utente esista davvero
+
+					if (user == null) {
+						key.attach(new TcpServerResponseDTO(INVALID_USERNAME));
+						break;
+					}
+
 					UserStat stat = user.getStat();
 					TcpServerResponseDTO response = new TcpServerResponseDTO();
 					response.stat = stat;
@@ -162,6 +177,8 @@ public class RequestTask implements Runnable {
 					WordleGame game = new WordleGame();
 					game.attempts = lastGame.attempts;
 					game.startedAt = lastGame.startedAt;
+					game.won = lastGame.won;
+					game.username = lastGame.username;
 					ServerMain.sendMulticastMessage(JsonService.toJson(game));
 					key.attach(new TcpServerResponseDTO(OK));
 					break;
@@ -169,7 +186,7 @@ public class RequestTask implements Runnable {
 			}
 
 		}catch (IOException e) {
-
+			System.out.println("Request task IO exception: "+e);
 		}
 
 	}

@@ -220,6 +220,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 					this.register(args[0], args[1]);
 				}
 				break;
+
+			default:
+				System.out.println("Comando non trovato!");
 		}
 
 		CLIHelper.pause();
