@@ -176,7 +176,7 @@ public class WordleGameService {
 			}
 
 		} catch (IOException e) {
-			System.out.println("Errore durante traduzione parola "+word+": "+e.getMessage());
+			System.out.println("Errore durante traduzione parola "+word+": "+e);
 		}
 
 		return null;
