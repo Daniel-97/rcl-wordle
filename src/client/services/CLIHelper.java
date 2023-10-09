@@ -82,7 +82,12 @@ public class CLIHelper {
 
 	public static void printServerWord(LetterDTO[][] userGuess, boolean printLetter) {
 
+		if (userGuess == null || userGuess.length == 0) {
+			return;
+		}
+
 		System.out.println("\n--------------------");
+
 		for(LetterDTO[] guess: userGuess) {
 			if (guess == null) {
 				continue;

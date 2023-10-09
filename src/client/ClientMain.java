@@ -268,10 +268,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		System.out.println("GAME MODE! Digita in qualsiasi momento :quit per uscire dalla modalita' gioco!");
 		while (mode == ClientMode.GAME_MODE) {
-			if(guesses.length > 0) {
-				System.out.println("I tuoi tentativi:");
-				CLIHelper.printServerWord(guesses, true);
-			}
+			CLIHelper.printServerWord(guesses, true);
 			System.out.println("Hai ancora " + remainingAttempts + " tentativi rimasti. Inserisci una parola:");
 			Pair<UserCommand, String[]> parsedCmd = CLIHelper.waitForCommand();
 			UserCommand cmd = parsedCmd.getKey();
@@ -284,6 +281,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			CLIHelper.cls();
 			this.sendWord(args[0]);
+			CLIHelper.printServerWord(guesses, true);
+			CLIHelper.pause();
 		}
 	}
 
@@ -346,7 +345,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				guesses = response.userGuess;
 
 		}
-		CLIHelper.pause();
 
 	}
 
@@ -358,12 +356,15 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(requestDTO);
 
 			TcpResponse response = readTcpMessage();
+			// todo mettere switch
 			if (response.code == OK) {
 				System.out.println("Login completato con successo");
 				mode = ClientMode.USER_MODE;
 				ClientMain.username = username;
 				// Iscrive l'utente alle callback dal server
 				serverRMI.subscribeClientToEvent(username, stub);
+			} else if(response.code == ALREADY_LOGGED_IN){
+				System.out.println("Utente gia' loggato su altro client, esegui prima la disconnessione!");
 			} else {
 				System.out.println("Nome utente o password errati!");
 			}
