@@ -8,7 +8,6 @@ import common.interfaces.ServerRmiInterface;
 import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
-import common.utils.ConfigReader;
 import server.tasks.RequestTask;
 
 import java.io.IOException;
@@ -173,7 +172,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						SocketChannel client = (SocketChannel) key.channel();
 						SocketAddress clientAddress = client.getRemoteAddress();
-						TcpClientRequestDTO clientMessage = ServerMain.readTcpMessage(client);
+						TcpRequest clientMessage = ServerMain.readTcpMessage(client);
 
 						if (clientMessage == null) {
 							System.out.println("Disconnessione forzata del client " + clientAddress);
@@ -187,7 +186,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 							poolExecutor.submit(new RequestTask(writeKey, clientMessage));
 						} catch (RejectedExecutionException e) {
 							System.out.println("Impossibile gestire nuova richiesta, thread pool rejection: "+e.getMessage());
-							writeKey.attach(new TcpServerResponseDTO(INTERNAL_SERVER_ERROR));
+							writeKey.attach(new TcpResponse(INTERNAL_SERVER_ERROR));
 						}
 					}
 
@@ -196,7 +195,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 					else if (key.isWritable() && key.attachment() != null) {
 
 						SocketChannel client = (SocketChannel) key.channel();
-						TcpServerResponseDTO response = (TcpServerResponseDTO) key.attachment();
+						TcpResponse response = (TcpResponse) key.attachment();
 
 						if (response != null) {
 							sendTcpMessage(client, response);
@@ -267,14 +266,14 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		System.out.println("Utente " + username + " disiscritto da eventi asincroni!");
 	}
 
-	public static void sendTcpMessage(SocketChannel socket, TcpServerResponseDTO request) throws IOException {
+	public static void sendTcpMessage(SocketChannel socket, TcpResponse request) throws IOException {
 
 		String json = JsonService.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socket.write(command);
 	}
 
-	public static TcpClientRequestDTO readTcpMessage(SocketChannel socketChannel) throws IOException {
+	public static TcpRequest readTcpMessage(SocketChannel socketChannel) throws IOException {
 
 		final int BUFFER_SIZE = 1024;
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
@@ -294,7 +293,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				break;
 		}
 
-		return JsonService.fromJson(json.toString(), TcpClientRequestDTO.class);
+		return JsonService.fromJson(json.toString(), TcpRequest.class);
 	}
 
 	/**

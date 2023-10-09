@@ -19,11 +19,11 @@ import static common.enums.ResponseCodeEnum.*;
 
 public class RequestTask implements Runnable {
 	private final SelectionKey key;
-	private final TcpClientRequestDTO request;
+	private final TcpRequest request;
 	private final UserService userService = UserService.getInstance();
 	private final WordleGameService wordleGameService = WordleGameService.getInstance();
 
-	public RequestTask(SelectionKey key, TcpClientRequestDTO request) {
+	public RequestTask(SelectionKey key, TcpRequest request) {
 		this.key = key;
 		this.request = request;
 	}
@@ -36,11 +36,11 @@ public class RequestTask implements Runnable {
 			System.out.println("["+Thread.currentThread().getName()+"] Gestisco richiesta da client " + clientAddress +": "+request);
 
 			if (request == null || request.command == null) {
-				key.attach(new TcpServerResponseDTO(INTERNAL_SERVER_ERROR));
+				key.attach(new TcpResponse(INTERNAL_SERVER_ERROR));
 				return;
 			}
 
-			TcpServerResponseDTO response;
+			TcpResponse response;
 			// Gestisco la richiesta
 			switch (request.command) {
 
@@ -69,7 +69,7 @@ public class RequestTask implements Runnable {
 					break;
 
 				default:
-					response = new TcpServerResponseDTO(BAD_REQUEST);
+					response = new TcpResponse(BAD_REQUEST);
 
 			}
 
@@ -82,35 +82,35 @@ public class RequestTask implements Runnable {
 
 	}
 
-	private TcpServerResponseDTO login(TcpClientRequestDTO request) {
+	private TcpResponse login(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 2) {
-			return new TcpServerResponseDTO(BAD_REQUEST);
+			return new TcpResponse(BAD_REQUEST);
 		}
 
 		boolean success = this.userService.login(request.arguments[0], request.arguments[1]);
-		return new TcpServerResponseDTO(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
+		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
 
-	private TcpServerResponseDTO logout(TcpClientRequestDTO request) {
+	private TcpResponse logout(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpServerResponseDTO(BAD_REQUEST);
+			return new TcpResponse(BAD_REQUEST);
 		}
 
 		boolean success = this.userService.logout(request.arguments[0]);
-		return new TcpServerResponseDTO(success ? OK : INVALID_USERNAME);
+		return new TcpResponse(success ? OK : INVALID_USERNAME);
 	}
 
-	private TcpServerResponseDTO playWordle(TcpClientRequestDTO request) {
+	private TcpResponse playWordle(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpServerResponseDTO(BAD_REQUEST);
+			return new TcpResponse(BAD_REQUEST);
 		}
 
 		User user = this.userService.getUser(request.arguments[0]);
 		WordleGame lastGame = user.getLastGame();
-		TcpServerResponseDTO response = new TcpServerResponseDTO();
+		TcpResponse response = new TcpResponse();
 
 		// TODO migliorare questo codice
 		// Aggiunto gioco al giocatore attuale
@@ -130,10 +130,10 @@ public class RequestTask implements Runnable {
 		return response;
 	}
 
-	private TcpServerResponseDTO verifyWord(TcpClientRequestDTO request) {
+	private TcpResponse verifyWord(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpServerResponseDTO(BAD_REQUEST);
+			return new TcpResponse(BAD_REQUEST);
 		}
 
 		String username = request.arguments[0];
@@ -141,17 +141,17 @@ public class RequestTask implements Runnable {
 		User user = this.userService.getUser(username);
 		WordleGame lastGame = user.getLastGame();
 
-		TcpServerResponseDTO res = new TcpServerResponseDTO();
+		TcpResponse res = new TcpResponse();
 		res.remainingAttempts = lastGame.getRemainingAttempts();
 
 		// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 		if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-			return new TcpServerResponseDTO(NEED_TO_START_GAME);
+			return new TcpResponse(NEED_TO_START_GAME);
 		}
 
 		// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
 		else if (lastGame.finished) {
-			return new TcpServerResponseDTO(GAME_ALREADY_PLAYED);
+			return new TcpResponse(GAME_ALREADY_PLAYED);
 		}
 
 		// Utente ha inviato parola di lunghezza errata
@@ -193,47 +193,47 @@ public class RequestTask implements Runnable {
 		return res;
 	}
 
-	private TcpServerResponseDTO stat(TcpClientRequestDTO request) {
+	private TcpResponse stat(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpServerResponseDTO(BAD_REQUEST);
+			return new TcpResponse(BAD_REQUEST);
 		}
 
 		String username = request.arguments[0];
 		User user = this.userService.getUser(username);
 
 		if (user == null) {
-			return new TcpServerResponseDTO(INVALID_USERNAME);
+			return new TcpResponse(INVALID_USERNAME);
 		}
 
 		UserStat stat = user.getStat();
-		TcpServerResponseDTO response = new TcpServerResponseDTO();
+		TcpResponse response = new TcpResponse();
 		response.stat = stat;
 		return response;
 	}
 
-	private TcpServerResponseDTO share(TcpClientRequestDTO request) throws IOException {
+	private TcpResponse share(TcpRequest request) throws IOException {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpServerResponseDTO(BAD_REQUEST);
+			return new TcpResponse(BAD_REQUEST);
 		}
 
 		String username = request.arguments[0];
 		User user = this.userService.getUser(username);
 
 		if (user == null) {
-			return new TcpServerResponseDTO(INVALID_USERNAME);
+			return new TcpResponse(INVALID_USERNAME);
 		}
 
 		WordleGame lastGame = user.getLastGame();
 		if (lastGame == null) {
-			return new TcpServerResponseDTO(NO_GAME_TO_SHARE);
+			return new TcpResponse(NO_GAME_TO_SHARE);
 		}
 
 		// Invio ultima partita dell'utente su gruppo multicast
 		System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
 		ServerMain.sendMulticastMessage(JsonService.toJson(lastGame));
-		return new TcpServerResponseDTO(OK);
+		return new TcpResponse(OK);
 	}
 
 }

@@ -4,12 +4,12 @@ import common.enums.ServerTCPCommand;
 
 import java.util.Arrays;
 
-public class TcpClientRequestDTO {
+public class TcpRequest {
 
 	public final ServerTCPCommand command;
 	public final String[] arguments;
 
-	public TcpClientRequestDTO(ServerTCPCommand command, String[] arguments) {
+	public TcpRequest(ServerTCPCommand command, String[] arguments) {
 		this.command = command;
 		this.arguments = arguments;
 	}

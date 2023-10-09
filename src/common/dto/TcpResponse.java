@@ -2,18 +2,18 @@ package common.dto;
 
 import common.enums.ResponseCodeEnum;
 
-public class TcpServerResponseDTO {
+public class TcpResponse {
 	public ResponseCodeEnum code; // Codice di risposta
 	public LetterDTO[][] userGuess;
 	public int remainingAttempts;
 	public UserStat stat;
 	public String wordTranslation;
 
-	public TcpServerResponseDTO(){
+	public TcpResponse(){
 		this.code = ResponseCodeEnum.OK;
 	}
 
-	public TcpServerResponseDTO(ResponseCodeEnum code) {
+	public TcpResponse(ResponseCodeEnum code) {
 		this.code = code;
 	}
 }

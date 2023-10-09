@@ -6,8 +6,8 @@ import client.enums.UserCommand;
 import client.services.CLIHelper;
 import client.worker.MulticastWorker;
 import common.dto.LetterDTO;
-import common.dto.TcpClientRequestDTO;
-import common.dto.TcpServerResponseDTO;
+import common.dto.TcpRequest;
+import common.dto.TcpResponse;
 import common.dto.UserScore;
 import common.entity.WordleGame;
 import common.enums.ServerTCPCommand;
@@ -296,8 +296,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			return;
 		}
 
-		TcpServerResponseDTO response = null;
-		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.VERIFY_WORD, new String[]{username, word});
+		TcpResponse response = null;
+		TcpRequest request = new TcpRequest(ServerTCPCommand.VERIFY_WORD, new String[]{username, word});
 		try {
 			sendTcpMessage(request);
 			response = readTcpMessage();
@@ -348,12 +348,12 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void login(String username, String password) {
 
-		TcpClientRequestDTO requestDTO = new TcpClientRequestDTO(ServerTCPCommand.LOGIN, new String[]{username, password});
+		TcpRequest requestDTO = new TcpRequest(ServerTCPCommand.LOGIN, new String[]{username, password});
 
 		try {
 			sendTcpMessage(requestDTO);
 
-			TcpServerResponseDTO response = readTcpMessage();
+			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Login completato con successo");
 				mode = ClientMode.USER_MODE;
@@ -371,12 +371,12 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void logout(String username) {
 
-		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.LOGOUT, new String[]{username});
+		TcpRequest request = new TcpRequest(ServerTCPCommand.LOGOUT, new String[]{username});
 
 		try {
 			sendTcpMessage(request);
 
-			TcpServerResponseDTO response = readTcpMessage();
+			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Logout completato con successo");
 				ClientMain.username = null;
@@ -395,11 +395,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * Richiedo al server se l'utente puo' iniziare a giocare
 	 */
 	private void playWORDLE() {
-		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.PLAY_WORDLE, new String[]{username});
+		TcpRequest request = new TcpRequest(ServerTCPCommand.PLAY_WORDLE, new String[]{username});
 		try {
 			sendTcpMessage(request);
 
-			TcpServerResponseDTO response = readTcpMessage();
+			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Ok, puoi giocare a Wordle!");
 				canPlayWord = true;
@@ -428,11 +428,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	}
 
 	private void sendMeStatistics() {
-		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.STAT, new String[]{username});
+		TcpRequest request = new TcpRequest(ServerTCPCommand.STAT, new String[]{username});
 		try {
 			sendTcpMessage(request);
 
-			TcpServerResponseDTO response = readTcpMessage();
+			TcpResponse response = readTcpMessage();
 			if(response != null && response.stat != null) {
 				CLIHelper.printUserStats(response.stat);
 			} else {
@@ -448,10 +448,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * Richiede al server di condividere i risultati dell ultima partita del client sul gruppo sociale
 	 */
 	private void share() {
-		TcpClientRequestDTO request = new TcpClientRequestDTO(ServerTCPCommand.SHARE, new String[]{username});
+		TcpRequest request = new TcpRequest(ServerTCPCommand.SHARE, new String[]{username});
 		try {
 			sendTcpMessage(request);
-			TcpServerResponseDTO response = readTcpMessage();
+			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Statistiche condivise con successo sul gruppo sociale!");
 			}
@@ -462,13 +462,13 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	}
 
 
-	public static void sendTcpMessage(TcpClientRequestDTO request) throws IOException {
+	public static void sendTcpMessage(TcpRequest request) throws IOException {
 		String json = JsonService.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socketChannel.write(command);
 	}
 
-	public static TcpServerResponseDTO readTcpMessage() throws IOException {
+	public static TcpResponse readTcpMessage() throws IOException {
 
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
@@ -490,7 +490,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		if (json.length() == 0) {
 			throw new IOException("Letti 0 bytes, il server potrebbe essere offline(?)");
 		}
-		return JsonService.fromJson(json.toString(), TcpServerResponseDTO.class);
+		return JsonService.fromJson(json.toString(), TcpResponse.class);
 	}
 
 	@Override
