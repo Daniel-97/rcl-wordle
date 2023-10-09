@@ -131,7 +131,7 @@ public class CLIHelper {
 		for(int i = 0; i < games.size(); i++) {
 			WordleGame game = games.get(i);
 				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " + game.attempts + "/" + 12 + " ("+game.username+")");
-				printServerWord(game.getGuess(), false);
+				printServerWord(game.getUserHint(), false);
 		}
 	}
 

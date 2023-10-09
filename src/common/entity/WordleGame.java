@@ -3,7 +3,6 @@ package common.entity;
 import common.dto.LetterDTO;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -18,14 +17,14 @@ public class WordleGame {
 	public boolean won;
 	public boolean finished;
 	public int attempts; // numero di tentativi fatti
-	private final List<LetterDTO[]> guess;
+	private final List<LetterDTO[]> userHint;
 
 	public WordleGame(String word, String username, int gameNumber) {
 		this.won = false;
 		this.finished = false;
 		this.attempts = 0;
 		this.word = word;
-		this.guess = new ArrayList<>();
+		this.userHint = new ArrayList<>();
 		this.username = username;
 		this.gameNumber = gameNumber;
 	}
@@ -34,12 +33,17 @@ public class WordleGame {
 		return MAX_ATTEMPTS - attempts;
 	}
 
-	public void addGuess(LetterDTO[] guess) {
-		attempts++;
-		this.guess.add(guess);
+	public void addHint(LetterDTO[] hint) {
+		this.userHint.add(hint);
 	}
 
-	public LetterDTO[][] getGuess() {
-		return this.guess.toArray(new LetterDTO[attempts][]);
+	public void addGuess(String word) {
+		attempts++;
+		this.won = word.equals(this.word);
+		this.finished = this.getRemainingAttempts() == 0 || this.won;
+	}
+
+	public LetterDTO[][] getUserHint() {
+		return this.userHint.toArray(new LetterDTO[attempts][]);
 	}
 }

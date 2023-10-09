@@ -118,11 +118,11 @@ public class RequestTask implements Runnable {
 			user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
 			response.code = OK;
 			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = user.getLastGame().getGuess();
+			response.userGuess = user.getLastGame().getUserHint();
 		} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
 			response.code = OK;
 			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = user.getLastGame().getGuess();
+			response.userGuess = user.getLastGame().getUserHint();
 		} else {
 			response.code = GAME_ALREADY_PLAYED;
 		}
@@ -166,14 +166,9 @@ public class RequestTask implements Runnable {
 			return res;
 		}
 
-		// Aggiungo il tentativo effettuato dall'utente
-		LetterDTO[] guess = wordleGameService.hintWord(clientWord);
-		lastGame.addGuess(guess);
-
 		List<UserScore> oldRank = userService.getRank();
-		// Aggiorno lo status del gioco
-		lastGame.won = clientWord.equals(lastGame.word);
-		lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
+		lastGame.addGuess(clientWord);
+		lastGame.addHint(wordleGameService.hintWord(clientWord));
 		userService.updateRank();
 		List<UserScore> newRank = userService.getRank();
 
@@ -188,7 +183,7 @@ public class RequestTask implements Runnable {
 			return res;
 		}
 
-		res.userGuess = lastGame.getGuess();
+		res.userGuess = lastGame.getUserHint();
 		return res;
 	}
 

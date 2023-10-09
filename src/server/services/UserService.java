@@ -130,7 +130,7 @@ public class UserService {
 	 * Aggiorna la classifica di gioco
 	 * @return
 	 */
-	public void updateRank() {
+	public synchronized void updateRank() {
 
 		List<UserScore> rank = new ArrayList<>();
 		for(User user: this.users) {
@@ -147,12 +147,5 @@ public class UserService {
 	 */
 	public List<UserScore> getRank() {
 		return new ArrayList<>(this.rank);
-	}
-
-	/**
-	 * Ordina la lista di utenti in base alla media di tentativi per indovinare una parola
-	 */
-	public void sortUsers() {
-		this.users.sort((o1, o2) -> o1.averageAttempts() - o2.averageAttempts());
 	}
 }
