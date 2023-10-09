@@ -104,8 +104,13 @@ public class CLIHelper {
 
 	public static void printUserStats(UserStat stat) {
 		System.out.println("Ecco le tue statistiche:");
+		if (stat == null) {
+			System.out.println("Nessuna statistica presente!");
+			return;
+		}
 		System.out.println("- Partite giocate: "+stat.playedGames);
 		System.out.println("- Percentuale partite vinte: "+stat.wonGamesPercentage+"%");
+		System.out.println("- Media tentativi partite vinte: "+stat.avgAttemptsWonGames);
 		System.out.println("- Ultima serie partite vinte di fila: "+stat.lastStreakWonGames);
 		System.out.println("- Migliore serie partite vinte di fila: "+stat.bestStreakWonGames);
 	}

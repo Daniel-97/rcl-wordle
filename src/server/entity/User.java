@@ -113,7 +113,7 @@ public class User {
 	 * Ritorna il numero di vittorie dell'utente
 	 * @return
 	 */
-	public int wonGames() {
+	private int wonGames() {
 		int wonGames = 0;
 		if (this.games == null) {
 			return 0;
@@ -126,6 +126,38 @@ public class User {
 	}
 
 	/**
+	 * Ritorna il numero di tentativi fatti in tutte le partite vinte dall'utente
+	 * @return
+	 */
+	private int attemptsWonGames() {
+		int attempts = 0;
+		for(WordleGame game: this.games) {
+			if (game.finished && game.won) {
+				attempts += game.attempts;
+			}
+		}
+
+		return attempts;
+	}
+
+	/**
+	 * Calcola la deviazione standard del campione: sigma = sqrt(1/n* sum( (xi - avg)^2 )
+	 * @return
+	 */
+	private float standardDeviation() {
+		float sigma = 0;
+		int wonGames = wonGames();
+		float avgWonGames = (float) attemptsWonGames() / wonGames;
+		for(WordleGame game: this.games) {
+			if (game.won && game.finished) {
+				sigma += Math.pow(game.attempts - avgWonGames, 2);
+			}
+		}
+		sigma = (float) Math.sqrt(sigma/wonGames);
+		return sigma;
+	}
+
+	/**
 	 * Ritorna le statistiche dell'utente
 	 * @return
 	 */
@@ -133,6 +165,7 @@ public class User {
 		UserStat stat = new UserStat();
 		stat.playedGames = games.size();
 		stat.wonGamesPercentage = wonGames() * 100 / games.size();
+		stat.avgAttemptsWonGames = (float) attemptsWonGames() / wonGames();
 		stat.lastStreakWonGames = lastStreak;
 		stat.bestStreakWonGames = bestStreak;
 

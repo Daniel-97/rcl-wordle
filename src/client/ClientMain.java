@@ -5,10 +5,7 @@ import client.enums.ClientMode;
 import client.enums.UserCommand;
 import client.services.CLIHelper;
 import client.worker.MulticastWorker;
-import common.dto.LetterDTO;
-import common.dto.TcpRequest;
-import common.dto.TcpResponse;
-import common.dto.UserScore;
+import common.dto.*;
 import common.entity.WordleGame;
 import common.enums.ServerTCPCommand;
 import common.interfaces.NotifyEventInterface;
@@ -240,7 +237,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 
 			case STAT:
-				this.sendMeStatistics();
+				UserStat stat = this.sendMeStatistics();
+				CLIHelper.printUserStats(stat);
 				break;
 
 			case SHARE:
@@ -310,10 +308,21 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		switch (response.code) {
 
-			case GAME_WON:
+			case GAME_WON: {
 				System.out.println("Complimenti, hai indovinato la parola! Traduzione: " + response.wordTranslation);
+				UserStat stat = this.sendMeStatistics();
+				CLIHelper.printUserStats(stat);
 				mode = ClientMode.USER_MODE;
 				break;
+			}
+
+			case GAME_LOST: {
+				System.out.println("Tentativi esauriti, hai perso!");
+				UserStat stat = this.sendMeStatistics();
+				CLIHelper.printUserStats(stat);
+				mode = ClientMode.USER_MODE;
+				break;
+			}
 
 			case INVALID_WORD_LENGHT:
 				System.out.println("Parola troppo lunga o troppo corta, tentativo non valido");
@@ -321,11 +330,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case WORD_NOT_IN_DICTIONARY:
 				System.out.println("Parola "+word+" non presente nel dizionario, tentativo non valido");
-				break;
-
-			case GAME_LOST:
-				System.out.println("Tentativi esauriti, hai perso!");
-				mode = ClientMode.USER_MODE;
 				break;
 
 			case GAME_ALREADY_PLAYED:
@@ -427,21 +431,19 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
-	private void sendMeStatistics() {
+	private UserStat sendMeStatistics() {
 		TcpRequest request = new TcpRequest(ServerTCPCommand.STAT, new String[]{username});
 		try {
 			sendTcpMessage(request);
 
 			TcpResponse response = readTcpMessage();
 			if(response != null && response.stat != null) {
-				CLIHelper.printUserStats(response.stat);
-			} else {
-				System.out.println("Nessuna statistica presente!");
+				return response.stat;
 			}
 		} catch (IOException e) {
 			System.out.println("Errore richiesta statistiche! "+e.getMessage());
-			System.exit(-1);
 		}
+		return null;
 	}
 
 	/**
