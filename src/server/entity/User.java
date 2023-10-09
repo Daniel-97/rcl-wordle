@@ -18,7 +18,6 @@ public class User {
 	private final String salt; // Password salt
 	private List<WordleGame> games;
 	public transient boolean online;
-	// Todo tenere aggiornate queste statistiche
 	private int lastStreak = 0;
 	private int bestStreak = 0;
 
@@ -149,5 +148,21 @@ public class User {
 		int avgAttempts = this.averageAttempts();
 
 		return wonGames * avgAttempts;
+	}
+
+	/**
+	 * Aggiunge un tentativo di indovinare la parola all'ultimo gioco dell'utente
+	 */
+	public synchronized void addGuessLastGame(String word) {
+		WordleGame lastGame = getLastGame();
+		lastGame.attempts++;
+		lastGame.won = word.equals(lastGame.word);
+		lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
+
+		// Se il gioco e' finito aggiorno le statistiche
+		if(lastGame.finished) {
+			this.lastStreak = lastGame.won ? this.lastStreak+1 : 0;
+			this.bestStreak = Math.max(this.lastStreak, this.bestStreak);
+		}
 	}
 }

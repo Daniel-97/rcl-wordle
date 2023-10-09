@@ -37,12 +37,6 @@ public class WordleGame {
 		this.userHint.add(hint);
 	}
 
-	public void addGuess(String word) {
-		attempts++;
-		this.won = word.equals(this.word);
-		this.finished = this.getRemainingAttempts() == 0 || this.won;
-	}
-
 	public LetterDTO[][] getUserHint() {
 		return this.userHint.toArray(new LetterDTO[attempts][]);
 	}

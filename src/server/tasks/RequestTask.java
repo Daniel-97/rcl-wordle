@@ -172,7 +172,7 @@ public class RequestTask implements Runnable {
 		}
 
 		List<UserScore> oldRank = userService.getRank();
-		lastGame.addGuess(clientWord);
+		user.addGuessLastGame(clientWord);
 		lastGame.addHint(wordleGameService.hintWord(clientWord));
 		userService.updateRank();
 		List<UserScore> newRank = userService.getRank();
