@@ -15,4 +15,12 @@ public class UserScore implements Serializable {
 	public int getScore() {
 		return score;
 	}
+
+	@Override
+	public String toString() {
+		return "UserScore{" +
+				"username='" + username + '\'' +
+				", score=" + score +
+				'}';
+	}
 }

@@ -212,17 +212,18 @@ public class WordleGameService {
 	 * @return
 	 */
 	public boolean isRankChanged(List<UserScore> oldRank, List<UserScore> newRank) {
-		// TODO fix
+
 		for(int i = 0; i < 3; i++) {
 			UserScore oldScore = oldRank.size() < (i+1) ? null : oldRank.get(i);
 			UserScore newScore = newRank.size() < (i+1) ? null : newRank.get(i);
-
+			System.out.println("old score:" + oldScore);
+			System.out.println("new score:"+newScore);
 			if (
 				(oldScore != null && newScore == null) ||
 				(oldScore == null && newScore != null) ||
-				(oldScore != null && newScore != null && !newScore.username.equals(oldScore.username))
+				(oldScore != null && newScore != null && newScore.score != oldScore.score)
 			) {
-				System.out.println("Classifica utenti cambiata nei primi 3 posti");
+				System.out.println("Classifica utenti cambiata nei primi 3 posti! Trasmetto aggiornamento ai client");
 				return true;
 			}
 		}

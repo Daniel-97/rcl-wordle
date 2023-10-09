@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -18,12 +19,12 @@ public class UserService {
 	private static UserService instance = null;
 	private static final String USERS_DATA_PATH = "data/users.json";
 	private List<User> users = new ArrayList<>();
-	private final List<UserScore> rank;
+	private List<UserScore> rank;
 
 	private UserService() {
 		System.out.println("Avvio servizio utenti...");
 		this.loadUsers();
-		this.rank = this.updateRank();
+		this.updateRank();
 	}
 
 	/**
@@ -126,10 +127,10 @@ public class UserService {
 	}
 
 	/**
-	 * Ritorna la classifica attuale del gioco
+	 * Aggiorna la classifica di gioco
 	 * @return
 	 */
-	public List<UserScore> updateRank() {
+	public void updateRank() {
 
 		List<UserScore> rank = new ArrayList<>();
 		for(User user: this.users) {
@@ -137,13 +138,15 @@ public class UserService {
 		}
 
 		rank.sort(Comparator.comparing(UserScore::getScore));
-
-		return rank;
-
+		this.rank = rank;
 	}
 
+	/**
+	 * Ritorna una copia della lista che contiene la classifica degli utenti
+	 * @return
+	 */
 	public List<UserScore> getRank() {
-		return this.rank;
+		return new ArrayList<>(this.rank);
 	}
 
 	/**

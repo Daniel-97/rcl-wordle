@@ -172,9 +172,9 @@ public class RequestTask implements Runnable {
 
 		List<UserScore> oldRank = userService.getRank();
 		// Aggiorno lo status del gioco
-		userService.updateRank();
 		lastGame.won = clientWord.equals(lastGame.word);
 		lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
+		userService.updateRank();
 		List<UserScore> newRank = userService.getRank();
 
 		// Se la partita e' finita lo comunico al client
@@ -182,7 +182,6 @@ public class RequestTask implements Runnable {
 			res.code = lastGame.won ? GAME_WON : GAME_LOST;
 			res.wordTranslation = wordleGameService.getWordTranslation();
 			key.attach(res);
-			//TODO sistemare non funziona
 			if(wordleGameService.isRankChanged(oldRank, newRank)) {
 				ServerMain.notifyRankToClient(userService.getRank());
 			}

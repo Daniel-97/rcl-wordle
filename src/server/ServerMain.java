@@ -34,8 +34,7 @@ import static common.enums.ResponseCodeEnum.*;
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	private static ThreadPoolExecutor poolExecutor;
-	// TODO, non thread safe adesso!
-	private static final Map<String, NotifyEventInterface> clients = new HashMap<>();
+	private static final HashMap<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
 	private static MulticastSocket multicastSocket;
@@ -267,7 +266,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	}
 
 	public static void sendTcpMessage(SocketChannel socket, TcpResponse request) throws IOException {
-
 		String json = JsonService.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socket.write(command);
