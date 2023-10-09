@@ -17,6 +17,7 @@ public class User {
 	private final String password; // password hash
 	private final String salt; // Password salt
 	private List<WordleGame> games;
+	public transient boolean online;
 	// Todo tenere aggiornate queste statistiche
 	private int lastStreak = 0;
 	private int bestStreak = 0;
@@ -25,6 +26,7 @@ public class User {
 		this.username = username;
 		this.salt = generateRandomSalt();
 		this.password = hashPassword(password, Base64.getDecoder().decode(this.salt));
+		this.online = false;
 	}
 
 	/**

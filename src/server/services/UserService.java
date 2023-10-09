@@ -108,7 +108,11 @@ public class UserService {
 		}
 
 		try {
-			return user.verifyPassword(password);
+			boolean verified =  user.verifyPassword(password);
+			if(verified) {
+				user.online = true;
+			}
+			return verified;
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
 			System.out.println("Errore verifica password: "+e.getMessage());
 			return false;
@@ -122,6 +126,9 @@ public class UserService {
 	 */
 	public synchronized boolean logout(String username) {
 		User user = getUser(username);
+		if (user != null) {
+			user.online = false;
+		}
 		// La disiscrizione dell utente dalle notifiche di rank viene fatta client side con RMI callback
 		return user != null;
 	}

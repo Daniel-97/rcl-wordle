@@ -88,6 +88,11 @@ public class RequestTask implements Runnable {
 			return new TcpResponse(BAD_REQUEST);
 		}
 
+		User user = this.userService.getUser(request.arguments[0]);
+		if (user.online) {
+			return new TcpResponse(ALREADY_LOGGED_IN);
+		}
+
 		boolean success = this.userService.login(request.arguments[0], request.arguments[1]);
 		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
