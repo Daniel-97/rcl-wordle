@@ -175,6 +175,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						if (clientMessage == null) {
 							System.out.println("Disconnessione forzata del client " + clientAddress);
+							// Todo qui va conclusa la partita del giocatore e messo offline come se avesse eseguito logout
 							client.close();
 							break;
 						}

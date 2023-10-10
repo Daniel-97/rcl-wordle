@@ -73,6 +73,15 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
+
+				try {
+					// Disiscrivo client da eventi del server
+					if (username != null) {
+						serverRMI.unsubscribeClientToEvent(username);
+					}
+				} catch (RemoteException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		});
 
