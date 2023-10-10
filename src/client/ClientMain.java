@@ -10,7 +10,6 @@ import common.dto.*;
 import common.entity.WordleGame;
 import common.enums.ServerTCPCommandEnum;
 import common.interfaces.NotifyEventInterface;
-import javafx.util.Pair;
 import common.interfaces.ServerRmiInterface;
 import server.services.JsonService;
 

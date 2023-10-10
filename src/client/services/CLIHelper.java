@@ -6,7 +6,6 @@ import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
 import common.entity.WordleGame;
-import javafx.util.Pair;
 
 import java.util.Arrays;
 import java.util.List;
