@@ -1,6 +1,7 @@
 package client.services;
 
-import client.enums.UserCommand;
+import client.entity.CLICommand;
+import client.enums.UserCommandEnum;
 import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
@@ -61,7 +62,7 @@ public class CLIHelper {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	public static Pair<UserCommand, String[]> waitForCommand() {
+	public static CLICommand waitForCommand() {
 		String input;
 		// Continuo a ciclare fino a che non ottengo un input valido
 		do{
@@ -71,13 +72,13 @@ public class CLIHelper {
 		while (input == null || input.isEmpty() || input.equals("\n"));
 
 		String[] cmdSplit = input.split(" ", -1);
-		UserCommand cmd = null;
+		UserCommandEnum cmd = null;
 		try {
-			cmd = UserCommand.valueOf(cmdSplit[0].replace(":","").toUpperCase());
+			cmd = UserCommandEnum.valueOf(cmdSplit[0].replace(":","").toUpperCase());
 		} catch (IllegalArgumentException ignored) {}
 		String[] args = Arrays.copyOfRange(cmdSplit, cmd != null ? 1 : 0, cmdSplit.length);
 
-		return new Pair<>(cmd, args);
+		return new CLICommand(cmd, args);
 	}
 
 	public static void printServerWord(LetterDTO[][] userGuess, boolean printLetter) {

@@ -1,6 +1,6 @@
 package common.enums;
 
-public enum ServerTCPCommand {
+public enum ServerTCPCommandEnum {
 	LOGIN,
 	LOGOUT,
 	PLAY_WORDLE,

@@ -3,7 +3,7 @@ package client.enums;
 /**
  * Comandi utente loggato
  */
-public enum UserCommand {
+public enum UserCommandEnum	 {
 	LOGIN,
 	REGISTER,
 	PLAY,

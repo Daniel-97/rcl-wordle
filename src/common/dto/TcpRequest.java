@@ -1,15 +1,15 @@
 package common.dto;
 
-import common.enums.ServerTCPCommand;
+import common.enums.ServerTCPCommandEnum;
 
 import java.util.Arrays;
 
 public class TcpRequest {
 
-	public final ServerTCPCommand command;
+	public final ServerTCPCommandEnum command;
 	public final String[] arguments;
 
-	public TcpRequest(ServerTCPCommand command, String[] arguments) {
+	public TcpRequest(ServerTCPCommandEnum command, String[] arguments) {
 		this.command = command;
 		this.arguments = arguments;
 	}
