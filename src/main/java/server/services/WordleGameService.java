@@ -18,7 +18,7 @@ public class WordleGameService {
 
 	private static WordleGameService instance = null;
 	private static final String WORDLE_STATE_PATH = "data/wordle.json";
-	private static final String DICTIONARY_PATH = "src/dictionary/words.txt";
+	private static final String DICTIONARY_PATH = "src/main/java/dictionary/words.txt";
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
 	private String wordTranslation; // Traduzione della parola in italiano
