@@ -1,5 +1,6 @@
 package common.entity;
 
+import client.entity.ClientConfig;
 import common.dto.LetterDTO;
 
 import java.util.ArrayList;
@@ -10,7 +11,6 @@ import java.util.List;
  */
 public class WordleGame {
 
-	private static final int MAX_ATTEMPTS = 12;
 	public final String word;
 	public final String username;
 	public final int gameNumber;
@@ -30,7 +30,7 @@ public class WordleGame {
 	}
 
 	public int getRemainingAttempts() {
-		return MAX_ATTEMPTS - attempts;
+		return ClientConfig.WORDLE_MAX_ATTEMPTS - attempts;
 	}
 
 	public void addHint(LetterDTO[] hint) {

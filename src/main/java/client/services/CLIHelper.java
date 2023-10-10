@@ -1,7 +1,9 @@
 package client.services;
 
 import client.entity.CLICommand;
+import client.entity.ClientConfig;
 import client.enums.UserCommandEnum;
+import common.dto.GuessDistributionItem;
 import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
@@ -118,6 +120,14 @@ public class CLIHelper {
 		System.out.println("- Media tentativi partite vinte: "+stat.avgAttemptsWonGames);
 		System.out.println("- Ultima serie partite vinte di fila: "+stat.lastStreakWonGames);
 		System.out.println("- Migliore serie partite vinte di fila: "+stat.bestStreakWonGames);
+
+		if (stat.guessDistribution != null) {
+			System.out.println("Distribuzione probabilita' tentativi su partite vinte:");
+			for(GuessDistributionItem item: stat.guessDistribution) {
+				if(item.percentage > 0)
+					System.out.println("- "+item.attemptNumber+" tentativo/i: "+item.percentage+"%");
+			}
+		}
 	}
 
 	public static void printRank(List<UserScore> rank) {
@@ -133,14 +143,15 @@ public class CLIHelper {
 	}
 
 	/**
-	 * Mostra a video tutte le partite giocate dai vari gioactori
+	 * Mostra a video tutte le partite giocate dai vari giocatori
 	 * @param games
 	 */
 	public static void printUsersGames(List<WordleGame> games) {
 		System.out.println("Elenco partite condivise dagli altri giocatori:");
 		for(int i = 0; i < games.size(); i++) {
 			WordleGame game = games.get(i);
-				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " + game.attempts + "/" + 12 + " ("+game.username+")");
+				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " +
+						game.attempts + "/" + ClientConfig.WORDLE_MAX_ATTEMPTS + " ("+game.username+")");
 				printServerWord(game.getUserHint(), false);
 		}
 	}

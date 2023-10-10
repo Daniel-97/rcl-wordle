@@ -1,5 +1,7 @@
 package server.entity;
 
+import client.entity.ClientConfig;
+import common.dto.GuessDistributionItem;
 import common.dto.UserStat;
 import common.entity.WordleGame;
 
@@ -141,20 +143,33 @@ public class User {
 	}
 
 	/**
-	 * Calcola la deviazione standard del campione: sigma = sqrt(1/n* sum( (xi - avg)^2 )
+	 * Ritorna il numero di partite vinte con un certo numero di tentativi
+	 * @param attempts
 	 * @return
 	 */
-	private float standardDeviation() {
-		float sigma = 0;
-		int wonGames = wonGames();
-		float avgWonGames = (float) attemptsWonGames() / wonGames;
-		for(WordleGame game: this.games) {
-			if (game.won && game.finished) {
-				sigma += Math.pow(game.attempts - avgWonGames, 2);
-			}
+	private int wonGamesByAttempt(int attempts) {
+		int count = 0;
+		for (WordleGame game: this.games) {
+			count = game.won && game.attempts == attempts ? count + 1 : count;
 		}
-		sigma = (float) Math.sqrt(sigma/wonGames);
-		return sigma;
+		return count;
+	}
+
+	/**
+	 * Calcola la distribuzione di probabilita' dei tentativi fatti dall'utente nelle partite vinte
+	 * @return
+	 */
+	private GuessDistributionItem[] getGuessDistribution() {
+		GuessDistributionItem[] guessDistribution = new GuessDistributionItem[ClientConfig.WORDLE_MAX_ATTEMPTS];
+		int wonGames = wonGames();
+
+		for(int i = 0; i < ClientConfig.WORDLE_MAX_ATTEMPTS; i++) {
+			guessDistribution[i] = new GuessDistributionItem();
+			guessDistribution[i].attemptNumber = i+1;
+			guessDistribution[i].percentage = wonGamesByAttempt(i+1) * 100 / wonGames;
+		}
+
+		return guessDistribution;
 	}
 
 	/**
@@ -168,7 +183,7 @@ public class User {
 		stat.avgAttemptsWonGames = (float) attemptsWonGames() / wonGames();
 		stat.lastStreakWonGames = lastStreak;
 		stat.bestStreakWonGames = bestStreak;
-
+		stat.guessDistribution = this.getGuessDistribution();
 		return stat;
 	}
 
