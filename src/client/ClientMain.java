@@ -356,7 +356,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(requestDTO);
 
 			TcpResponse response = readTcpMessage();
-			// todo mettere switch
 			if (response.code == OK) {
 				System.out.println("Login completato con successo");
 				mode = ClientMode.USER_MODE;

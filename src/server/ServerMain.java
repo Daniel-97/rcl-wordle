@@ -145,7 +145,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			}
 
 			Set<SelectionKey> selectedKeys = selector.selectedKeys();
-			// Iteratore
+			// Iteratore delle chiavi
 			Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 			// Fino a che ci sono canali pronti continuo a ciclare
 			while (keyIterator.hasNext()) {
@@ -154,7 +154,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				keyIterator.remove();
 
 				try {
-					//Connessione accettata da client
+					// Connessione accettata da client
 					if (key.isAcceptable()) {
 
 						ServerSocketChannel server = (ServerSocketChannel) key.channel();
@@ -235,12 +235,19 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			throw new IllegalArgumentException(PASSWORD_REQUIRED.name());
 		}
 
+		// Controllo se gia' esiste un utente con lo stesso username
+		User user = this.userService.getUser(username);
+		if (user != null) {
+			throw new IllegalArgumentException(USERNAME_ALREADY_USED.name());
+		}
+
 		// Aggiungo nuovo utente al sistema
 		try {
-			User user = new User(username, password);
-			this.userService.addUser(user);
+			User newUser = new User(username, password);
+			this.userService.addUser(newUser);
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
+			System.out.println("Impossibile registrare nuovo utente " + e);
+			throw new RemoteException(INTERNAL_SERVER_ERROR.name());
 		}
 	}
 
