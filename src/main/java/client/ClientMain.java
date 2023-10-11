@@ -280,7 +280,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		System.out.println("GAME MODE! Digita in qualsiasi momento :quit per uscire dalla modalita' gioco!");
 		while (mode == ClientModeEnum.GAME_MODE) {
 			CLIHelper.printServerWord(guesses, true);
-			System.out.println("Hai ancora " + remainingAttempts + " tentativi rimasti. Inserisci una parola:");
+			System.out.println("Tentativi rimasti: " + remainingAttempts + ". Inserisci una parola:");
 			CLICommand cliCommand = CLIHelper.waitForCommand();
 			UserCommandEnum cmd = cliCommand.command;
 			String[] args = cliCommand.args;

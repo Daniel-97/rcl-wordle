@@ -179,10 +179,12 @@ public class User {
 	 */
 	public UserStat getStat() {
 		UserStat stat = new UserStat();
+
 		if (games != null) {
+			int wonGames = wonGames();
 			stat.playedGames = games.size();
-			stat.wonGamesPercentage = wonGames() * 100 / games.size();
-			stat.avgAttemptsWonGames = (float) attemptsWonGames() / wonGames();
+			stat.wonGamesPercentage = wonGames * 100 / games.size();
+			stat.avgAttemptsWonGames = wonGames > 0 ? (float) attemptsWonGames() / wonGames : 0;
 			stat.lastStreakWonGames = lastStreak;
 			stat.bestStreakWonGames = bestStreak;
 			stat.guessDistribution = this.getGuessDistribution();

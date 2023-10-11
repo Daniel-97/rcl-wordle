@@ -199,6 +199,7 @@ public class RequestTask implements Runnable {
 			return res;
 		}
 
+		res.remainingAttempts = lastGame.getRemainingAttempts();
 		res.userGuess = lastGame.getUserHint();
 		return res;
 	}

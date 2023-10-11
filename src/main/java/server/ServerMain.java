@@ -274,9 +274,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	}
 
 	public static void sendTcpMessage(SocketChannel socket, TcpResponse request) throws IOException {
+
 		String json = JsonService.toJson(request);
-		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		socket.write(command);
+		ByteBuffer jsonRequest = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
+		socket.write(jsonRequest);
 	}
 
 	public static TcpRequest readTcpMessage(SocketChannel socketChannel) throws IOException {

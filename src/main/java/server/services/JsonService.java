@@ -15,7 +15,11 @@ import java.nio.file.Paths;
  */
 public class JsonService {
 
-	private final static Gson gson = new GsonBuilder().setDateFormat("MMM dd, yyyy, HH:mm:ss").setPrettyPrinting().create();
+	private final static Gson gson = new GsonBuilder()
+			.setDateFormat("MMM dd, yyyy, HH:mm:ss")
+			.setPrettyPrinting()
+			.serializeSpecialFloatingPointValues()
+			.create();
 
 	public static String toJson(Object src) {
 		return gson.toJson(src);

@@ -14,6 +14,7 @@ public class UserStat {
 		avgAttemptsWonGames = 0;
 		lastStreakWonGames = 0;
 		bestStreakWonGames = 0;
+		guessDistribution = null;
 	}
 
 }
