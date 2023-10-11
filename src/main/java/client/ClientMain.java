@@ -34,15 +34,14 @@ import static common.enums.ResponseCodeEnum.*;
 
 public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
-	private final static int BUFFER_SIZE = 1024;
 	private static ServerRmiInterface serverRMI;
 	private static NotifyEventInterface stub;
-	private static SocketChannel socketChannel;
 	private static MulticastSocket multicastSocket;
 	private static Thread multicastThread;
-	private static String username = null;
 	private static List<UserScore> rank;
 	private static final List<WordleGame> sharedGames = new ArrayList<>();
+	private static SocketChannel socketChannel;
+	private String username = null;
 	private ClientModeEnum mode = ClientModeEnum.GUEST_MODE;
 	private boolean canPlayWord = false;
 	private int remainingAttempts;
@@ -78,8 +77,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 				try {
 					// Disiscrivo client da eventi del server
-					if (username != null) {
-						serverRMI.unsubscribeClientFromEvent(username);
+					if (client.username != null) {
+						serverRMI.unsubscribeClientFromEvent(client.username);
 					}
 				} catch (RemoteException e) {
 					System.out.println("Errore chiamata RMI unsubscribeClientFromEvent()");
@@ -345,6 +344,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case GAME_ALREADY_PLAYED:
 				System.out.println("Hai gia' giocato a questa parola!");
+				mode = ClientModeEnum.USER_MODE;
 				break;
 
 			case NEED_TO_START_GAME:
@@ -372,7 +372,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			if (response.code == OK) {
 				System.out.println("Login completato con successo");
 				mode = ClientModeEnum.USER_MODE;
-				ClientMain.username = username;
+				this.username = username;
 				// Iscrive l'utente alle callback dal server
 				serverRMI.subscribeClientToEvent(username, stub);
 			} else if(response.code == ALREADY_LOGGED_IN){
@@ -396,7 +396,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Logout completato con successo");
-				ClientMain.username = null;
+				this.username = null;
 				this.mode = ClientModeEnum.GUEST_MODE;
 				// Disiscrive l'utente alle callback dal server
 				serverRMI.unsubscribeClientFromEvent(username);
@@ -485,6 +485,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	public static TcpResponse readTcpMessage() throws IOException,RuntimeException {
 
+		final int BUFFER_SIZE = 1024;
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
 		int bytesRead;

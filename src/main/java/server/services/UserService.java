@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -160,7 +161,12 @@ public class UserService {
 			rank.add(new UserScore(user.getUsername(), user.getScore()));
 		}
 
-		rank.sort(Comparator.comparing(UserScore::getScore));
+		rank.sort(new Comparator<UserScore>() {
+			@Override
+			public int compare(UserScore o1, UserScore o2) {
+				return o2.score - o1.score;
+			}
+		});
 		this.rank = rank;
 	}
 

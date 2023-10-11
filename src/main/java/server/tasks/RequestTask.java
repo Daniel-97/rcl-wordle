@@ -85,7 +85,7 @@ public class RequestTask implements Runnable {
 			e.printStackTrace();
 			response = new TcpResponse(INTERNAL_SERVER_ERROR);
 		}
-		// Copio la risposta nell'allegato della chiave. Verrà usato da Server.main per rispondere al client
+		// Copio la risposta nell'allegato della chiave. Verrà usato da Server.main per rispondere al client (NIO)
 		key.attach(response);
 	}
 
@@ -132,7 +132,6 @@ public class RequestTask implements Runnable {
 		WordleGame lastGame = user.getLastGame();
 		TcpResponse response = new TcpResponse();
 
-		// TODO migliorare questo codice
 		// Aggiunto gioco al giocatore attuale
 		if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
 			user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
