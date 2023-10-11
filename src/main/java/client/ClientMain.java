@@ -64,6 +64,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
+
 				System.out.println("Shutdown Wordle client...");
 				try {
 					// Chiudo il socket TCP con il server

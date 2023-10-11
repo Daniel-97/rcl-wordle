@@ -22,6 +22,7 @@ public class User {
 	public transient boolean online;
 	private int lastStreak = 0;
 	private int bestStreak = 0;
+	public int clientHashCode;
 
 	public User(String username, String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
 		this.username = username;

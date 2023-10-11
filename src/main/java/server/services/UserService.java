@@ -11,7 +11,6 @@ import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -100,7 +99,7 @@ public class UserService {
 	 * @param password
 	 * @return
 	 */
-	public synchronized boolean login(String username, String password) {
+	public synchronized boolean login(String username, String password, int clientHashCode) {
 
 		User user = getUser(username);
 		if (user == null) {
@@ -109,8 +108,9 @@ public class UserService {
 
 		try {
 			boolean verified =  user.verifyPassword(password);
-			if(verified) {
+			if (verified) {
 				user.online = true;
+				user.clientHashCode = clientHashCode;
 			}
 			return verified;
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
@@ -131,6 +131,20 @@ public class UserService {
 		}
 		// La disiscrizione dell utente dalle notifiche di rank viene fatta client side con RMI callback
 		return user != null;
+	}
+
+	/**
+	 * Effettua il logout di un utente utilizzando il client hash code. Utile quando casca la connessione con il client
+	 * @param clientHashCode
+	 */
+	public synchronized void logout(int clientHashCode) {
+		for (User user: this.users) {
+			if(clientHashCode == user.clientHashCode) {
+				user.online = false;
+				System.out.println("Logout forzato utente " + user.getUsername() + " effettuato con successo");
+				return;
+			}
+		}
 	}
 
 	/**

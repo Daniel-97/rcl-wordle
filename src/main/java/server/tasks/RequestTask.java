@@ -22,12 +22,14 @@ import static common.enums.ResponseCodeEnum.*;
 public class RequestTask implements Runnable {
 	private final SelectionKey key;
 	private final TcpRequest request;
+	private final SocketChannel client;
 	private final UserService userService = UserService.getInstance();
 	private final WordleGameService wordleGameService = WordleGameService.getInstance();
 
 	public RequestTask(SelectionKey key, TcpRequest request) {
 		this.key = key;
 		this.request = request;
+		this.client = (SocketChannel) key.channel();
 	}
 
 	@Override
@@ -35,7 +37,6 @@ public class RequestTask implements Runnable {
 
 		TcpResponse response;
 		try {
-			SocketChannel client = (SocketChannel) key.channel();
 			SocketAddress clientAddress = client.getRemoteAddress();
 			System.out.println("["+Thread.currentThread().getName()+"] Gestisco richiesta da client " + clientAddress +": "+request);
 
@@ -88,7 +89,7 @@ public class RequestTask implements Runnable {
 		key.attach(response);
 	}
 
-	private TcpResponse login(TcpRequest request) {
+	private TcpResponse login(TcpRequest request) throws IOException {
 
 		if (request.arguments == null || request.arguments.length < 2) {
 			return new TcpResponse(BAD_REQUEST);
@@ -104,7 +105,10 @@ public class RequestTask implements Runnable {
 			return new TcpResponse(ALREADY_LOGGED_IN);
 		}
 
-		boolean success = this.userService.login(request.arguments[0], request.arguments[1]);
+		// Mi memorizzo hash code di indirizzo ip:porta del client, mi permette di fare logout di utente quando effettua
+		// una disconnessione forzata
+		int clientHashCode = this.client.getRemoteAddress().hashCode();
+		boolean success = this.userService.login(request.arguments[0], request.arguments[1], clientHashCode);
 		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
 

@@ -172,9 +172,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						SocketChannel client = (SocketChannel) key.channel();
 						SocketAddress clientAddress = client.getRemoteAddress();
 						TcpRequest clientMessage = ServerMain.readTcpMessage(client);
-
+						System.out.println(clientAddress.hashCode());
 						if (clientMessage == null) {
 							System.out.println("Disconnessione forzata del client " + clientAddress);
+							userService.logout(clientAddress.hashCode());
 							// Todo qui va conclusa la partita del giocatore e messo offline come se avesse eseguito logout
 							client.close();
 							break;
