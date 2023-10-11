@@ -292,7 +292,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			CLIHelper.cls();
 			this.sendWord(args[0]);
-			CLIHelper.printServerWord(guesses, true);
+			if (this.mode == ClientModeEnum.GAME_MODE) {
+				CLIHelper.printServerWord(guesses, true);
+			}
 			CLIHelper.pause();
 		}
 	}
@@ -349,7 +351,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case NEED_TO_START_GAME:
 				System.out.println("Parola cambiata! Devi ripartire da capo!");
-				CLIHelper.pause();
 				mode = ClientModeEnum.USER_MODE;
 				break;
 
