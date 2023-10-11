@@ -89,7 +89,14 @@ public class RequestTask implements Runnable {
 		key.attach(response);
 	}
 
-	private TcpResponse login(TcpRequest request) throws IOException {
+	/**
+	 * Metodo per effettuare login dell'utente. Synchronized per evitare che due client effettuino il login
+	 * con lo stesso utente da client diversi
+	 * @param request
+	 * @return
+	 * @throws IOException
+	 */
+	private synchronized TcpResponse login(TcpRequest request) throws IOException {
 
 		if (request.arguments == null || request.arguments.length < 2) {
 			return new TcpResponse(BAD_REQUEST);
@@ -112,7 +119,7 @@ public class RequestTask implements Runnable {
 		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
 
-	private TcpResponse logout(TcpRequest request) {
+	private synchronized TcpResponse logout(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpResponse(BAD_REQUEST);
@@ -149,7 +156,12 @@ public class RequestTask implements Runnable {
 		return response;
 	}
 
-	private TcpResponse verifyWord(TcpRequest request) {
+	/**
+	 * Metodo principale del gioco, synchronized per evitare che la parola o le statistiche cambino nel mentre
+	 * @param request
+	 * @return
+	 */
+	private synchronized TcpResponse verifyWord(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpResponse(BAD_REQUEST);
@@ -194,6 +206,7 @@ public class RequestTask implements Runnable {
 		// Se la partita e' finita lo comunico al client
 		if (lastGame.finished) {
 			res.code = lastGame.won ? GAME_WON : GAME_LOST;
+			// TOdo qui puo succedere che la parola ottenuta e' cambiata nel mentre, atomico?
 			res.wordTranslation = wordleGameService.getWordTranslation();
 			key.attach(res);
 			if(wordleGameService.isRankChanged(oldRank, newRank)) {

@@ -100,7 +100,7 @@ public class UserService {
 	 * @param password
 	 * @return
 	 */
-	public synchronized boolean login(String username, String password, int clientHashCode) {
+	public boolean login(String username, String password, int clientHashCode) {
 
 		User user = getUser(username);
 		if (user == null) {
@@ -125,7 +125,7 @@ public class UserService {
 	 * @param username
 	 * @return
 	 */
-	public synchronized boolean logout(String username) {
+	public boolean logout(String username) {
 		User user = getUser(username);
 		if (user != null) {
 			user.online = false;
@@ -154,7 +154,7 @@ public class UserService {
 	 * Aggiorna la classifica di gioco
 	 * @return
 	 */
-	public synchronized void updateRank() {
+	public void updateRank() {
 
 		List<UserScore> rank = new ArrayList<>();
 		for(User user: this.users) {
