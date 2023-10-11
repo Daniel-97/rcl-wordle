@@ -128,6 +128,7 @@ public class UserService {
 		User user = getUser(username);
 		if (user != null) {
 			user.online = false;
+			user.endLastGame();
 		}
 		// La disiscrizione dell utente dalle notifiche di rank viene fatta client side con RMI callback
 		return user != null;
@@ -141,6 +142,7 @@ public class UserService {
 		for (User user: this.users) {
 			if(clientHashCode == user.clientHashCode) {
 				user.online = false;
+				user.endLastGame();
 				System.out.println("Logout forzato utente " + user.getUsername() + " effettuato con successo");
 				return;
 			}

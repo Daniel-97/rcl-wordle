@@ -219,4 +219,14 @@ public class User {
 			this.bestStreak = Math.max(this.lastStreak, this.bestStreak);
 		}
 	}
+
+	/**
+	 * Termina l'ultimo gioco dell utente
+	 */
+	public synchronized void endLastGame() {
+		WordleGame lastGame = getLastGame();
+		if (lastGame != null) {
+			lastGame.finished = true;
+		}
+	}
 }
