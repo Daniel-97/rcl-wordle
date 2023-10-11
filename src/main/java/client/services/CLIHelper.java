@@ -54,8 +54,8 @@ public class CLIHelper {
 		}
 	}
 
-	public static void printCursor() {
-		System.out.print("WORDLE-CLIENT>");
+	public static void printCursor(String username) {
+		System.out.print(username != null ? (username + "@wordle-client>") : "guest@wordle-client>");
 	}
 
 	/**
@@ -63,11 +63,11 @@ public class CLIHelper {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	public static CLICommand waitForCommand() {
+	public static CLICommand waitForCommand(String username) {
 		String input;
 		// Continuo a ciclare fino a che non ottengo un input valido
 		do{
-			printCursor();
+			printCursor(username);
 			input = cliScanner.nextLine();
 		}
 		while (input == null || input.isEmpty() || input.equals("\n"));

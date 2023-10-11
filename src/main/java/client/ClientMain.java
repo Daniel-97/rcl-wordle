@@ -169,7 +169,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private void guestMode() {
 
 		CLIHelper.entryMenu();
-		CLICommand cliCommand = CLIHelper.waitForCommand();
+		CLICommand cliCommand = CLIHelper.waitForCommand(username);
 		UserCommandEnum cmd = cliCommand.command;
 		String[] args = cliCommand.args;
 
@@ -217,7 +217,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private void userMode() {
 
 		CLIHelper.mainMenu();
-		CLICommand cliCommand = CLIHelper.waitForCommand();
+		CLICommand cliCommand = CLIHelper.waitForCommand(username);
 		UserCommandEnum cmd = cliCommand.command;
 
 		if (cmd == null) {
@@ -282,7 +282,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		while (mode == ClientModeEnum.GAME_MODE) {
 			CLIHelper.printServerWord(guesses, true);
 			System.out.println("Tentativi rimasti: " + remainingAttempts + ". Inserisci una parola:");
-			CLICommand cliCommand = CLIHelper.waitForCommand();
+			CLICommand cliCommand = CLIHelper.waitForCommand(username);
 			UserCommandEnum cmd = cliCommand.command;
 			String[] args = cliCommand.args;
 
