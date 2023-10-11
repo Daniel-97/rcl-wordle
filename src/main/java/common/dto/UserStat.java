@@ -8,6 +8,12 @@ public class UserStat {
 	public int bestStreakWonGames; // Migliore serie di partite vinte
 	public GuessDistributionItem[] guessDistribution; // Distribuzione tentativi su partite vinte
 
-	public UserStat(){}
+	public UserStat(){
+		playedGames = 0;
+		wonGamesPercentage = 0;
+		avgAttemptsWonGames = 0;
+		lastStreakWonGames = 0;
+		bestStreakWonGames = 0;
+	}
 
 }

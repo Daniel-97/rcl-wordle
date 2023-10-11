@@ -68,19 +68,20 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				try {
 					// Chiudo il socket TCP con il server
 					socketChannel.close();
-					// Interrompo worker che gestisce il gruppo multicast
-					multicastThread.interrupt();
 				} catch (IOException e) {
-					throw new RuntimeException(e);
+					System.out.println("Errore durante chiusura socket TCP");
 				}
+
+				// Interrompo worker che gestisce il gruppo multicast
+				multicastThread.interrupt();
 
 				try {
 					// Disiscrivo client da eventi del server
 					if (username != null) {
-						serverRMI.unsubscribeClientToEvent(username);
+						serverRMI.unsubscribeClientFromEvent(username);
 					}
 				} catch (RemoteException e) {
-					throw new RuntimeException(e);
+					System.out.println("Errore chiamata RMI unsubscribeClientFromEvent()");
 				}
 			}
 		});
@@ -347,6 +348,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case NEED_TO_START_GAME:
 				System.out.println("Parola cambiata! Devi ripartire da capo!");
+				CLIHelper.pause();
 				mode = ClientModeEnum.USER_MODE;
 				break;
 
@@ -396,7 +398,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				ClientMain.username = null;
 				this.mode = ClientModeEnum.GUEST_MODE;
 				// Disiscrive l'utente alle callback dal server
-				serverRMI.unsubscribeClientToEvent(username);
+				serverRMI.unsubscribeClientFromEvent(username);
 			} else {
 				System.out.println("Errore durante il logout!");
 			}
@@ -450,7 +452,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			if(response != null && response.stat != null) {
 				return response.stat;
 			}
-		} catch (IOException e) {
+		} catch (IOException | RuntimeException e) {
 			System.out.println("Errore richiesta statistiche! "+e.getMessage());
 		}
 		return null;
@@ -480,7 +482,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		socketChannel.write(command);
 	}
 
-	public static TcpResponse readTcpMessage() throws IOException {
+	public static TcpResponse readTcpMessage() throws IOException,RuntimeException {
 
 		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		StringBuilder json = new StringBuilder();
@@ -502,7 +504,12 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		if (json.length() == 0) {
 			throw new IOException("Letti 0 bytes, il server potrebbe essere offline(?)");
 		}
-		return JsonService.fromJson(json.toString(), TcpResponse.class);
+
+		TcpResponse response = JsonService.fromJson(json.toString(), TcpResponse.class);
+		if(response.code == INTERNAL_SERVER_ERROR) {
+			throw new RuntimeException(INTERNAL_SERVER_ERROR.name());
+		}
+		return response;
 	}
 
 	@Override

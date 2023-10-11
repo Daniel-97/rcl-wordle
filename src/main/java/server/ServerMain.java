@@ -268,7 +268,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	}
 
 	@Override
-	public synchronized void unsubscribeClientToEvent(String username) throws RemoteException {
+	public synchronized void unsubscribeClientFromEvent(String username) throws RemoteException {
 		clients.remove(username);
 		System.out.println("Utente " + username + " disiscritto da eventi asincroni!");
 	}

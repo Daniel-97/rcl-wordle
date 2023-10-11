@@ -160,13 +160,14 @@ public class User {
 	 * @return
 	 */
 	private GuessDistributionItem[] getGuessDistribution() {
-		GuessDistributionItem[] guessDistribution = new GuessDistributionItem[ClientConfig.WORDLE_MAX_ATTEMPTS];
+		GuessDistributionItem[] guessDistribution = new GuessDistributionItem[ServerConfig.WORDLE_MAX_ATTEMPTS];
 		int wonGames = wonGames();
 
 		for(int i = 0; i < ClientConfig.WORDLE_MAX_ATTEMPTS; i++) {
 			guessDistribution[i] = new GuessDistributionItem();
 			guessDistribution[i].attemptNumber = i+1;
-			guessDistribution[i].percentage = wonGamesByAttempt(i+1) * 100 / wonGames;
+			if (wonGames > 0)
+				guessDistribution[i].percentage = wonGamesByAttempt(i+1) * 100 / wonGames;
 		}
 
 		return guessDistribution;
@@ -178,12 +179,14 @@ public class User {
 	 */
 	public UserStat getStat() {
 		UserStat stat = new UserStat();
-		stat.playedGames = games.size();
-		stat.wonGamesPercentage = wonGames() * 100 / games.size();
-		stat.avgAttemptsWonGames = (float) attemptsWonGames() / wonGames();
-		stat.lastStreakWonGames = lastStreak;
-		stat.bestStreakWonGames = bestStreak;
-		stat.guessDistribution = this.getGuessDistribution();
+		if (games != null) {
+			stat.playedGames = games.size();
+			stat.wonGamesPercentage = wonGames() * 100 / games.size();
+			stat.avgAttemptsWonGames = (float) attemptsWonGames() / wonGames();
+			stat.lastStreakWonGames = lastStreak;
+			stat.bestStreakWonGames = bestStreak;
+			stat.guessDistribution = this.getGuessDistribution();
+		}
 		return stat;
 	}
 

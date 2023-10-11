@@ -14,6 +14,8 @@ import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import static common.enums.ResponseCodeEnum.*;
 
@@ -30,6 +32,8 @@ public class RequestTask implements Runnable {
 
 	@Override
 	public void run() {
+
+		TcpResponse response;
 		try {
 			SocketChannel client = (SocketChannel) key.channel();
 			SocketAddress clientAddress = client.getRemoteAddress();
@@ -40,7 +44,6 @@ public class RequestTask implements Runnable {
 				return;
 			}
 
-			TcpResponse response;
 			// Gestisco la richiesta
 			switch (request.command) {
 
@@ -73,13 +76,16 @@ public class RequestTask implements Runnable {
 
 			}
 
-			// Copio la risposta nell'allegato della chiave. Verrà usato da Server.main per rispondere al client
-			key.attach(response);
-
-		}catch (IOException e) {
+		} catch (Exception e) {
+			// Se casco qui dentro il thread ha incontrato un errore inaspettato durante la gestione della richiesta
+			// Devo ritornare internal server error altrimenti il client rimane in attesa all'infinito.
+			// Essendo il task Runnable non propaga le eccezioni al chiamante
 			System.out.println("Request task IO exception: "+e);
+			e.printStackTrace();
+			response = new TcpResponse(INTERNAL_SERVER_ERROR);
 		}
-
+		// Copio la risposta nell'allegato della chiave. Verrà usato da Server.main per rispondere al client
+		key.attach(response);
 	}
 
 	private TcpResponse login(TcpRequest request) {
@@ -89,6 +95,11 @@ public class RequestTask implements Runnable {
 		}
 
 		User user = this.userService.getUser(request.arguments[0]);
+
+		if (user == null) {
+			return new TcpResponse(INVALID_USERNAME_PASSWORD);
+		}
+
 		if (user.online) {
 			return new TcpResponse(ALREADY_LOGGED_IN);
 		}

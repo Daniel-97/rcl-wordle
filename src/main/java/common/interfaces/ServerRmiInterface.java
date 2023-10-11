@@ -28,7 +28,7 @@ public interface ServerRmiInterface extends Remote {
 	 * @param username
 	 * @throws RemoteException
 	 */
-	void unsubscribeClientToEvent(String username) throws RemoteException;
+	void unsubscribeClientFromEvent(String username) throws RemoteException;
 
 
 }

@@ -11,6 +11,7 @@ public class ServerConfig {
 	public static String MULTICAST_IP;
 	public static int MULTICAST_PORT;
 	public static int WORD_TIME_MINUTES;
+	public static int WORDLE_MAX_ATTEMPTS = 6;
 
 	public static void loadConfig() {
 		// Leggi le configurazioni dal file

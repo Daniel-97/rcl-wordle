@@ -21,7 +21,7 @@ public class JsonService {
 		return gson.toJson(src);
 	}
 
-	public static <T> T fromJson(String json, Class<T> type){
+	public static <T> T fromJson(String json, Class<T> type) throws JsonSyntaxException{
 		return gson.fromJson(json, type);
 	}
 
