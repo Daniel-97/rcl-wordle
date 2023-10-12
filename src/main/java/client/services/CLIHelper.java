@@ -63,7 +63,7 @@ public class CLIHelper {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	public static CLICommand waitForCommand(String username) {
+	public static CLICommand waitForInput(String username, boolean parseCommand) {
 		String input;
 		// Continuo a ciclare fino a che non ottengo un input valido
 		do{
@@ -74,11 +74,12 @@ public class CLIHelper {
 
 		String[] cmdSplit = input.split(" ", -1);
 		UserCommandEnum cmd = null;
-		try {
-			cmd = UserCommandEnum.valueOf(cmdSplit[0].replace(":","").toUpperCase());
-		} catch (IllegalArgumentException ignored) {}
+		if(parseCommand) {
+			try {
+				cmd = UserCommandEnum.valueOf(cmdSplit[0].replace(":", "").toUpperCase());
+			} catch (IllegalArgumentException ignored) {}
+		}
 		String[] args = Arrays.copyOfRange(cmdSplit, cmd != null ? 1 : 0, cmdSplit.length);
-
 		return new CLICommand(cmd, args);
 	}
 
