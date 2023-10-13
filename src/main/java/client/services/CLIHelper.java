@@ -14,7 +14,14 @@ import java.util.List;
 import java.util.Scanner;
 
 public class CLIHelper {
-
+	public static final String RESET = "\033[0m";
+	public static final String YELLOW_BACKGROUND = "\033[43m";
+	public static final String GRAY_BACKGROUND = "\033[100m";
+	public static final String GREEN_BACKGROUND = "\033[42m";
+	public static final String BLACK = "\033[0;30m";
+	public static final String BLACK_BOLD = "\033[1;30m";
+	public static final String GREEN = "\033[0;32m";
+	public static final String YELLOW = "\033[0;33m";
 	private static final Scanner cliScanner = new Scanner(System.in);
 	private static  final String ENTRY_MENU =
 			"ENTRY MENU:\n"+
@@ -88,34 +95,52 @@ public class CLIHelper {
 		if (userGuess == null || userGuess.length == 0) {
 			return;
 		}
-
-		System.out.println("\n--------------------");
+		System.out.println();
+		System.out.format("+-----------------------------------------+%n");
+		System.out.format("+                 WORDLE                  +%n");
+		System.out.format("+-----------------------------------------+%n");
+		System.out.format("+                                         +%n");
 
 		for(LetterDTO[] guess: userGuess) {
+
 			if (guess == null) {
 				continue;
 			}
 
-			if (printLetter) {
-				for (LetterDTO letter : guess) {
-					System.out.print(Character.toUpperCase(letter.letter) + " ");
-				}
-				System.out.println();
-			}
+			String letterColor = printLetter ? BLACK : BLACK_BOLD;
+			System.out.print("+");
 			for (LetterDTO letter : guess) {
-				System.out.print(letter.guessStatus + " ");
+				String color;
+				switch (letter.guessStatus) {
+					case '+':
+						color = GREEN_BACKGROUND;
+						letterColor = printLetter ? BLACK : GREEN;
+						break;
+					case '?':
+						color = YELLOW_BACKGROUND;
+						letterColor = printLetter ? BLACK : YELLOW;
+						break;
+					default:
+						color = GRAY_BACKGROUND;
+						letterColor = printLetter ? BLACK : BLACK_BOLD;
+				}
+				System.out.print("|"+ letterColor + color + " " + Character.toUpperCase(letter.letter) + " " + RESET);
 			}
-			System.out.println("\n--------------------");
+			System.out.println("|+");
+			System.out.println("+                                         +");
 		}
+		System.out.println("+-----------------------------------------+");
 
 	}
 
 	public static void printUserStats(UserStat stat) {
-		System.out.println("Ecco le tue statistiche:");
+
 		if (stat == null) {
 			System.out.println("Nessuna statistica presente!");
 			return;
 		}
+
+		System.out.println("Ecco le tue statistiche:");
 		System.out.println("- Partite giocate: "+stat.playedGames);
 		System.out.println("- Percentuale partite vinte: "+stat.wonGamesPercentage+"%");
 		System.out.println("- Media tentativi partite vinte: "+stat.avgAttemptsWonGames);
@@ -132,15 +157,22 @@ public class CLIHelper {
 	}
 
 	public static void printRank(List<UserScore> rank) {
+
 		if (rank == null || rank.size() == 0){
 			System.out.println("Nessuna classifica presente al momento!");
 			return;
 		}
 
-		System.out.println("CLASSIFICA GIOCATORI");
+		//System.out.println("CLASSIFICA GIOCATORI");
+		System.out.format("+----------+---------------+-------+%n");
+		System.out.format("+       CLASSIFICA DI GIOCO        +%n");
+		System.out.format("+----------+---------------+-------+%n");
+		System.out.format("| Position | Username      | Score |%n");
+		System.out.format("+----------+---------------+-------+%n");
 		for(int i = 0; i < rank.size(); i++) {
-			System.out.println((i+1) + ")	username: "+rank.get(i).username + ", score: " + rank.get(i).score);
+			System.out.format("| %-8d | %-13s | %-5d |%n", (i+1), rank.get(i).username, rank.get(i).score);
 		}
+		System.out.format("+----------+---------------+-------+%n");
 	}
 
 	/**

@@ -57,6 +57,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	public static void main(String[] argv) {
 
 		System.out.println(TITLE);
+		// Inizializza il client
 		ClientMain client = new ClientMain();
 
 		// Thread in ascolto di SIGINT e SIGTERM
@@ -86,13 +87,16 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 		});
 
+		// Avvia il client
 		client.run();
 	}
 
 	public ClientMain() {
 
 		super();
-		System.out.println("Avvio Wordle game client...");
+		System.out.println("Avvio Wordle client...");
+
+		// Carico le configurazioni del client
 		ClientConfig.loadConfig();
 
 		// RMI e callback
