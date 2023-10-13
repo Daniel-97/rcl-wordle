@@ -281,12 +281,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void gameMode() {
 
-		System.out.println("GAME MODE! Digita in qualsiasi momento :quit per uscire dalla modalita' gioco!");
+		System.out.println("GAME MODE! Digita in qualsiasi momento :quit per uscire dalla modalita' gioco!\n");
 		while (mode == ClientModeEnum.GAME_MODE) {
 			CLIHelper.printServerWord(guesses, true);
-			System.out.println("Tentativi rimasti: " + remainingAttempts + ". Inserisci una parola:");
+			System.out.println("- Tentativi rimasti: " + remainingAttempts + ". Inserisci una nuova parola!");
 			CLICommand cliCommand = CLIHelper.waitForInput(username, false);
-			UserCommandEnum cmd = cliCommand.command;
 			String[] args = cliCommand.args;
 
 			if (args[0].equals(":exit")) {
@@ -299,7 +298,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			if (this.mode == ClientModeEnum.GAME_MODE) {
 				CLIHelper.printServerWord(guesses, true);
 			}
-			CLIHelper.pause();
+			CLIHelper.pause(); // TODO rimuovere questo pause
 		}
 	}
 
@@ -361,7 +360,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			default:
 				System.out.println("Parola non indovinata!");
 				guesses = response.userGuess;
-
 		}
 
 	}

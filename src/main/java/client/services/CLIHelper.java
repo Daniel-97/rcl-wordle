@@ -107,7 +107,7 @@ public class CLIHelper {
 				continue;
 			}
 
-			String letterColor = printLetter ? BLACK : BLACK_BOLD;
+			String letterColor;
 			System.out.print("+");
 			for (LetterDTO letter : guess) {
 				String color;
@@ -129,7 +129,7 @@ public class CLIHelper {
 			System.out.println("|+");
 			System.out.println("+                                         +");
 		}
-		System.out.println("+-----------------------------------------+");
+		System.out.println("+-----------------------------------------+\n");
 
 	}
 
@@ -180,7 +180,7 @@ public class CLIHelper {
 	 * @param games
 	 */
 	public static void printUsersGames(List<WordleGame> games) {
-		System.out.println("Elenco partite condivise dagli altri giocatori:");
+		System.out.println("Elenco partite condivise dagli altri giocatori\n");
 		for(int i = 0; i < games.size(); i++) {
 			WordleGame game = games.get(i);
 				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " +
