@@ -3,6 +3,7 @@ package server.services;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import common.utils.WordleLogger;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -20,6 +21,8 @@ public class JsonService {
 			.setPrettyPrinting()
 			.serializeSpecialFloatingPointValues()
 			.create();
+
+	private final static WordleLogger logger = new WordleLogger(JsonService.class.getName());
 
 	public static String toJson(Object src) {
 		return gson.toJson(src);
@@ -41,7 +44,7 @@ public class JsonService {
 		BufferedReader br = Files.newBufferedReader(jsonPath);
 		parsedObj = gson.fromJson(br, type);
 
-		System.out.println("File " + path + " letto correttamente!");
+		logger.info("File " + path + " letto correttamente!");
 		return parsedObj;
 	}
 
@@ -68,6 +71,6 @@ public class JsonService {
 		bw.close();
 
 		int wroteBytes = json.getBytes().length;
-		System.out.println("Salvataggio di " + path + " completato! (" + wroteBytes + " bytes)");
+		logger.info("Salvataggio di " + path + " completato! (" + wroteBytes + " bytes)");
 	}
 }

@@ -3,6 +3,7 @@ package server.tasks;
 import common.dto.*;
 import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
+import common.utils.WordleLogger;
 import server.ServerMain;
 import server.entity.User;
 import server.services.JsonService;
@@ -20,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import static common.enums.ResponseCodeEnum.*;
 
 public class RequestTask implements Runnable {
+	private final static WordleLogger logger = new WordleLogger(RequestTask.class.getName());
 	private final SelectionKey key;
 	private final TcpRequest request;
 	private final SocketChannel client;
@@ -38,7 +40,7 @@ public class RequestTask implements Runnable {
 		TcpResponse response;
 		try {
 			SocketAddress clientAddress = client.getRemoteAddress();
-			System.out.println("["+Thread.currentThread().getName()+"] Gestisco richiesta da client " + clientAddress +": "+request);
+			logger.debug("["+Thread.currentThread().getName()+"] Gestisco richiesta da client " + clientAddress +": "+request);
 
 			if (request == null || request.command == null) {
 				key.attach(new TcpResponse(INTERNAL_SERVER_ERROR));
@@ -81,7 +83,7 @@ public class RequestTask implements Runnable {
 			// Se casco qui dentro il thread ha incontrato un errore inaspettato durante la gestione della richiesta
 			// Devo ritornare internal server error altrimenti il client rimane in attesa all'infinito.
 			// Essendo il task Runnable non propaga le eccezioni al chiamante
-			System.out.println("Request task IO exception: "+e);
+			logger.error("Request task IO exception: "+e);
 			e.printStackTrace();
 			response = new TcpResponse(INTERNAL_SERVER_ERROR);
 		}
@@ -258,7 +260,7 @@ public class RequestTask implements Runnable {
 		}
 
 		// Invio ultima partita dell'utente su gruppo multicast
-		System.out.println("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
+		logger.debug("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
 		ServerMain.sendMulticastMessage(JsonService.toJson(lastGame));
 		return new TcpResponse(OK);
 	}

@@ -1,6 +1,7 @@
 package server;
 
 import common.dto.*;
+import common.utils.WordleLogger;
 import server.entity.ServerConfig;
 import server.entity.User;
 import common.interfaces.NotifyEventInterface;
@@ -33,6 +34,7 @@ import static common.enums.ResponseCodeEnum.*;
 
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
+	private static WordleLogger logger = new WordleLogger(ServerMain.class.getName());
 	private static ThreadPoolExecutor poolExecutor;
 	private static final HashMap<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
@@ -54,12 +56,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Inizializza il server
 		ServerMain server = new ServerMain();
-
 		// Thread in ascolto di SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				System.out.println("Shutdown Wordle server...");
+				logger.info("Shutdown Wordle server...");
 				poolExecutor.shutdown();
 				server.userService.saveUsers();
 				server.wordleGameService.saveState();
@@ -74,7 +75,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	public ServerMain() {
 
-		System.out.println("Avvio Wordle game server...");
+		logger.info("Avvio Wordle game server...");
 		// Carico le configurazioni
 		ServerConfig.loadConfig();
 
@@ -92,12 +93,12 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			// Pubblicazione dello stub nel registry
 			registry.bind(ServerConfig.STUB_NAME, stub);
 
-			System.out.println("RMI server in ascolto sulla porta " + ServerConfig.RMI_PORT);
+			logger.info("RMI server in ascolto sulla porta " + ServerConfig.RMI_PORT);
 		} catch (AlreadyBoundException e){
-			System.out.println("RMI already bind exception: " + e.getMessage());
+			logger.error("RMI already bind exception: " + e.getMessage());
 			System.exit(-1);
 		} catch (RemoteException e){
-			System.out.println("RMI remote exception: " + e.getMessage());
+			logger.error("RMI remote exception: " + e.getMessage());
 			System.exit(-1);
 		}
 
@@ -120,13 +121,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		try {
 			multicastSocket = new MulticastSocket(ServerConfig.MULTICAST_PORT);
 		} catch (IOException e) {
-			System.out.println("Errore durante inizializzazione multicast! " + e.getMessage());
+			logger.error("Errore durante inizializzazione multicast! " + e.getMessage());
 			System.exit(-1);
 		}
 
 		// Inizializza thread pool executor
 		int coreCount = Runtime.getRuntime().availableProcessors();
-		System.out.println("Avvio una cached thread pool con dimensione massima " + coreCount*2);
+		logger.debug("Avvio una cached thread pool con dimensione massima " + coreCount*2);
 		poolExecutor = new ThreadPoolExecutor(0, coreCount*2, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
 	}
@@ -140,7 +141,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				// Bloccate, si ferma fino a quando almeno un canale non e' pronto
 				selector.select();
 			} catch (IOException e) {
-				System.out.println("Errore durante la selezione di un canale!");
+				logger.error("Errore durante la selezione di un canale!");
 				System.exit(-1);
 			}
 
@@ -160,7 +161,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						ServerSocketChannel server = (ServerSocketChannel) key.channel();
 						// Accetto la nuova connessione
 						SocketChannel client = server.accept();
-						System.out.println("Accettata nuova connessione TCP da client " + client.getRemoteAddress());
+						logger.debug("Accettata nuova connessione TCP da client " + client.getRemoteAddress());
 						client.configureBlocking(false);
 						// Aggiungo il client al selector su operazioni di READ
 						client.register(selector, SelectionKey.OP_READ, null);
@@ -174,7 +175,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						TcpRequest clientMessage = ServerMain.readTcpMessage(client);
 
 						if (clientMessage == null) {
-							System.out.println("Disconnessione forzata del client " + clientAddress);
+							logger.warn("Disconnessione forzata del client " + clientAddress);
 							userService.logout(clientAddress.hashCode());
 							client.close();
 							break;
@@ -185,7 +186,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						try {
 							poolExecutor.submit(new RequestTask(writeKey, clientMessage));
 						} catch (RejectedExecutionException e) {
-							System.out.println("Impossibile gestire nuova richiesta, thread pool rejection: "+e.getMessage());
+							logger.error("Impossibile gestire nuova richiesta, thread pool rejection: "+e.getMessage());
 							writeKey.attach(new TcpResponse(INTERNAL_SERVER_ERROR));
 						}
 					}
@@ -247,7 +248,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			User newUser = new User(username, password);
 			this.userService.addUser(newUser);
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-			System.out.println("Impossibile registrare nuovo utente " + e);
+			logger.error("Impossibile registrare nuovo utente " + e);
 			throw new RemoteException(INTERNAL_SERVER_ERROR.name());
 		}
 	}
@@ -262,7 +263,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Aggiungo utente alla lista di utenti che vogliono essere notificati degli eventi asincroni
 		clients.put(username, eventInterface);
-		System.out.println("Utente " + username + " iscritto per eventi asincroni!");
+		logger.success("Utente " + username + " iscritto per eventi asincroni!");
 		// Invio al client la classifica attuale
 		eventInterface.notifyUsersRank(this.userService.getRank());
 	}
@@ -270,7 +271,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	@Override
 	public synchronized void unsubscribeClientFromEvent(String username) throws RemoteException {
 		clients.remove(username);
-		System.out.println("Utente " + username + " disiscritto da eventi asincroni!");
+		logger.info("Utente " + username + " disiscritto da eventi asincroni!");
 	}
 
 	public static void sendTcpMessage(SocketChannel socket, TcpResponse request) throws IOException {
@@ -323,7 +324,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			try {
 				client.getValue().notifyUsersRank(rank);
 			} catch (RemoteException e) {
-				System.out.println("Errore durante invio aggiornamento classifica a utente "+client.getKey()+". " + e.getMessage());
+				logger.error("Errore durante invio aggiornamento classifica a utente "+client.getKey()+". " + e.getMessage());
 			}
 		}
 	}
