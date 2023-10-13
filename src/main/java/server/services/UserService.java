@@ -2,6 +2,7 @@ package server.services;
 
 import com.google.gson.JsonSyntaxException;
 import common.dto.UserScore;
+import common.utils.WordleLogger;
 import server.entity.User;
 import common.enums.ResponseCodeEnum;
 import com.google.gson.reflect.TypeToken;
@@ -14,8 +15,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class UserService {
+	private static WordleLogger logger = new WordleLogger(UserService.class.getName());
 	private static UserService instance = null;
 	private static final String USERS_DATA_PATH = "data/users.json";
 	private List<User> users = new ArrayList<>();
@@ -45,9 +48,9 @@ public class UserService {
 		Type ListOfUserType = new TypeToken<List<User>>(){}.getType();
 		try {
 			this.users = (List<User>) JsonService.readJson(USERS_DATA_PATH, ListOfUserType);
-			System.out.println("Caricato/i correttamente " + this.users.size() + " utente/i da file json");
+			logger.info("Caricato/i correttamente " + this.users.size() + " utente/i da file json");
 		} catch (IOException | JsonSyntaxException e) {
-			System.out.println("Errore lettura file user.json, creazione nuovo array");
+			logger.error("Errore lettura file user.json, creazione nuovo array");
 			this.users = new ArrayList<>();
 		}
 	}
@@ -77,7 +80,7 @@ public class UserService {
 
 		// Se sono arrivato qui l'utente non esiste, posso aggiungerlo
 		this.users.add(user);
-		System.out.println("Nuovo utente aggiunto! "+user.getUsername());
+		logger.success("Nuovo utente aggiunto! "+user.getUsername());
 	}
 
 	/**
@@ -115,7 +118,7 @@ public class UserService {
 			}
 			return verified;
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-			System.out.println("Errore verifica password: "+e.getMessage());
+			logger.error("Errore verifica password: "+e.getMessage());
 			return false;
 		}
 	}
@@ -144,7 +147,7 @@ public class UserService {
 			if(clientHashCode == user.clientHashCode) {
 				user.online = false;
 				user.endLastGame();
-				System.out.println("Logout forzato utente " + user.getUsername() + " effettuato con successo");
+				logger.warn("Logout forzato utente " + user.getUsername() + " effettuato con successo");
 				return;
 			}
 		}

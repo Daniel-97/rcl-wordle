@@ -3,6 +3,7 @@ package server.services;
 import common.dto.LetterDTO;
 import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
+import common.utils.WordleLogger;
 import server.entity.ServerConfig;
 import server.entity.WordleGameState;
 import java.io.BufferedReader;
@@ -15,7 +16,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class WordleGameService {
-
+	private static WordleLogger logger = new WordleLogger(WordleGameService.class.getName());
 	private static WordleGameService instance = null;
 	private static final String WORDLE_STATE_PATH = "data/wordle.json";
 	private static final String DICTIONARY_PATH = "src/main/java/dictionary/words.txt";
@@ -34,7 +35,7 @@ public class WordleGameService {
 
 	private WordleGameService() {
 
-		System.out.println("Avvio servizio wordle game...");
+		logger.info("Avvio servizio wordle game...");
 		// Carico il dizionario delle parole in memoria
 		Path dictionaryPath = Paths.get(DICTIONARY_PATH);
 		try (
@@ -46,11 +47,11 @@ public class WordleGameService {
 				line = br.readLine();
 			}
 		} catch (IOException e) {
-			System.out.println("Impossibile leggere dizionario parole. " + e.getMessage());
+			logger.error("Impossibile leggere dizionario parole. " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 
-		System.out.println("Caricato dizionario di " + this.dictionary.size() + " parole");
+		logger.info("Caricato dizionario di " + this.dictionary.size() + " parole");
 
 		/*  Carico file wordle.json che contiene le configurazioni dell ultimo gioco
 			Permette di mantenere lo stato del server in caso di riavvio o crash
@@ -58,12 +59,12 @@ public class WordleGameService {
 		try {
 			this.state = (WordleGameState) JsonService.readJson(WORDLE_STATE_PATH, WordleGameState.class);
 		}catch (IOException e) {
-			System.out.println("Errore lettura wordle.json, reset gioco");
+			logger.error("Errore lettura wordle.json, reset gioco");
 			this.state = new WordleGameState();
 		}
 
 		this.updateWord();
-		System.out.println("Parola del giorno: " + this.state.actualWord + ", traduzione: "+wordTranslation);
+		logger.info("Parola del giorno: " + this.state.actualWord + ", traduzione: "+wordTranslation);
 
 	}
 
@@ -72,7 +73,7 @@ public class WordleGameService {
 		try {
 			JsonService.writeJson(WORDLE_STATE_PATH, this.state);
 		} catch (IOException e) {
-			System.out.println("Errore! Impossibile salvare il corrente stato del gioco!");
+			logger.error("Errore! Impossibile salvare il corrente stato del gioco!");
 		}
 	}
 
@@ -92,7 +93,7 @@ public class WordleGameService {
 		this.state.extractedAt = new Date();
 		this.state.gameNumber++;
 		wordTranslation = this.translateWord(this.state.actualWord);
-		System.out.println("Parola scaduta! Nuova parola estratta: " + word + ", traduzione: "+wordTranslation);
+		logger.warn("Parola scaduta! Nuova parola estratta: " + word + ", traduzione: "+wordTranslation);
 
 		return word;
 	}
@@ -176,7 +177,7 @@ public class WordleGameService {
 			}
 
 		} catch (IOException e) {
-			System.out.println("Errore durante traduzione parola "+word+": "+e);
+			logger.error("Errore durante traduzione parola "+word+": "+e);
 		}
 
 		return null;
@@ -216,14 +217,12 @@ public class WordleGameService {
 		for(int i = 0; i < 3; i++) {
 			UserScore oldScore = oldRank.size() < (i+1) ? null : oldRank.get(i);
 			UserScore newScore = newRank.size() < (i+1) ? null : newRank.get(i);
-			System.out.println("old score:" + oldScore);
-			System.out.println("new score:"+newScore);
 			if (
 				(oldScore != null && newScore == null) ||
 				(oldScore == null && newScore != null) ||
 				(oldScore != null && newScore != null && newScore.score != oldScore.score)
 			) {
-				System.out.println("Classifica utenti cambiata nei primi 3 posti! Trasmetto aggiornamento ai client");
+				logger.info("Classifica utenti cambiata nei primi 3 posti! Trasmetto aggiornamento ai client");
 				return true;
 			}
 		}

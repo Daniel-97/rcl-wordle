@@ -40,7 +40,7 @@ public class RequestTask implements Runnable {
 		TcpResponse response;
 		try {
 			SocketAddress clientAddress = client.getRemoteAddress();
-			logger.debug("["+Thread.currentThread().getName()+"] Gestisco richiesta da client " + clientAddress +": "+request);
+			logger.debug("Gestisco richiesta da client " + clientAddress +": "+request.command);
 
 			if (request == null || request.command == null) {
 				key.attach(new TcpResponse(INTERNAL_SERVER_ERROR));

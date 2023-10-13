@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class ConfigReader {
+	private static WordleLogger logger = new WordleLogger(ConfigReader.class.getName());
 
 	/**
 	 * Legge il file di configurazione dal path specificato nella variabile di ambiente WORDLE_CONFIG
@@ -14,7 +15,7 @@ public class ConfigReader {
 
 		String configPath = System.getenv("WORDLE_CONFIG");
 		if (configPath == null) {
-			System.out.println("Variabile d'ambiente WORDLE_CONFIG non trovata!");
+			logger.error("Variabile d'ambiente WORDLE_CONFIG non trovata!");
 			System.exit(-1);
 		}
 
@@ -23,14 +24,14 @@ public class ConfigReader {
 			FileInputStream file = new FileInputStream(configPath);
 			properties.load(file);
 		} catch (FileNotFoundException e) {
-			System.out.println("File di configurazione " + configPath + " non trovato");
+			logger.error("File di configurazione " + configPath + " non trovato");
 			System.exit(-1);
 		} catch (IOException e) {
-			System.out.println("Errore caricamento file di configurazione");
+			logger.error("Errore caricamento file di configurazione");
 			System.exit(-1);
 		}
 
-		System.out.println("File di configurazione " + configPath + " letto correttamente!");
+		logger.debug("File di configurazione " + configPath + " letto correttamente!");
 		return properties;
 	}
 
