@@ -8,6 +8,7 @@ import client.services.CLIHelper;
 import client.worker.MulticastWorker;
 import common.dto.*;
 import common.entity.WordleGame;
+import common.enums.AnsiColor;
 import common.enums.ServerTCPCommandEnum;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
@@ -322,9 +323,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		switch (response.code) {
 
 			case GAME_WON: {
-				System.out.format("+---------------------------------------+%n");
-				System.out.format("+               HAI VINTO! :)           +%n");
-				System.out.format("+---------------------------------------+%n");
+				CLIHelper.printServerWord(response.userGuess, true);
+				System.out.format("+-----------------------------------------+%n");
+				System.out.format("+               "+ AnsiColor.GREEN_BACKGROUND +"HAI VINTO! :)"+AnsiColor.RESET+"            +%n");
+				System.out.format("+-----------------------------------------+%n");
 				System.out.println("Traduzione parola: " + response.wordTranslation);
 				UserStat stat = this.sendMeStatistics();
 				CLIHelper.printUserStats(stat);
@@ -333,9 +335,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 
 			case GAME_LOST: {
-				System.out.format("+---------------------------------------+%n");
-				System.out.format("+               HAI PERSO! :(           +%n");
-				System.out.format("+---------------------------------------+%n");
+				CLIHelper.printServerWord(response.userGuess, true);
+				System.out.format("+-----------------------------------------+%n");
+				System.out.format("+               "+ AnsiColor.RED_BACKGROUND+"HAI PERSO! :("+AnsiColor.RESET+"            +%n");
+				System.out.format("+-----------------------------------------+%n");
 				UserStat stat = this.sendMeStatistics();
 				CLIHelper.printUserStats(stat);
 				mode = ClientModeEnum.USER_MODE;

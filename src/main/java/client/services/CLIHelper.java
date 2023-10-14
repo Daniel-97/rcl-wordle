@@ -8,20 +8,13 @@ import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
 import common.entity.WordleGame;
+import common.enums.AnsiColor;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 public class CLIHelper {
-	public static final String RESET = "\033[0m";
-	public static final String YELLOW_BACKGROUND = "\033[43m";
-	public static final String GRAY_BACKGROUND = "\033[100m";
-	public static final String GREEN_BACKGROUND = "\033[42m";
-	public static final String BLACK = "\033[0;30m";
-	public static final String BLACK_BOLD = "\033[1;30m";
-	public static final String GREEN = "\033[0;32m";
-	public static final String YELLOW = "\033[0;33m";
 	private static final Scanner cliScanner = new Scanner(System.in);
 	private static  final String ENTRY_MENU =
 			"ENTRY MENU:\n"+
@@ -113,18 +106,18 @@ public class CLIHelper {
 				String color;
 				switch (letter.guessStatus) {
 					case '+':
-						color = GREEN_BACKGROUND;
-						letterColor = printLetter ? BLACK : GREEN;
+						color = AnsiColor.GREEN_BACKGROUND;
+						letterColor = printLetter ? AnsiColor.BLACK : AnsiColor.GREEN;
 						break;
 					case '?':
-						color = YELLOW_BACKGROUND;
-						letterColor = printLetter ? BLACK : YELLOW;
+						color = AnsiColor.YELLOW_BACKGROUND;
+						letterColor = printLetter ? AnsiColor.BLACK : AnsiColor.YELLOW;
 						break;
 					default:
-						color = GRAY_BACKGROUND;
-						letterColor = printLetter ? BLACK : BLACK_BOLD;
+						color = AnsiColor.GRAY_BACKGROUND;
+						letterColor = printLetter ? AnsiColor.BLACK : AnsiColor.BLACK_BOLD;
 				}
-				System.out.print("|"+ letterColor + color + " " + Character.toUpperCase(letter.letter) + " " + RESET);
+				System.out.print("|"+ letterColor + color + " " + Character.toUpperCase(letter.letter) + " " + AnsiColor.RESET);
 			}
 			System.out.println("|+");
 			System.out.println("+                                         +");
@@ -139,27 +132,27 @@ public class CLIHelper {
 			System.out.println("Nessuna statistica presente!");
 			return;
 		}
-		System.out.format("+---------------------------------------+%n");
-		System.out.format("+             STATISTICHE               +%n");
-		System.out.format("+---------------------------------------+%n");
-		System.out.format("| - Partite giocate: %-18d |%n", stat.playedGames);
-		System.out.format("| - Partite vinte:   %-18s |%n", stat.wonGamesPercentage + "%");
-		System.out.format("| - Media tentativi: %-18f |%n", stat.avgAttemptsWonGames);
-		System.out.format("| - Ultima serie:    %-18d |%n", stat.lastStreakWonGames);
-		System.out.format("| - Migliore serie:  %-18d |%n", stat.bestStreakWonGames);
-		System.out.format("+---------------------------------------+%n");
+		System.out.format("+-----------------------------------------+%n");
+		System.out.format("+               STATISTICHE               +%n");
+		System.out.format("+-----------------------------------------+%n");
+		System.out.format("| - Partite giocate: %-20d |%n", stat.playedGames);
+		System.out.format("| - Partite vinte:   %-20s |%n", stat.wonGamesPercentage + "%");
+		System.out.format("| - Media tentativi: %-20f |%n", stat.avgAttemptsWonGames);
+		System.out.format("| - Ultima serie:    %-20d |%n", stat.lastStreakWonGames);
+		System.out.format("| - Migliore serie:  %-20d |%n", stat.bestStreakWonGames);
+		System.out.format("+-----------------------------------------+%n");
 
 		if (stat.guessDistribution == null) {
 			return;
 		}
 
-		System.out.format("+       DISTRIBUZIONE PROBABILITA'      +%n");
-		System.out.format("+---------------------+-----------------+%n");
-		System.out.format("| N. tentativo        |   Percentuale   |%n");
-		System.out.format("+---------------------+-----------------+%n");
+		System.out.format("+        DISTRIBUZIONE PROBABILITA'       +%n");
+		System.out.format("+----------------------+------------------+%n");
+		System.out.format("| N. tentativo         |   Percentuale    |%n");
+		System.out.format("+----------------------+------------------+%n");
 		for(GuessDistributionItem item: stat.guessDistribution) {
-			System.out.format("|          %-2d         |       %-3d%%      |%n", item.attemptNumber, item.percentage);
-			System.out.format("+---------------------+-----------------+%n");
+			System.out.format("|          %-2d          |       %-3d%%       |%n", item.attemptNumber, item.percentage);
+			System.out.format("+----------------------+------------------+%n");
 		}
 	}
 
