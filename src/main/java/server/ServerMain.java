@@ -35,9 +35,9 @@ import static common.enums.ResponseCodeEnum.*;
 
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
-	private static WordleLogger logger = new WordleLogger(ServerMain.class.getName());
+	private static final WordleLogger logger = new WordleLogger(ServerMain.class.getName());
 	private static ThreadPoolExecutor poolExecutor;
-	private static final ScheduledExecutorService wordUpdateExecutor = Executors.newSingleThreadScheduledExecutor();
+	private static ScheduledExecutorService wordUpdateExecutor;
 	private static final HashMap<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
@@ -88,6 +88,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Avvio il thread che si occupera' di estrarre la nuova parola
 		// todo initial deley deve essere calcolato in base alla parola vecchia se ripristinata. Altrimenti ad ogni riavvio la parola si resetta
+		wordUpdateExecutor = Executors.newSingleThreadScheduledExecutor();
 		wordUpdateExecutor.scheduleAtFixedRate(new WordExtractorTask(), 0, ServerConfig.WORD_TIME_MINUTES, TimeUnit.MINUTES);
 
 		// Inizializza RMI server
@@ -134,7 +135,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Inizializza thread pool executor
 		int coreCount = Runtime.getRuntime().availableProcessors();
-		logger.debug("Avvio una cached thread pool con dimensione massima " + coreCount*2);
+		logger.debug("Creo una cached thread pool con dimensione massima " + coreCount*2);
 		poolExecutor = new ThreadPoolExecutor(0, coreCount*2, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
 	}
