@@ -4,8 +4,8 @@ import common.dto.LetterDTO;
 import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
 import common.utils.WordleLogger;
+import server.entity.ServerConfig;
 import server.entity.WordleGameState;
-import server.tasks.WordExtractorTask;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -212,7 +212,17 @@ public class WordleGameService {
 		return state;
 	}
 
-	public void setState(WordleGameState state) {
-		this.state = state;
+	/**
+	 * Ritorna i minuti che rimangono alla parola prima della
+	 * @return
+	 */
+	public long getWordRemainingMinutes() {
+		long diff = new Date().getTime() - state.extractedAt.getTime();
+		long minutes = diff / 1000 / 60;
+		if (minutes > ServerConfig.WORD_TIME_MINUTES) {
+			minutes = 0;
+		}
+		return minutes;
+
 	}
 }

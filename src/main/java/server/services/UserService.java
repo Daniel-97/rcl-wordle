@@ -25,7 +25,7 @@ public class UserService {
 	private List<UserScore> rank;
 
 	private UserService() {
-		System.out.println("Avvio servizio utenti...");
+		logger.info("Avvio servizio utenti...");
 		this.loadUsers();
 		this.updateRank();
 	}

@@ -22,19 +22,20 @@ public class WordExtractorTask implements Runnable {
 
 	@Override
 	public void run() {
-
-		logger.debug("Estraggo una nuova parola...");
-
+		/*
+		Calendar cal = GregorianCalendar.getInstance();
+		cal.setTime(state.extractedAt);
+		cal.add(GregorianCalendar.MINUTE, ServerConfig.WORD_TIME_MINUTES);
+		*/
 		try {
 			// Provo a prendere la lock su word
 			WordleGameService.wordLock.lock();
 
 			WordleGameState state = wordleGameService.getState();
-			logger.debug("Vecchia parola estratta a " + state.extractedAt);
 
 			state.word = wordleGameService.extractRandomWord();
 			state.translation = wordleGameService.translateWord(state.word);
-			logger.info("Nuova parola estratta, vecchia scaduta: " + state.word + ", traduzione: " + state.translation);
+			logger.info("Parola scaduta, nuova parola estratta: " + state.word + ", traduzione: " + state.translation);
 			state.extractedAt = new Date();
 			state.gameNumber++;
 

@@ -87,9 +87,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		this.wordleGameService = WordleGameService.getInstance();
 
 		// Avvio il thread che si occupera' di estrarre la nuova parola
-		// todo initial deley deve essere calcolato in base alla parola vecchia se ripristinata. Altrimenti ad ogni riavvio la parola si resetta
 		wordUpdateExecutor = Executors.newSingleThreadScheduledExecutor();
-		wordUpdateExecutor.scheduleAtFixedRate(new WordExtractorTask(), 0, ServerConfig.WORD_TIME_MINUTES, TimeUnit.MINUTES);
+		// Calcolo i minuti rimanenti della parola precedentemente estratta
+		long remainingTime = wordleGameService.getWordRemainingMinutes();
+		wordUpdateExecutor.scheduleAtFixedRate(new WordExtractorTask(), remainingTime, ServerConfig.WORD_TIME_MINUTES, TimeUnit.MINUTES);
 
 		// Inizializza RMI server
 		try {
