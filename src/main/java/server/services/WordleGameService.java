@@ -92,7 +92,6 @@ public class WordleGameService {
 	 * @return
 	 */
 	public String getGameWord() {
-		//this.updateWord();
 		String word;
 
 		try {

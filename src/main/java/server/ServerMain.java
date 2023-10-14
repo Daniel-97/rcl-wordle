@@ -37,7 +37,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	private static WordleLogger logger = new WordleLogger(ServerMain.class.getName());
 	private static ThreadPoolExecutor poolExecutor;
-	private static Thread wordUpdateThread;
+	private static final ScheduledExecutorService wordUpdateExecutor = Executors.newSingleThreadScheduledExecutor();
 	private static final HashMap<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
@@ -63,11 +63,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			@Override
 			public void run() {
 				logger.info("Shutdown Wordle server...");
-				poolExecutor.shutdown();
-				wordUpdateThread.interrupt();
-				server.userService.saveUsers();
-				server.wordleGameService.saveState();
-				multicastSocket.close();
+				poolExecutor.shutdown(); // Interrompo thread pool
+				wordUpdateExecutor.shutdown(); // interrompo word update
+				server.userService.saveUsers(); // Salvo utenti su file
+				server.wordleGameService.saveState(); // Salvo stato del gioco su file
+				multicastSocket.close(); // Chiudo socket multicast
 				try {socketChannel.close();} catch (IOException ignore) {}
 			}
 		});
@@ -87,8 +87,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		this.wordleGameService = WordleGameService.getInstance();
 
 		// Avvio il thread che si occupera' di estrarre la nuova parola
-		wordUpdateThread = new Thread(new WordExtractorTask());
-		wordUpdateThread.start();
+		// todo initial deley deve essere calcolato in base alla parola vecchia se ripristinata. Altrimenti ad ogni riavvio la parola si resetta
+		wordUpdateExecutor.scheduleAtFixedRate(new WordExtractorTask(), 0, ServerConfig.WORD_TIME_MINUTES, TimeUnit.MINUTES);
 
 		// Inizializza RMI server
 		try {
