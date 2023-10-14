@@ -295,11 +295,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			CLIHelper.cls();
 			this.sendWord(args[0]);
-			if (this.mode == ClientModeEnum.GAME_MODE) {
-				CLIHelper.printServerWord(guesses, true);
-			}
-			CLIHelper.pause(); // TODO rimuovere questo pause
+			//CLIHelper.printServerWord(guesses, true);
 		}
+		CLIHelper.pause();
 	}
 
 	private void sendWord(String word) {
@@ -324,7 +322,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		switch (response.code) {
 
 			case GAME_WON: {
-				System.out.println("Complimenti, hai indovinato la parola! Traduzione: " + response.wordTranslation);
+				System.out.format("+------------------------------------------+%n");
+				System.out.format("+                HAI VINTO                 +%n");
+				System.out.format("+------------------------------------------+%n");
+				System.out.println("Traduzione parola: " + response.wordTranslation);
 				UserStat stat = this.sendMeStatistics();
 				CLIHelper.printUserStats(stat);
 				mode = ClientModeEnum.USER_MODE;
@@ -332,7 +333,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 
 			case GAME_LOST: {
-				System.out.println("Tentativi esauriti, hai perso!");
+				System.out.format("+------------------------------------------+%n");
+				System.out.format("+                HAI PERSO                 +%n");
+				System.out.format("+------------------------------------------+%n");
 				UserStat stat = this.sendMeStatistics();
 				CLIHelper.printUserStats(stat);
 				mode = ClientModeEnum.USER_MODE;
@@ -358,7 +361,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				break;
 
 			default:
-				System.out.println("Parola non indovinata!");
 				guesses = response.userGuess;
 		}
 

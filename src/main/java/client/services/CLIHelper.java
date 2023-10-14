@@ -139,20 +139,27 @@ public class CLIHelper {
 			System.out.println("Nessuna statistica presente!");
 			return;
 		}
+		System.out.format("+---------------------------------------+%n");
+		System.out.format("+             STATISTICHE               +%n");
+		System.out.format("+---------------------------------------+%n");
+		System.out.format("| - Partite giocate: %-18d |%n", stat.playedGames);
+		System.out.format("| - Partite vinte:   %-18s |%n", stat.wonGamesPercentage + "%");
+		System.out.format("| - Media tentativi: %-18f |%n", stat.avgAttemptsWonGames);
+		System.out.format("| - Ultima serie:    %-18d |%n", stat.lastStreakWonGames);
+		System.out.format("| - Migliore serie:  %-18d |%n", stat.bestStreakWonGames);
+		System.out.format("+---------------------------------------+%n");
 
-		System.out.println("Ecco le tue statistiche:");
-		System.out.println("- Partite giocate: "+stat.playedGames);
-		System.out.println("- Percentuale partite vinte: "+stat.wonGamesPercentage+"%");
-		System.out.println("- Media tentativi partite vinte: "+stat.avgAttemptsWonGames);
-		System.out.println("- Ultima serie partite vinte di fila: "+stat.lastStreakWonGames);
-		System.out.println("- Migliore serie partite vinte di fila: "+stat.bestStreakWonGames);
+		if (stat.guessDistribution == null) {
+			return;
+		}
 
-		if (stat.guessDistribution != null) {
-			System.out.println("Distribuzione probabilita' tentativi su partite vinte:");
-			for(GuessDistributionItem item: stat.guessDistribution) {
-				if(item.percentage > 0)
-					System.out.println("- "+item.attemptNumber+" tentativo/i: "+item.percentage+"%");
-			}
+		System.out.format("+       DISTRIBUZIONE PROBABILITA'      +%n");
+		System.out.format("+---------------------+-----------------+%n");
+		System.out.format("| N. tentativo        |   Percentuale   |%n");
+		System.out.format("+---------------------+-----------------+%n");
+		for(GuessDistributionItem item: stat.guessDistribution) {
+			System.out.format("|          %-2d         |       %-3d%%      |%n", item.attemptNumber, item.percentage);
+			System.out.format("+---------------------+-----------------+%n");
 		}
 	}
 

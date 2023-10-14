@@ -208,13 +208,10 @@ public class RequestTask implements Runnable {
 		// Se la partita e' finita lo comunico al client
 		if (lastGame.finished) {
 			res.code = lastGame.won ? GAME_WON : GAME_LOST;
-			// TOdo qui puo succedere che la parola ottenuta e' cambiata nel mentre, atomico?
 			res.wordTranslation = wordleGameService.getWordTranslation();
-			key.attach(res);
-			if(wordleGameService.isRankChanged(oldRank, newRank)) {
+			if (wordleGameService.isRankChanged(oldRank, newRank)) {
 				ServerMain.notifyRankToClient(userService.getRank());
 			}
-			return res;
 		}
 
 		res.remainingAttempts = lastGame.getRemainingAttempts();
