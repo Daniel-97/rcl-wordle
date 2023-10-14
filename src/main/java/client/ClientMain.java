@@ -322,9 +322,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		switch (response.code) {
 
 			case GAME_WON: {
-				System.out.format("+------------------------------------------+%n");
-				System.out.format("+                HAI VINTO                 +%n");
-				System.out.format("+------------------------------------------+%n");
+				System.out.format("+---------------------------------------+%n");
+				System.out.format("+               HAI VINTO! :)           +%n");
+				System.out.format("+---------------------------------------+%n");
 				System.out.println("Traduzione parola: " + response.wordTranslation);
 				UserStat stat = this.sendMeStatistics();
 				CLIHelper.printUserStats(stat);
@@ -333,9 +333,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 
 			case GAME_LOST: {
-				System.out.format("+------------------------------------------+%n");
-				System.out.format("+                HAI PERSO                 +%n");
-				System.out.format("+------------------------------------------+%n");
+				System.out.format("+---------------------------------------+%n");
+				System.out.format("+               HAI PERSO! :(           +%n");
+				System.out.format("+---------------------------------------+%n");
 				UserStat stat = this.sendMeStatistics();
 				CLIHelper.printUserStats(stat);
 				mode = ClientModeEnum.USER_MODE;
