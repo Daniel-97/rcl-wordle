@@ -4,8 +4,9 @@ import common.dto.LetterDTO;
 import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
 import common.utils.WordleLogger;
-import server.entity.ServerConfig;
 import server.entity.WordleGameState;
+import server.tasks.WordExtractorTask;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,15 +15,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class WordleGameService {
-	private static WordleLogger logger = new WordleLogger(WordleGameService.class.getName());
-	private static WordleGameService instance = null;
+	private static final WordleLogger logger = new WordleLogger(WordleGameService.class.getName());
+	public static final Lock wordLock = new ReentrantLock();
 	private static final String WORDLE_STATE_PATH = "data/wordle.json";
 	private static final String DICTIONARY_PATH = "src/main/java/dictionary/words.txt";
+	private static WordleGameService instance = null;
 	public static final int WORD_LENGHT = 10;
 	private WordleGameState state; // Contiene lo stato attuale del gioco
-	private String wordTranslation; // Traduzione della parola in italiano
 	private final ArrayList<String> dictionary = new ArrayList<>(); //Dizionario delle parole, non deve essere salvato sul json
 
 
@@ -59,12 +62,10 @@ public class WordleGameService {
 		try {
 			this.state = (WordleGameState) JsonService.readJson(WORDLE_STATE_PATH, WordleGameState.class);
 		}catch (IOException e) {
-			logger.error("Errore lettura wordle.json, reset gioco");
-			this.state = new WordleGameState();
+			String word = this.extractRandomWord();
+			this.state = new WordleGameState(word, this.translateWord(word));
+			logger.info("Primo avvio del gioco, nuova parola estratta: " + state.word + ", traduzione: " + state.translation);
 		}
-
-		this.updateWord();
-		logger.info("Parola del giorno: " + this.state.actualWord + ", traduzione: "+wordTranslation);
 
 	}
 
@@ -81,30 +82,27 @@ public class WordleGameService {
 	 * Estrae in modo casuale una parola dal dizionario
 	 * @return
 	 */
-	public String extractWord() {
-		String word = this.dictionary.get(new Random().nextInt(this.dictionary.size()));
-
-		// Estrai una nuova parola se e' identica a quella precedente
-		if (this.state.actualWord != null && this.state.actualWord.equals(word)) {
-			return this.extractWord();
-		}
-
-		this.state.actualWord = word;
-		this.state.extractedAt = new Date();
-		this.state.gameNumber++;
-		wordTranslation = this.translateWord(this.state.actualWord);
-		logger.warn("Parola scaduta! Nuova parola estratta: " + word + ", traduzione: "+wordTranslation);
-
-		return word;
+	public String extractRandomWord() {
+		return this.dictionary.get(new Random().nextInt(this.dictionary.size()));
 	}
 
 	/**
-	 * Ritorna la parola attuale del gioco. Prima di farlo controlla se la parola deve essere aggiornata
+	 * Ritorna la parola attuale del gioco, prima tenta di prendere la lock, altrimenti significa che un altro
+	 * thread ci sta lavorando sopra (get oppure aggiornamento)
 	 * @return
 	 */
 	public String getGameWord() {
-		this.updateWord();
-		return this.state.actualWord;
+		//this.updateWord();
+		String word;
+
+		try {
+			wordLock.lock();
+			word = this.state.word;
+		} finally {
+			wordLock.unlock();
+		}
+
+		return word;
 	}
 
 	public int getGameNumber() {
@@ -122,13 +120,13 @@ public class WordleGameService {
 
 		for (int i = 0; i < word.length(); i++) {
 			char guessedLetter = word.toCharArray()[i];
-			char correctLetter = this.state.actualWord.toCharArray()[i];
+			char correctLetter = this.state.word.toCharArray()[i];
 
 			result[i] = new LetterDTO();
 			result[i].letter = word.toCharArray()[i];
 			if (guessedLetter == correctLetter) {
 				result[i].guessStatus = '+';
-			} else if (this.state.actualWord.contains(String.valueOf(guessedLetter))) {
+			} else if (this.state.word.contains(String.valueOf(guessedLetter))) {
 				result[i].guessStatus = '?';
 			} else {
 				result[i].guessStatus = 'X';
@@ -152,12 +150,40 @@ public class WordleGameService {
 		return false;
 	}
 
+	public String getWordTranslation() {
+		return this.state.translation;
+	}
+
+	/**
+	 * Ritorna true se ci sono differenze nelle prime tre posizioni tra la vecchia e la nuova classifica
+	 * @param oldRank
+	 * @param newRank
+	 * @return
+	 */
+	public boolean isRankChanged(List<UserScore> oldRank, List<UserScore> newRank) {
+
+		for(int i = 0; i < 3; i++) {
+			UserScore oldScore = oldRank.size() < (i+1) ? null : oldRank.get(i);
+			UserScore newScore = newRank.size() < (i+1) ? null : newRank.get(i);
+			if (
+				(oldScore != null && newScore == null) ||
+				(oldScore == null && newScore != null) ||
+				(oldScore != null && newScore != null && newScore.score != oldScore.score)
+			) {
+				logger.info("Classifica utenti cambiata nei primi 3 posti! Trasmetto aggiornamento ai client");
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * Questo metodo contatta le API di mymemory per tradurre una parola da inglese a italiano
 	 * @param word
 	 * @return
 	 */
-	private String translateWord(String word) {
+	public String translateWord(String word) {
 
 		try {
 			URL url = new URL("https://api.mymemory.translated.net/get?q="+word+"&langpair=en|it");
@@ -183,50 +209,11 @@ public class WordleGameService {
 		return null;
 	}
 
-	/**
-	 * Controlla se la parola attuale e' scaduta e nel caso aggiorna
-	 * @return
-	 */
-	private synchronized void updateWord() {
-
-		if (this.state.actualWord == null) {
-			this.extractWord();
-		} else {
-			Calendar cal = GregorianCalendar.getInstance();
-			cal.setTime(this.state.extractedAt);
-			cal.add(GregorianCalendar.MINUTE, ServerConfig.WORD_TIME_MINUTES);
-
-			if (cal.getTime().getTime() < new Date().getTime()) {
-				this.extractWord();
-			}
-		}
+	public WordleGameState getState() {
+		return state;
 	}
 
-	public String getWordTranslation() {
-		return wordTranslation;
-	}
-
-	/**
-	 * Ritorna true se ci sono differenze nelle prime tre posizioni tra la vecchia e la nuova classifica
-	 * @param oldRank
-	 * @param newRank
-	 * @return
-	 */
-	public boolean isRankChanged(List<UserScore> oldRank, List<UserScore> newRank) {
-
-		for(int i = 0; i < 3; i++) {
-			UserScore oldScore = oldRank.size() < (i+1) ? null : oldRank.get(i);
-			UserScore newScore = newRank.size() < (i+1) ? null : newRank.get(i);
-			if (
-				(oldScore != null && newScore == null) ||
-				(oldScore == null && newScore != null) ||
-				(oldScore != null && newScore != null && newScore.score != oldScore.score)
-			) {
-				logger.info("Classifica utenti cambiata nei primi 3 posti! Trasmetto aggiornamento ai client");
-				return true;
-			}
-		}
-
-		return false;
+	public void setState(WordleGameState state) {
+		this.state = state;
 	}
 }

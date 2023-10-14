@@ -10,6 +10,7 @@ import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
 import server.tasks.RequestTask;
+import server.tasks.WordExtractorTask;
 
 import java.io.IOException;
 import java.net.*;
@@ -36,6 +37,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	private static WordleLogger logger = new WordleLogger(ServerMain.class.getName());
 	private static ThreadPoolExecutor poolExecutor;
+	private static Thread wordUpdateThread;
 	private static final HashMap<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
 	private static ServerSocketChannel socketChannel;
@@ -62,6 +64,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			public void run() {
 				logger.info("Shutdown Wordle server...");
 				poolExecutor.shutdown();
+				wordUpdateThread.interrupt();
 				server.userService.saveUsers();
 				server.wordleGameService.saveState();
 				multicastSocket.close();
@@ -82,6 +85,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Inizializzo i servizi
 		this.userService = UserService.getInstance();
 		this.wordleGameService = WordleGameService.getInstance();
+
+		// Avvio il thread che si occupera' di estrarre la nuova parola
+		wordUpdateThread = new Thread(new WordExtractorTask());
+		wordUpdateThread.start();
 
 		// Inizializza RMI server
 		try {
