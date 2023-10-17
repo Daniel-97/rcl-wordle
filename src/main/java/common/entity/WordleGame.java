@@ -18,6 +18,7 @@ public class WordleGame {
 	public boolean finished;
 	public int attempts; // numero di tentativi fatti
 	private final List<LetterDTO[]> userHint;
+	private final List<String> userGuess;
 
 	public WordleGame(String word, String username, int gameNumber) {
 		this.won = false;
@@ -27,17 +28,18 @@ public class WordleGame {
 		this.userHint = new ArrayList<>();
 		this.username = username;
 		this.gameNumber = gameNumber;
+		this.userGuess = new ArrayList<>();
 	}
 
 	public int getRemainingAttempts() {
 		return ClientConfig.WORDLE_MAX_ATTEMPTS - attempts;
 	}
 
-	public void addHint(LetterDTO[] hint) {
-		this.userHint.add(hint);
+	public void addGuess(String guess) {
+		this.userGuess.add(guess);
 	}
 
-	public LetterDTO[][] getUserHint() {
-		return this.userHint.toArray(new LetterDTO[attempts][]);
+	public List<String> getUserGuess() {
+		return userGuess;
 	}
 }

@@ -1,6 +1,7 @@
 package server.tasks;
 
 import common.dto.*;
+import common.entity.SharedGame;
 import common.entity.WordleGame;
 import common.enums.ResponseCodeEnum;
 import common.utils.WordleLogger;
@@ -146,11 +147,11 @@ public class RequestTask implements Runnable {
 			user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
 			response.code = OK;
 			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = user.getLastGame().getUserHint();
+			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess());
 		} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
 			response.code = OK;
 			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = user.getLastGame().getUserHint();
+			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess());
 		} else {
 			response.code = GAME_ALREADY_PLAYED;
 		}
@@ -201,7 +202,7 @@ public class RequestTask implements Runnable {
 
 		List<UserScore> oldRank = userService.getRank();
 		user.addGuessLastGame(clientWord);
-		lastGame.addHint(wordleGameService.hintWord(clientWord));
+		lastGame.addGuess(clientWord);
 		userService.updateRank();
 		List<UserScore> newRank = userService.getRank();
 
@@ -215,7 +216,7 @@ public class RequestTask implements Runnable {
 		}
 
 		res.remainingAttempts = lastGame.getRemainingAttempts();
-		res.userGuess = lastGame.getUserHint();
+		res.userGuess = wordleGameService.buildUserHint(lastGame.getUserGuess());
 		return res;
 	}
 
@@ -258,7 +259,8 @@ public class RequestTask implements Runnable {
 
 		// Invio ultima partita dell'utente su gruppo multicast
 		logger.debug("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
-		ServerMain.sendMulticastMessage(JsonService.toJson(lastGame));
+		SharedGame share = new SharedGame(username, lastGame.gameNumber, wordleGameService.buildUserHint(lastGame.getUserGuess()));
+		ServerMain.sendMulticastMessage(JsonService.toJson(share));
 		return new TcpResponse(OK);
 	}
 

@@ -7,6 +7,7 @@ import common.dto.GuessDistributionItem;
 import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
+import common.entity.SharedGame;
 import common.entity.WordleGame;
 import common.enums.AnsiColor;
 
@@ -179,13 +180,13 @@ public class CLIHelper {
 	 * Mostra a video tutte le partite giocate dai vari giocatori
 	 * @param games
 	 */
-	public static void printUsersGames(List<WordleGame> games) {
+	public static void printUsersGames(List<SharedGame> games) {
 		System.out.println("Elenco partite condivise dagli altri giocatori\n");
 		for(int i = 0; i < games.size(); i++) {
-			WordleGame game = games.get(i);
+			SharedGame game = games.get(i);
 				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " +
-						game.attempts + "/" + ClientConfig.WORDLE_MAX_ATTEMPTS + " ("+game.username+")");
-				printServerWord(game.getUserHint(), false);
+						game.hints.length + "/" + ClientConfig.WORDLE_MAX_ATTEMPTS + " ("+game.username+")");
+				printServerWord(game.hints, false);
 		}
 	}
 

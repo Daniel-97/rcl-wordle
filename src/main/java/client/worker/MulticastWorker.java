@@ -4,6 +4,7 @@ import client.entity.ClientConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import common.entity.SharedGame;
 import common.entity.WordleGame;
 import server.services.JsonService;
 
@@ -18,9 +19,9 @@ import java.util.List;
  */
 public class MulticastWorker implements Runnable {
 	private final MulticastSocket multicastSocket;
-	private final List<WordleGame> userGames;
+	private final List<SharedGame> userGames;
 
-	public MulticastWorker(MulticastSocket ms, List<WordleGame> userGames) {
+	public MulticastWorker(MulticastSocket ms, List<SharedGame> userGames) {
 
 		this.multicastSocket = ms;
 		this.userGames = userGames;
@@ -41,7 +42,7 @@ public class MulticastWorker implements Runnable {
 				String json = new String(dp.getData(), 0, dp.getLength());
 
 				try {
-					WordleGame wordleGame = JsonService.fromJson(json, WordleGame.class);
+					SharedGame wordleGame = JsonService.fromJson(json, SharedGame.class);
 					this.userGames.add(wordleGame);
 				} catch (JsonSyntaxException e) {
 					System.out.println("Errore parsing gioco condiviso da altro utente: "+e.getMessage());

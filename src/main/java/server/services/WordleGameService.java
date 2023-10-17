@@ -137,6 +137,19 @@ public class WordleGameService {
 	}
 
 	/**
+	 * Costruisce l'array dei suggerimenti a partire dai tentativi dell'utente
+	 * @param userGuess
+	 * @return
+	 */
+	public LetterDTO[][] buildUserHint(List<String> userGuess) {
+		LetterDTO[][] hints = new LetterDTO[userGuess.size()][];
+		for(int i = 0; i < userGuess.size(); i++) {
+			hints[i] = this.hintWord(userGuess.get(i));
+		}
+		return hints;
+	}
+
+	/**
 	 * Questa funzione controlla se la parola specificata e' presente nel dizionario delle parole
 	 * @param word
 	 * @return

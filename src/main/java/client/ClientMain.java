@@ -7,6 +7,7 @@ import client.enums.UserCommandEnum;
 import client.services.CLIHelper;
 import client.worker.MulticastWorker;
 import common.dto.*;
+import common.entity.SharedGame;
 import common.entity.WordleGame;
 import common.enums.AnsiColor;
 import common.enums.ServerTCPCommandEnum;
@@ -40,7 +41,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private static MulticastSocket multicastSocket;
 	private static Thread multicastThread;
 	private static List<UserScore> rank;
-	private static final List<WordleGame> sharedGames = new ArrayList<>();
+	private static final List<SharedGame> sharedGames = new ArrayList<>();
 	private static SocketChannel socketChannel;
 	private String username = null;
 	private ClientModeEnum mode = ClientModeEnum.GUEST_MODE;
