@@ -107,7 +107,7 @@ public class User {
 			return 0;
 		}
 		for (WordleGame game: this.games) {
-			avg += game.attempts;
+			avg += game.getAttempts();
 		}
 		return avg / this.games.size();
 	}
@@ -136,7 +136,7 @@ public class User {
 		int attempts = 0;
 		for(WordleGame game: this.games) {
 			if (game.finished && game.won) {
-				attempts += game.attempts;
+				attempts += game.getAttempts();
 			}
 		}
 
@@ -151,7 +151,7 @@ public class User {
 	private int wonGamesByAttempt(int attempts) {
 		int count = 0;
 		for (WordleGame game: this.games) {
-			count = game.won && game.attempts == attempts ? count + 1 : count;
+			count = game.won && game.getAttempts() == attempts ? count + 1 : count;
 		}
 		return count;
 	}
@@ -209,7 +209,7 @@ public class User {
 	 */
 	public synchronized void addGuessLastGame(String word) {
 		WordleGame lastGame = getLastGame();
-		lastGame.attempts++;
+		lastGame.addGuess(word);
 		lastGame.won = word.equals(lastGame.word);
 		lastGame.finished = lastGame.getRemainingAttempts() == 0 || lastGame.won;
 
