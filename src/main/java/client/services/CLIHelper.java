@@ -8,7 +8,6 @@ import common.dto.LetterDTO;
 import common.dto.UserScore;
 import common.dto.UserStat;
 import common.entity.SharedGame;
-import common.entity.WordleGame;
 import common.enums.AnsiColor;
 
 import java.util.Arrays;
@@ -175,7 +174,12 @@ public class CLIHelper {
 	 * @param games
 	 */
 	public static void printUsersGames(List<SharedGame> games) {
-		System.out.println("Elenco partite condivise dagli altri giocatori\n");
+
+		if (games == null || games.size() == 0) {
+			System.out.println("Nessuna condivisione presente");
+			return;
+		}
+
 		for(int i = 0; i < games.size(); i++) {
 			SharedGame game = games.get(i);
 				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " +

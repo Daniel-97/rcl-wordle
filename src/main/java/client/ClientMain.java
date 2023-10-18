@@ -261,7 +261,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				break;
 
 			case SHARE:
-				System.out.println("Condivido le statistiche con gli altri utenti");
 				this.share();
 				break;
 
@@ -476,7 +475,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			sendTcpMessage(request);
 			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
-				System.out.println("Statistiche condivise con successo sul gruppo sociale!");
+				System.out.println("Ultima partita condivisa con successo sul gruppo sociale!");
 			}
 		} catch (IOException e) {
 			System.out.println("Errore richiesta condivisione ultima partita! "+e.getMessage());
