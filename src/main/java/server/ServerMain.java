@@ -181,22 +181,26 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						SocketChannel client = (SocketChannel) key.channel();
 						SocketAddress clientAddress = client.getRemoteAddress();
-						TcpRequest clientMessage = ServerMain.readTcpMessage(client);
 
-						if (clientMessage == null) {
-							logger.warn("Disconnessione forzata del client " + clientAddress);
-							userService.logout(clientAddress.hashCode());
-							client.close();
-							break;
-						}
-
-						SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
-						// Faccio gestire la richiesta del client dal pool di thread
+						TcpRequest clientMessage;
 						try {
+							clientMessage = ServerMain.readTcpMessage(client);
+
+							if (clientMessage == null) {
+								logger.warn("Disconnessione forzata del client " + clientAddress);
+								userService.logout(clientAddress.hashCode());
+								client.close();
+								break;
+							}
+
+							// Registro il selettore per operazione di lettura
+							SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
+							// Faccio gestire la richiesta del client dal pool di thread
 							poolExecutor.submit(new RequestTask(writeKey, clientMessage));
-						} catch (RejectedExecutionException e) {
-							logger.error("Impossibile gestire nuova richiesta, thread pool rejection: "+e.getMessage());
-							writeKey.attach(new TcpResponse(INTERNAL_SERVER_ERROR));
+
+						} catch (Exception e) {
+							logger.error("Impossibile gestire nuova richiesta "+e);
+							ServerMain.sendTcpMessage(client, new TcpResponse(INTERNAL_SERVER_ERROR));
 						}
 					}
 
@@ -283,11 +287,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		logger.info("Utente " + username + " disiscritto da eventi asincroni!");
 	}
 
-	public static void sendTcpMessage(SocketChannel socket, TcpResponse request) throws IOException {
+	public static void sendTcpMessage(SocketChannel socketChannel, TcpResponse request) throws IOException {
 
 		String json = JsonService.toJson(request);
 		ByteBuffer jsonRequest = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		socket.write(jsonRequest);
+		socketChannel.write(jsonRequest);
 	}
 
 	public static TcpRequest readTcpMessage(SocketChannel socketChannel) throws IOException {

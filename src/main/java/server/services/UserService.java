@@ -49,8 +49,8 @@ public class UserService {
 		try {
 			this.users = (List<User>) JsonService.readJson(USERS_DATA_PATH, ListOfUserType);
 			logger.info("Caricato/i correttamente " + this.users.size() + " utente/i da file json");
-		} catch (IOException | JsonSyntaxException e) {
-			logger.error("Errore lettura file user.json, creazione nuovo array");
+		} catch (Exception e) {
+			logger.error("Errore lettura file user.json, creazione nuovo array." + e);
 			this.users = new ArrayList<>();
 		}
 	}

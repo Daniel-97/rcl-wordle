@@ -8,11 +8,11 @@ import client.services.CLIHelper;
 import client.worker.MulticastWorker;
 import common.dto.*;
 import common.entity.SharedGame;
-import common.entity.WordleGame;
 import common.enums.AnsiColor;
 import common.enums.ServerTCPCommandEnum;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
+import common.utils.WordleLogger;
 import server.services.JsonService;
 
 import java.io.IOException;
@@ -43,6 +43,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private static List<UserScore> rank;
 	private static final List<SharedGame> sharedGames = new ArrayList<>();
 	private static SocketChannel socketChannel;
+	private static final WordleLogger logger = new WordleLogger(ClientMain.class.getName());
 	private String username = null;
 	private ClientModeEnum mode = ClientModeEnum.GUEST_MODE;
 	private boolean canPlayWord = false;
@@ -54,7 +55,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			" \\ \\      / / _ \\|  _ \\|  _ \\| |   | ____|  / ___| |   |_ _| ____| \\ | |_   _|\n" +
 			"  \\ \\ /\\ / / | | | |_) | | | | |   |  _|   | |   | |    | ||  _| |  \\| | | |  \n" +
 			"   \\ V  V /| |_| |  _ <| |_| | |___| |___  | |___| |___ | || |___| |\\  | | |  \n" +
-			"    \\_/\\_/  \\___/|_| \\_\\____/|_____|_____|  \\____|_____|___|_____|_| \\_| |_|  ";
+			"    \\_/\\_/  \\___/|_| \\_\\____/|_____|_____|  \\____|_____|___|_____|_| \\_| |_|  \n\n";
 
 	public static void main(String[] argv) {
 
@@ -67,12 +68,12 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			@Override
 			public void run() {
 
-				System.out.println("Shutdown Wordle client...");
+				logger.debug("Shutdown Wordle client...");
 				try {
 					// Chiudo il socket TCP con il server
 					socketChannel.close();
 				} catch (IOException e) {
-					System.out.println("Errore durante chiusura socket TCP");
+					logger.error("Errore durante chiusura socket TCP");
 				}
 
 				// Interrompo worker che gestisce il gruppo multicast
@@ -84,11 +85,14 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 						serverRMI.unsubscribeClientFromEvent(client.username);
 					}
 				} catch (RemoteException e) {
-					System.out.println("Errore chiamata RMI unsubscribeClientFromEvent()");
+					logger.error("Errore chiamata RMI unsubscribeClientFromEvent()");
 				}
+
+				System.out.println("Grazie per aver usato Wordle client! Torna presto!");
 			}
 		});
 
+		CLIHelper.pause();
 		// Avvia il client
 		client.run();
 	}
@@ -96,7 +100,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	public ClientMain() {
 
 		super();
-		System.out.println("Avvio Wordle client...");
 
 		// Carico le configurazioni del client
 		ClientConfig.loadConfig();
@@ -106,17 +109,17 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			Registry registry = LocateRegistry.getRegistry(ClientConfig.RMI_PORT);
 			Remote RemoteObject = registry.lookup(ClientConfig.STUB_NAME);
 			serverRMI = (ServerRmiInterface) RemoteObject;
-			System.out.println("Lookup registro RMI server riuscito! Stub: " + ClientConfig.STUB_NAME);
+			logger.debug("Lookup registro RMI server riuscito! Stub: " + ClientConfig.STUB_NAME);
 
 			// Callback (esporta oggetto)
 			stub = (NotifyEventInterface) UnicastRemoteObject.exportObject(this, 0);
 
 		} catch (RemoteException e) {
-			System.out.println("Errore connessione RMI, controlla che il server sia online: " + e.getMessage());
+			logger.error("Errore connessione RMI, controlla che il server sia online: " + e.getMessage());
 			System.exit(-1);
 
 		} catch (NotBoundException e) {
-			System.out.println("Client not bound exception" + e.getMessage());
+			logger.error("Client not bound exception" + e.getMessage());
 			System.exit(-1);
 		}
 
@@ -124,9 +127,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		try {
 			socketChannel = SocketChannel.open();
 			socketChannel.connect(new InetSocketAddress(ClientConfig.SERVER_IP, ClientConfig.TCP_PORT));
-			System.out.println("Connessione TCP con il server riuscita! "+ClientConfig.SERVER_IP+":"+ClientConfig.TCP_PORT);
+			logger.debug("Connessione TCP con il server riuscita! "+ClientConfig.SERVER_IP+":"+ClientConfig.TCP_PORT);
 		} catch (IOException e) {
-			System.out.println("Errore durante connessione TCP al server: "+ e.getMessage());
+			logger.error("Errore durante connessione TCP al server: "+ e.getMessage());
 			System.exit(-1);
 		}
 
@@ -135,9 +138,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			multicastSocket = new MulticastSocket(ClientConfig.MULTICAST_PORT);
 			InetAddress multicastAddress = InetAddress.getByName(ClientConfig.MULTICAST_IP);
 			multicastSocket.joinGroup(multicastAddress);
-			System.out.println("Join a gruppo multicast " + ClientConfig.MULTICAST_IP + " avvenuta con successo!");
+			logger.debug("Join a gruppo multicast " + ClientConfig.MULTICAST_IP + " avvenuta con successo!");
 		} catch (IOException e) {
-			System.out.println("Errore durante inizializzazione multicast! " + e.getMessage());
+			logger.error("Errore durante inizializzazione multicast! " + e.getMessage());
 			System.exit(-1);
 		}
 
@@ -146,6 +149,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		multicastThread = new Thread(multicastWorker);
 		multicastThread.start();
 
+		System.out.println("Avvio Wordle client avvenuto con successo!\n");
 	}
 
 	/**
@@ -154,6 +158,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	public void run() {
 
 		while (true) {
+
+			System.out.println(TITLE);
 			switch (mode) {
 
 				case GUEST_MODE:
@@ -168,6 +174,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 					this.gameMode();
 					break;
 			}
+			CLIHelper.pause();
 		}
 	}
 
@@ -188,7 +195,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		switch (cmd) {
 
 			case HELP:
-				CLIHelper.entryMenu();
 				return;
 
 			case QUIT:
@@ -215,8 +221,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				System.out.println("Comando non trovato!");
 		}
 
-		CLIHelper.pause();
-
 	}
 
 	private void userMode() {
@@ -227,14 +231,12 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		if (cmd == null) {
 			System.out.println("Comando non trovato!");
-			CLIHelper.pause();
 			return;
 		}
 
 		switch (cmd) {
 
 			case HELP: {
-				CLIHelper.mainMenu();
 				return;
 			}
 
@@ -277,8 +279,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			default:
 				System.out.println("Comando non trovato!");
 		}
-
-		CLIHelper.pause();
 	}
 
 	private void gameMode() {
@@ -299,7 +299,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			this.sendWord(args[0]);
 			//CLIHelper.printServerWord(guesses, true);
 		}
-		CLIHelper.pause();
 	}
 
 	private void sendWord(String word) {
@@ -525,7 +524,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	@Override
 	public void notifyUsersRank(List<UserScore> newRank) throws RemoteException {
-		System.out.println("Ricevuta classifica di gioco dal server!");
+		logger.debug("Ricevuta classifica di gioco dal server!");
 		rank = newRank;
 	}
 }

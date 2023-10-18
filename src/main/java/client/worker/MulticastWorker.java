@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import common.entity.SharedGame;
 import common.entity.WordleGame;
+import common.utils.WordleLogger;
 import server.services.JsonService;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.List;
+import java.util.ServiceLoader;
 
 /**
  * Worker che rimane in ascolto di nuovi messaggi sul gruppo di multicast
@@ -20,6 +22,7 @@ import java.util.List;
 public class MulticastWorker implements Runnable {
 	private final MulticastSocket multicastSocket;
 	private final List<SharedGame> userGames;
+	private final WordleLogger logger = new WordleLogger(MulticastWorker.class.getName());
 
 	public MulticastWorker(MulticastSocket ms, List<SharedGame> userGames) {
 
@@ -30,7 +33,7 @@ public class MulticastWorker implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println("Multicast worker in ascolto...");
+		logger.debug("Multicast worker in ascolto...");
 		final int BUFFER_SIZE = 8192;
 		byte[] buffer = new byte[BUFFER_SIZE];
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
@@ -45,19 +48,19 @@ public class MulticastWorker implements Runnable {
 					SharedGame wordleGame = JsonService.fromJson(json, SharedGame.class);
 					this.userGames.add(wordleGame);
 				} catch (JsonSyntaxException e) {
-					System.out.println("Errore parsing gioco condiviso da altro utente: "+e.getMessage());
+					logger.error("Errore parsing gioco condiviso da altro utente: "+e.getMessage());
 				}
 
 			} catch (IOException e) {
-				System.out.println("Errore durante ricezione messaggio multicast!" + e.getMessage());
+				logger.error("Errore durante ricezione messaggio multicast!" + e.getMessage());
 			}
 		}
 
 		try {
-			System.out.println("Abbandono il gruppo di multicast...");
+			logger.debug("Abbandono il gruppo di multicast...");
 			multicastSocket.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
 		} catch (IOException e) {
-			System.out.println("Impossibile abbandonare gruppo di multicast! "+e.getMessage());
+			logger.error("Impossibile abbandonare gruppo di multicast! "+e.getMessage());
 		}
 	}
 }

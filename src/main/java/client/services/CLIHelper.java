@@ -17,29 +17,23 @@ import java.util.Scanner;
 
 public class CLIHelper {
 	private static final Scanner cliScanner = new Scanner(System.in);
-	private static  final String ENTRY_MENU =
-			"ENTRY MENU:\n"+
-			"- :login <username> <password>      -> login\n"+
-			"- :register <username>	<password>  -> registrati a Wordle\n"+
-			"- :help                             -> aiuto\n"+
-			"- :quit                             -> esci da Wordle\n";
-
-	private static final String MAIN_MENU =
-			"MAIN MENU:\n"+
-			"- :play    -> gioca a wordle\n"+
-			"- :share   -> condividi i risultati sul gruppo sociale\n"+
-			"- :social  -> mostra i risultati pubblicati sul gruppo sociale\n"+
-			"- :stat    -> mostra le tue statistiche\n"+
-			"- :rank    -> mostra la classifica di gioco\n" +
-			"- :logout  -> logout da Wordle\n"+
-			"- :quit    -> esci da Wordle\n"+
-			"- :help    -> aiuto\n";
 
 	public static void entryMenu() {
-		System.out.println(ENTRY_MENU);
+		System.out.format("- login    <username> <password> -> Effettua il login %n");
+		System.out.format("- register <username> <password> -> Condividi ultima partita %n");
+		System.out.format("- help                           -> Aiuto %n");
+		System.out.format("- quit                           -> Esci da Wordle %n%n");
 	}
+
 	public static void mainMenu() {
-		System.out.println(MAIN_MENU);
+		System.out.format("- play   -> Gioca a Wordle %n");
+		System.out.format("- share  -> Condividi ultima partita %n");
+		System.out.format("- social -> Mostra condivisioni utenti %n");
+		System.out.format("- stat   -> Mostra le statistiche personali %n");
+		System.out.format("- rank   -> Mostra la classifica di gioco %n");
+		System.out.format("- logout -> Logout da Wordle %n");
+		System.out.format("- quit   -> Esci da Wordle %n");
+		System.out.format("- help   -> Aiuto %n%n");
 	}
 
 
@@ -77,7 +71,7 @@ public class CLIHelper {
 		UserCommandEnum cmd = null;
 		if(parseCommand) {
 			try {
-				cmd = UserCommandEnum.valueOf(cmdSplit[0].replace(":", "").toUpperCase());
+				cmd = UserCommandEnum.valueOf(cmdSplit[0].toUpperCase());
 			} catch (IllegalArgumentException ignored) {}
 		}
 		String[] args = Arrays.copyOfRange(cmdSplit, cmd != null ? 1 : 0, cmdSplit.length);
@@ -165,7 +159,7 @@ public class CLIHelper {
 		}
 
 		//System.out.println("CLASSIFICA GIOCATORI");
-		System.out.format("+----------+---------------+-------+%n");
+		System.out.format("+----------------------------------+%n");
 		System.out.format("+       CLASSIFICA DI GIOCO        +%n");
 		System.out.format("+----------+---------------+-------+%n");
 		System.out.format("| Position | Username      | Score |%n");
