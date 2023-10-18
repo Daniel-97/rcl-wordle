@@ -18,21 +18,21 @@ public class CLIHelper {
 	private static final Scanner cliScanner = new Scanner(System.in);
 
 	public static void entryMenu() {
-		System.out.format("- login    <username> <password> -> Effettua il login %n");
-		System.out.format("- register <username> <password> -> Condividi ultima partita %n");
-		System.out.format("- help                           -> Aiuto %n");
-		System.out.format("- quit                           -> Esci da Wordle %n%n");
+		System.out.format("⦁ login    <username> <password> -> Effettua il login %n");
+		System.out.format("⦁ register <username> <password> -> Condividi ultima partita %n");
+		System.out.format("⦁ help                           -> Aiuto %n");
+		System.out.format("⦁ quit                           -> Esci da Wordle %n%n");
 	}
 
 	public static void mainMenu() {
-		System.out.format("- play   -> Gioca a Wordle %n");
-		System.out.format("- share  -> Condividi ultima partita %n");
-		System.out.format("- social -> Mostra condivisioni utenti %n");
-		System.out.format("- stat   -> Mostra le statistiche personali %n");
-		System.out.format("- rank   -> Mostra la classifica di gioco %n");
-		System.out.format("- logout -> Logout da Wordle %n");
-		System.out.format("- quit   -> Esci da Wordle %n");
-		System.out.format("- help   -> Aiuto %n%n");
+		System.out.format("⦁ play   -> Gioca a Wordle %n");
+		System.out.format("⦁ share  -> Condividi ultima partita %n");
+		System.out.format("⦁ social -> Mostra condivisioni utenti %n");
+		System.out.format("⦁ stat   -> Mostra le statistiche personali %n");
+		System.out.format("⦁ rank   -> Mostra la classifica di gioco %n");
+		System.out.format("⦁ logout -> Logout da Wordle %n");
+		System.out.format("⦁ quit   -> Esci da Wordle %n");
+		System.out.format("⦁ help   -> Aiuto %n%n");
 	}
 
 
