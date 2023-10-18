@@ -180,6 +180,10 @@ public class RequestTask implements Runnable {
 
 		// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
 		if (!lastGame.word.equals(wordleGameService.getGameWord())) {
+			// Se ultimo gioco non e' finito, e la parola e' cambiata allora lo elimino.
+			if (!lastGame.finished) {
+				user.removeLastGame();
+			}
 			return new TcpResponse(NEED_TO_START_GAME);
 		}
 

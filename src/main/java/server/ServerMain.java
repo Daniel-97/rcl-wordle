@@ -200,6 +200,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						} catch (Exception e) {
 							logger.error("Impossibile gestire nuova richiesta "+e);
+							// In caso di errore imprevisto invio un codice di errore generico al client
 							ServerMain.sendTcpMessage(client, new TcpResponse(INTERNAL_SERVER_ERROR));
 						}
 					}

@@ -181,7 +181,7 @@ public class User {
 	public UserStat getStat() {
 		UserStat stat = new UserStat();
 
-		if (games != null) {
+		if (games != null && games.size() > 0) {
 			int wonGames = wonGames();
 			stat.playedGames = games.size();
 			stat.wonGamesPercentage = wonGames * 100 / games.size();
@@ -227,6 +227,15 @@ public class User {
 		WordleGame lastGame = getLastGame();
 		if (lastGame != null) {
 			lastGame.finished = true;
+		}
+	}
+
+	/**
+	 * Rimuove l'ultimo gioco dell'utente
+	 */
+	public synchronized void removeLastGame() {
+		if(this.games != null && this.games.size() > 0) {
+			this.games.remove(this.games.size() - 1);
 		}
 	}
 }
