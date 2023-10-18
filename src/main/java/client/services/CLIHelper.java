@@ -14,25 +14,27 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import static common.enums.AnsiColor.*;
+
 public class CLIHelper {
 	private static final Scanner cliScanner = new Scanner(System.in);
 
 	public static void entryMenu() {
-		System.out.format("⦁ login    <username> <password> -> Effettua il login %n");
-		System.out.format("⦁ register <username> <password> -> Condividi ultima partita %n");
-		System.out.format("⦁ help                           -> Aiuto %n");
-		System.out.format("⦁ quit                           -> Esci da Wordle %n%n");
+		System.out.format("⦁ "+WHITE_BOLD+"login    <username> <password>"+RESET+" -> Effettua il login %n");
+		System.out.format("⦁ "+WHITE_BOLD+"register <username> <password>"+RESET+" -> Condividi ultima partita %n");
+		System.out.format("⦁ "+WHITE_BOLD+"help"+RESET+"                           -> Aiuto %n");
+		System.out.format("⦁ "+WHITE_BOLD+"quit"+RESET+"                           -> Esci da Wordle %n%n");
 	}
 
 	public static void mainMenu() {
-		System.out.format("⦁ play   -> Gioca a Wordle %n");
-		System.out.format("⦁ share  -> Condividi ultima partita %n");
-		System.out.format("⦁ social -> Mostra condivisioni utenti %n");
-		System.out.format("⦁ stat   -> Mostra le statistiche personali %n");
-		System.out.format("⦁ rank   -> Mostra la classifica di gioco %n");
-		System.out.format("⦁ logout -> Logout da Wordle %n");
-		System.out.format("⦁ quit   -> Esci da Wordle %n");
-		System.out.format("⦁ help   -> Aiuto %n%n");
+		System.out.format("⦁ "+WHITE_BOLD+"play"+RESET+"   -> Gioca a Wordle %n");
+		System.out.format("⦁ "+WHITE_BOLD+"share"+RESET+"  -> Condividi ultima partita %n");
+		System.out.format("⦁ "+WHITE_BOLD+"social"+RESET+" -> Mostra condivisioni utenti %n");
+		System.out.format("⦁ "+WHITE_BOLD+"stat"+RESET+"   -> Mostra le statistiche personali %n");
+		System.out.format("⦁ "+WHITE_BOLD+"rank"+RESET+"   -> Mostra la classifica di gioco %n");
+		System.out.format("⦁ "+WHITE_BOLD+"logout"+RESET+" -> Logout da Wordle %n");
+		System.out.format("⦁ "+WHITE_BOLD+"quit"+RESET+"   -> Esci da Wordle %n");
+		System.out.format("⦁ "+WHITE_BOLD+"help"+RESET+"   -> Aiuto %n%n");
 	}
 
 
@@ -111,7 +113,7 @@ public class CLIHelper {
 						color = AnsiColor.GRAY_BACKGROUND;
 						letterColor = printLetter ? AnsiColor.BLACK : AnsiColor.BLACK_BOLD;
 				}
-				System.out.print("|"+ letterColor + color + " " + Character.toUpperCase(letter.letter) + " " + AnsiColor.RESET);
+				System.out.print("|"+ letterColor + color + " " + Character.toUpperCase(letter.letter) + " " + RESET);
 			}
 			System.out.println("|+");
 			System.out.println("+                                         +");

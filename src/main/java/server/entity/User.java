@@ -103,7 +103,7 @@ public class User {
 	 */
 	public int averageAttempts() {
 		int avg = 0;
-		if (this.games == null) {
+		if (this.games == null || this.games.size() == 0) {
 			return 0;
 		}
 		for (WordleGame game: this.games) {

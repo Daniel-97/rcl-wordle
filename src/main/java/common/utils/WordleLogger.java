@@ -1,18 +1,11 @@
 package common.utils;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
-public class WordleLogger {
+import static common.enums.AnsiColor.*;
 
-	private static final String ANSI_RESET = "\u001B[0m";
-	public static final String WHITE_BOLD = "\033[1;37m";
-	public static final String CYAN_BOLD = "\033[1;36m";
-	public static final String BLUE_BOLD = "\033[1;34m";
-	public static final String RED_BOLD = "\033[1;31m";
-	public static final String GREEN_BOLD = "\033[1;32m";
-	public static final String YELLOW_BOLD = "\033[1;33m";
+public class WordleLogger {
 
 	private String className;
 	public WordleLogger(String className) {
@@ -24,10 +17,10 @@ public class WordleLogger {
 		//SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 		System.out.println(
-				"["+color + level + ANSI_RESET + "]" +
-				"["+ WHITE_BOLD + Thread.currentThread().getName() + ANSI_RESET + "]" +
-				"["+ CYAN_BOLD + className + ANSI_RESET + "]" +
-				"["+ WHITE_BOLD + dateFormat.format(new Date()) + ANSI_RESET + "] " +
+				"["+color + level + RESET + "]" +
+				"["+ WHITE_BOLD + Thread.currentThread().getName() + RESET + "]" +
+				"["+ CYAN_BOLD + className + RESET + "]" +
+				"["+ WHITE_BOLD + dateFormat.format(new Date()) + RESET + "] " +
 				message + "\n");
 	}
 
