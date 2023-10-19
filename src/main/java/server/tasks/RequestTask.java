@@ -134,7 +134,7 @@ public class RequestTask implements Runnable {
 	}
 
 	private TcpResponse playWordle(TcpRequest request) {
-		 // todo qui va presa la lock sulla parola attuale
+
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpResponse(BAD_REQUEST);
 		}
@@ -143,18 +143,25 @@ public class RequestTask implements Runnable {
 		WordleGame lastGame = user.getLastGame();
 		TcpResponse response = new TcpResponse();
 
-		// Aggiunto gioco al giocatore attuale
-		if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
-			user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
-			response.code = OK;
-			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess(), wordleGameService.getGameWord());
-		} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
-			response.code = OK;
-			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess(), wordleGameService.getGameWord());
-		} else {
-			response.code = GAME_ALREADY_PLAYED;
+		try {
+			// Prendo la lock sulla parola
+			WordleGameService.wordLock.lock();
+			// Aggiunto gioco al giocatore attuale
+			if (lastGame == null || !lastGame.word.equals(wordleGameService.getGameWord())) {
+				user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
+				response.code = OK;
+				response.remainingAttempts = user.getLastGame().getRemainingAttempts();
+				response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess(), wordleGameService.getGameWord());
+			} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
+				response.code = OK;
+				response.remainingAttempts = user.getLastGame().getRemainingAttempts();
+				response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess(), wordleGameService.getGameWord());
+			} else {
+				response.code = GAME_ALREADY_PLAYED;
+			}
+		} finally {
+			// Rilascio il lock sulla parola attuale
+			WordleGameService.wordLock.unlock();
 		}
 
 		return response;
@@ -166,7 +173,7 @@ public class RequestTask implements Runnable {
 	 * @return
 	 */
 	private synchronized TcpResponse verifyWord(TcpRequest request) {
-		//Todo qui va presa la lock sulla parola attualmente estratta
+
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpResponse(BAD_REQUEST);
 		}
@@ -179,48 +186,57 @@ public class RequestTask implements Runnable {
 		TcpResponse res = new TcpResponse();
 		res.remainingAttempts = lastGame.getRemainingAttempts();
 
-		// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
-		if (!lastGame.word.equals(wordleGameService.getGameWord())) {
-			// Se ultimo gioco non e' finito, e la parola e' cambiata allora lo elimino.
-			if (!lastGame.finished) {
-				user.removeLastGame();
+		try {
+
+			// Prendo il lock sulla parola
+			WordleGameService.wordLock.lock();
+
+			// Ultimo gioco dell'utente e' diverso dalla parola attualmente estratta
+			if (!lastGame.word.equals(wordleGameService.getGameWord())) {
+				// Se ultimo gioco non e' finito, e la parola e' cambiata allora lo elimino.
+				if (!lastGame.finished) {
+					user.removeLastGame();
+				}
+				return new TcpResponse(NEED_TO_START_GAME);
 			}
-			return new TcpResponse(NEED_TO_START_GAME);
-		}
 
-		// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
-		else if (lastGame.finished) {
-			return new TcpResponse(GAME_ALREADY_PLAYED);
-		}
-
-		// Utente ha inviato parola di lunghezza errata
-		else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
-			res.code = INVALID_WORD_LENGHT;
-			return res;
-		}
-
-		// Utente ha mandato parola che non si trova nel dizionario
-		else if (!wordleGameService.isWordInDict(clientWord)) {
-			res.code = WORD_NOT_IN_DICTIONARY;
-			return res;
-		}
-
-		List<UserScore> oldRank = userService.getRank();
-		user.addGuessLastGame(clientWord);
-		userService.updateRank();
-		List<UserScore> newRank = userService.getRank();
-
-		// Se la partita e' finita lo comunico al client
-		if (lastGame.finished) {
-			res.code = lastGame.won ? GAME_WON : GAME_LOST;
-			res.wordTranslation = wordleGameService.getWordTranslation();
-			if (wordleGameService.isRankChanged(oldRank, newRank)) {
-				ServerMain.notifyRankToClient(userService.getRank());
+			// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
+			else if (lastGame.finished) {
+				return new TcpResponse(GAME_ALREADY_PLAYED);
 			}
-		}
 
-		res.remainingAttempts = lastGame.getRemainingAttempts();
-		res.userGuess = wordleGameService.buildUserHint(lastGame.getUserGuess(), wordleGameService.getGameWord());
+			// Utente ha inviato parola di lunghezza errata
+			else if (clientWord.length() > WordleGameService.WORD_LENGHT || clientWord.length() < WordleGameService.WORD_LENGHT) {
+				res.code = INVALID_WORD_LENGHT;
+				return res;
+			}
+
+			// Utente ha mandato parola che non si trova nel dizionario
+			else if (!wordleGameService.isWordInDict(clientWord)) {
+				res.code = WORD_NOT_IN_DICTIONARY;
+				return res;
+			}
+
+			List<UserScore> oldRank = userService.getRank();
+			user.addGuessLastGame(clientWord);
+			userService.updateRank();
+			List<UserScore> newRank = userService.getRank();
+
+			// Se la partita e' finita lo comunico al client
+			if (lastGame.finished) {
+				res.code = lastGame.won ? GAME_WON : GAME_LOST;
+				res.wordTranslation = wordleGameService.getWordTranslation();
+				if (wordleGameService.isRankChanged(oldRank, newRank)) {
+					ServerMain.notifyRankToClient(userService.getRank());
+				}
+			}
+
+			res.remainingAttempts = lastGame.getRemainingAttempts();
+			res.userGuess = wordleGameService.buildUserHint(lastGame.getUserGuess(), wordleGameService.getGameWord());
+		} finally {
+			// Rilascio il lock sulla parola
+			WordleGameService.wordLock.unlock();
+		}
 		return res;
 	}
 

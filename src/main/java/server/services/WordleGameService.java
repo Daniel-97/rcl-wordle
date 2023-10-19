@@ -92,16 +92,7 @@ public class WordleGameService {
 	 * @return
 	 */
 	public String getGameWord() {
-		String word;
-
-		try {
-			wordLock.lock();
-			word = this.state.word;
-		} finally {
-			wordLock.unlock();
-		}
-
-		return word;
+		return this.state.word;
 	}
 
 	public int getGameNumber() {
