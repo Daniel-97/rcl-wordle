@@ -12,17 +12,15 @@ import java.util.List;
 public class WordleGame {
 
 	public final String word;
-	public final String username;
 	public final int gameNumber;
 	public boolean won;
 	public boolean finished;
 	private final List<String> userGuess;
 
-	public WordleGame(String word, String username, int gameNumber) {
+	public WordleGame(String word, int gameNumber) {
 		this.won = false;
 		this.finished = false;
 		this.word = word;
-		this.username = username;
 		this.gameNumber = gameNumber;
 		this.userGuess = new ArrayList<>();
 	}

@@ -213,7 +213,6 @@ public class RequestTask implements Runnable {
 		if (lastGame.finished) {
 			res.code = lastGame.won ? GAME_WON : GAME_LOST;
 			res.wordTranslation = wordleGameService.getWordTranslation();
-			//todo in caso di vittoria nelle statistiche condivise manca l ultimo tenattivo
 			if (wordleGameService.isRankChanged(oldRank, newRank)) {
 				ServerMain.notifyRankToClient(userService.getRank());
 			}

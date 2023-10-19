@@ -46,10 +46,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private static final WordleLogger logger = new WordleLogger(ClientMain.class.getName());
 	private String username = null;
 	private ClientModeEnum mode = ClientModeEnum.GUEST_MODE;
-	private boolean canPlayWord = false;
 	private int remainingAttempts;
 	private LetterDTO[][] guesses;
-
 	private static final String TITLE =
 			" __        _____  ____  ____  _     _____    ____ _     ___ _____ _   _ _____ \n" +
 			" \\ \\      / / _ \\|  _ \\|  _ \\| |   | ____|  / ___| |   |_ _| ____| \\ | |_   _|\n" +
@@ -247,9 +245,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case PLAY: {
 				// Prima di iniziare il gioco devo chiedere al server se l utente puo iniziare o meno
-				// TODO capire se fare comando separato per giocare a wordle
-				this.playWORDLE();
-				if (canPlayWord) {
+				if (this.playWORDLE()) {
 					this.mode = ClientModeEnum.GAME_MODE;
 				}
 				break;
@@ -274,6 +270,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 			case QUIT:
 				System.exit(0);
+				break;
 
 			default:
 				System.out.println("Comando non trovato!");
@@ -302,12 +299,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void sendWord(String word) {
 
-		if (!canPlayWord) {
-			System.out.println("Errore, richiedi prima al server di poter giocare la parola attuale");
-			return;
-		}
-
-		TcpResponse response = null;
+		TcpResponse response;
 		TcpRequest request = new TcpRequest(ServerTCPCommandEnum.VERIFY_WORD, new String[]{username, word});
 		try {
 			sendTcpMessage(request);
@@ -418,7 +410,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	/**
 	 * Richiedo al server se l'utente puo' iniziare a giocare
 	 */
-	private void playWORDLE() {
+	private boolean playWORDLE() {
 		TcpRequest request = new TcpRequest(ServerTCPCommandEnum.PLAY_WORDLE, new String[]{username});
 		try {
 			sendTcpMessage(request);
@@ -426,15 +418,17 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Ok, puoi giocare a Wordle!");
-				canPlayWord = true;
 				remainingAttempts = response.remainingAttempts;
 				guesses = response.userGuess;
+				return true;
 			} else {
 				System.out.println("Errore, non puoi giocare con parola attuale! " + response.code);
+				return false;
 			}
 		} catch (IOException e) {
 			System.out.println("Errore imprevisto durante richiesta di playWORDLE! " + e.getMessage());
 			System.exit(-1);
+			return false;
 		}
 	}
 

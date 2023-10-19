@@ -88,7 +88,7 @@ public class User {
 	 * @return
 	 */
 	public void newGame(String word, int gameNumber) {
-		WordleGame game = new WordleGame(word, this.username, gameNumber);
+		WordleGame game = new WordleGame(word, gameNumber);
 
 		if (this.games == null) {
 			this.games = new ArrayList<>();
