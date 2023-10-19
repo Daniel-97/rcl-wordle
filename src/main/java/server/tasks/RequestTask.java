@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -133,7 +134,7 @@ public class RequestTask implements Runnable {
 	}
 
 	private TcpResponse playWordle(TcpRequest request) {
-
+		 // todo qui va presa la lock sulla parola attuale
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpResponse(BAD_REQUEST);
 		}
@@ -147,11 +148,11 @@ public class RequestTask implements Runnable {
 			user.newGame(wordleGameService.getGameWord(), wordleGameService.getGameNumber());
 			response.code = OK;
 			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess());
+			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess(), wordleGameService.getGameWord());
 		} else if (lastGame.word.equals(wordleGameService.getGameWord()) && !lastGame.finished) {
 			response.code = OK;
 			response.remainingAttempts = user.getLastGame().getRemainingAttempts();
-			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess());
+			response.userGuess = wordleGameService.buildUserHint(user.getLastGame().getUserGuess(), wordleGameService.getGameWord());
 		} else {
 			response.code = GAME_ALREADY_PLAYED;
 		}
@@ -165,7 +166,7 @@ public class RequestTask implements Runnable {
 	 * @return
 	 */
 	private synchronized TcpResponse verifyWord(TcpRequest request) {
-
+		//Todo qui va presa la lock sulla parola attualmente estratta
 		if (request.arguments == null || request.arguments.length < 1) {
 			return new TcpResponse(BAD_REQUEST);
 		}
@@ -219,7 +220,7 @@ public class RequestTask implements Runnable {
 		}
 
 		res.remainingAttempts = lastGame.getRemainingAttempts();
-		res.userGuess = wordleGameService.buildUserHint(lastGame.getUserGuess());
+		res.userGuess = wordleGameService.buildUserHint(lastGame.getUserGuess(), wordleGameService.getGameWord());
 		return res;
 	}
 
@@ -261,8 +262,9 @@ public class RequestTask implements Runnable {
 		}
 
 		// Invio ultima partita dell'utente su gruppo multicast
-		logger.debug("Invio ultima partita dell'utente " + username + " sul gruppo sociale...");
-		SharedGame share = new SharedGame(username, lastGame.gameNumber, wordleGameService.buildUserHint(lastGame.getUserGuess()));
+		logger.debug("Invio ultima partita dell'utente " + username + " sul gruppo sociale. word: "+lastGame.word + ",wordle n."+lastGame.gameNumber);
+		System.out.println(lastGame.getUserGuess().toString());
+		SharedGame share = new SharedGame(username, lastGame.gameNumber, wordleGameService.buildUserHint(lastGame.getUserGuess(), lastGame.word));
 		ServerMain.sendMulticastMessage(JsonService.toJson(share));
 		return new TcpResponse(OK);
 	}

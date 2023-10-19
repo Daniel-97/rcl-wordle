@@ -109,17 +109,17 @@ public class WordleGameService {
 	}
 
 	/**
-	 * Ritorna i suggerimenti per la parola passata sotto fomra di array di oggetti
+	 * Ritorna i suggerimenti per la parola passata rispetto a right word sotto forma di array di oggetti
 	 * @param word
 	 * @return
 	 */
-	public LetterDTO[] hintWord(String word) {
+	public LetterDTO[] hintWord(String word, String rightWord) {
 
 		LetterDTO[] result = new LetterDTO[word.length()];
 
 		for (int i = 0; i < word.length(); i++) {
 			char guessedLetter = word.toCharArray()[i];
-			char correctLetter = this.state.word.toCharArray()[i];
+			char correctLetter = rightWord.toCharArray()[i];
 
 			result[i] = new LetterDTO();
 			result[i].letter = word.toCharArray()[i];
@@ -141,10 +141,10 @@ public class WordleGameService {
 	 * @param userGuess
 	 * @return
 	 */
-	public LetterDTO[][] buildUserHint(List<String> userGuess) {
+	public LetterDTO[][] buildUserHint(List<String> userGuess, String rightWord) {
 		LetterDTO[][] hints = new LetterDTO[userGuess.size()][];
 		for(int i = 0; i < userGuess.size(); i++) {
-			hints[i] = this.hintWord(userGuess.get(i));
+			hints[i] = this.hintWord(userGuess.get(i), rightWord);
 		}
 		return hints;
 	}
