@@ -50,7 +50,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			" \\ \\      / / _ \\|  _ \\|  _ \\| |   | ____| / ___|| ____|  _ \\ \\   / / ____|  _ \\ \n" +
 			"  \\ \\ /\\ / / | | | |_) | | | | |   |  _|   \\___ \\|  _| | |_) \\ \\ / /|  _| | |_) |\n" +
 			"   \\ V  V /| |_| |  _ <| |_| | |___| |___   ___) | |___|  _ < \\ V / | |___|  _ < \n" +
-			"    \\_/\\_/  \\___/|_| \\_\\____/|_____|_____| |____/|_____|_| \\_\\ \\_/  |_____|_| \\_\\";
+			"    \\_/\\_/  \\___/|_| \\_\\____/|_____|_____| |____/|_____|_| \\_\\ \\_/  |_____|_| \\_\\\n\n";
 
 	public static void main(String[] argv) {
 
@@ -58,7 +58,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 		// Inizializza il server
 		ServerMain server = new ServerMain();
-		// Thread in ascolto di SIGINT e SIGTERM
+		// Hook per SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {

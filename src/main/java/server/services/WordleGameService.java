@@ -3,6 +3,7 @@ package server.services;
 import common.dto.LetterDTO;
 import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
+import common.enums.AnsiColor;
 import common.utils.WordleLogger;
 import server.entity.ServerConfig;
 import server.entity.WordleGameState;
@@ -64,8 +65,9 @@ public class WordleGameService {
 		}catch (IOException e) {
 			String word = this.extractRandomWord();
 			this.state = new WordleGameState(word, this.translateWord(word));
-			logger.info("Primo avvio del gioco, nuova parola estratta: " + state.word + ", traduzione: " + state.translation);
 		}
+
+		logger.info("Parola attuale: " + AnsiColor.WHITE_BOLD + state.word + AnsiColor.RESET + ", traduzione: " + state.translation);
 
 	}
 

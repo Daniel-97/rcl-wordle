@@ -1,6 +1,7 @@
 package server.tasks;
 
 import common.dto.MyMemoryResponse;
+import common.enums.AnsiColor;
 import common.utils.WordleLogger;
 import server.entity.ServerConfig;
 import server.entity.WordleGameState;
@@ -35,7 +36,7 @@ public class WordExtractorTask implements Runnable {
 
 			state.word = wordleGameService.extractRandomWord();
 			state.translation = wordleGameService.translateWord(state.word);
-			logger.info("Parola scaduta, nuova parola estratta: " + state.word + ", traduzione: " + state.translation);
+			logger.info("Parola scaduta, nuova parola estratta: " + AnsiColor.WHITE_BOLD + state.word + AnsiColor.RESET + ", traduzione: " + state.translation);
 			state.extractedAt = new Date();
 			state.gameNumber++;
 

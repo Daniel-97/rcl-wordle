@@ -61,7 +61,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		// Inizializza il client
 		ClientMain client = new ClientMain();
 
-		// Thread in ascolto di SIGINT e SIGTERM
+		// Hook per SIGINT e SIGTERM
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
