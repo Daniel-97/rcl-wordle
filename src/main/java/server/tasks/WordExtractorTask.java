@@ -28,7 +28,7 @@ public class WordExtractorTask implements Runnable {
 		cal.add(GregorianCalendar.MINUTE, ServerConfig.WORD_TIME_MINUTES);
 		*/
 		try {
-			// Provo a prendere la lock su word
+			// Mantengo la lock sulla parola fino a che non ne ho estratta una nuova e ho salvato la traduzione
 			WordleGameService.wordLock.lock();
 
 			WordleGameState state = wordleGameService.getState();
