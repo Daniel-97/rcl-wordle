@@ -128,8 +128,7 @@ public class UserService {
 	 * @param username
 	 * @return
 	 */
-	public boolean logout(String username) {
-		User user = getUser(username);
+	public boolean logout(User user) {
 		if (user != null) {
 			user.online = false;
 			user.endLastGame();

@@ -7,6 +7,7 @@ import common.enums.ResponseCodeEnum;
 import common.utils.WordleLogger;
 import server.ServerMain;
 import server.entity.User;
+import server.exceptions.WordleException;
 import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
@@ -50,10 +51,9 @@ public class RequestTask implements Runnable {
 
 			// Ogni richiesta proveniente dai client deve avere obbligatoriamente il comando e lo username dell'utente
 			if (request.command == null || request.username == null || request.username.isEmpty()) {
-				key.attach(new TcpResponse(BAD_REQUEST));
-				return;
+				throw new WordleException(BAD_REQUEST);
 			}
-			// todo qui posso controllare anche che l utente sia effettivamente valido
+
 			// Gestisco la richiesta
 			switch (request.command) {
 
@@ -82,9 +82,14 @@ public class RequestTask implements Runnable {
 					break;
 
 				default:
-					response = new TcpResponse(BAD_REQUEST);
+					throw new WordleException(INVALID_COMMAND);
 
 			}
+
+		} catch (WordleException e) {
+			// Qui ho ricevuto un errore gestito, lo ritorno al client
+			logger.warn("Wordle exception: " + e.getMessage());
+			response = new TcpResponse(e.getCode());
 
 		} catch (Exception e) {
 			// Se casco qui dentro il thread ha incontrato un errore inaspettato durante la gestione della richiesta
@@ -94,8 +99,23 @@ public class RequestTask implements Runnable {
 			e.printStackTrace();
 			response = new TcpResponse(INTERNAL_SERVER_ERROR);
 		}
+
 		// Copio la risposta nell'allegato della chiave. Verrà usato da Server.main per rispondere al client (NIO)
 		key.attach(response);
+	}
+
+	/**
+	 * Controlla che lo username passato sia valido, altrimenti lancia eccezione
+	 * @param username
+	 * @return
+	 * @throws WordleException
+	 */
+	private User checkUser(String username) throws WordleException {
+		User user = this.userService.getUser(username);
+		if (user == null) {
+			throw new WordleException(INVALID_USERNAME);
+		}
+		return user;
 	}
 
 	/**
@@ -104,22 +124,27 @@ public class RequestTask implements Runnable {
 	 * @return
 	 * @throws IOException
 	 */
-	private synchronized TcpResponse login(TcpRequest request) throws IOException {
+	private synchronized TcpResponse login(TcpRequest request) throws IOException, WordleException {
 
+		// Controllo manualmente, non posso ritornare INVALID_USERNAME
 		User user = this.userService.getUser(request.username);
-
 		if (user == null) {
-			return new TcpResponse(INVALID_USERNAME_PASSWORD);
+			throw new WordleException(INVALID_USERNAME_PASSWORD);
 		}
 
 		if (user.online) {
-			return new TcpResponse(ALREADY_LOGGED_IN);
+			throw new WordleException(ALREADY_LOGGED_IN);
 		}
 
 		// Mi memorizzo hash code di indirizzo ip:porta del client, mi permette di fare logout di utente quando effettua una disconnessione forzata
 		int clientHashCode = this.client.getRemoteAddress().hashCode();
 		boolean success = this.userService.login(request.username, request.arguments[0], clientHashCode);
-		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
+
+		if (!success) {
+			throw new WordleException(INVALID_USERNAME_PASSWORD);
+		}
+
+		return new TcpResponse(OK);
 	}
 
 	/**
@@ -127,9 +152,15 @@ public class RequestTask implements Runnable {
 	 * @param request
 	 * @return
 	 */
-	private synchronized TcpResponse logout(TcpRequest request) {
-		boolean success = this.userService.logout(request.username);
-		return new TcpResponse(success ? OK : INVALID_USERNAME);
+	private synchronized TcpResponse logout(TcpRequest request) throws WordleException {
+		User user = checkUser(request.username);
+		boolean success = this.userService.logout(user);
+
+		if (!success) {
+			throw new WordleException(INVALID_USERNAME_PASSWORD);
+		}
+
+		return new TcpResponse(OK);
 	}
 
 	/**
@@ -138,9 +169,9 @@ public class RequestTask implements Runnable {
 	 * @param request
 	 * @return
 	 */
-	private TcpResponse playWordle(TcpRequest request) {
+	private TcpResponse playWordle(TcpRequest request) throws WordleException {
 
-		User user = this.userService.getUser(request.username);
+		User user = checkUser(request.username);
 		WordleGame lastGame = user.getLastGame();
 		TcpResponse response = new TcpResponse();
 		// Prendo la parola attuale in modo sicuro
@@ -168,14 +199,14 @@ public class RequestTask implements Runnable {
 	 * @param request
 	 * @return
 	 */
-	private TcpResponse verifyWord(TcpRequest request) {
+	private TcpResponse verifyWord(TcpRequest request) throws WordleException {
 
 		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpResponse(BAD_REQUEST);
+			throw new WordleException(BAD_REQUEST);
 		}
 
 		String clientWord = request.arguments[0];
-		User user = this.userService.getUser(request.username);
+		User user = checkUser(request.username);
 		WordleGame lastGame = user.getLastGame();
 		// prendo la parola attuale in modo sicuro
 		String actualWord = wordleGameService.getGameWord();
@@ -188,12 +219,12 @@ public class RequestTask implements Runnable {
 			if (!lastGame.finished) {
 				user.removeLastGame();
 			}
-			return new TcpResponse(NEED_TO_START_GAME);
+			throw new WordleException(NEED_TO_START_GAME);
 		}
 
 		// Ultimo gioco dell'utente corrisponde alla parola attuale ed ha gia' completato il gioco
 		else if (lastGame.finished) {
-			return new TcpResponse(GAME_ALREADY_PLAYED);
+			throw new WordleException(GAME_ALREADY_PLAYED);
 		}
 
 		// Utente ha inviato parola di lunghezza errata
@@ -233,15 +264,9 @@ public class RequestTask implements Runnable {
 	 * @param request
 	 * @return
 	 */
-	private TcpResponse stat(TcpRequest request) {
+	private TcpResponse stat(TcpRequest request) throws WordleException {
 
-
-		String username = request.username;
-		User user = this.userService.getUser(username);
-
-		if (user == null) {
-			return new TcpResponse(INVALID_USERNAME);
-		}
+		User user = this.checkUser(request.username);
 
 		UserStat stat = user.getStat();
 		TcpResponse response = new TcpResponse();
@@ -255,14 +280,10 @@ public class RequestTask implements Runnable {
 	 * @return TcpResponse
 	 * @throws IOException
 	 */
-	private TcpResponse share(TcpRequest request) throws IOException {
+	private TcpResponse share(TcpRequest request) throws IOException, WordleException {
 
-		String username = request.username;
-		User user = this.userService.getUser(username);
-
-		if (user == null) {
-			return new TcpResponse(INVALID_USERNAME);
-		}
+		User user = checkUser(request.username);
+		String username = user.getUsername();
 
 		WordleGame lastGame = user.getLastGame();
 		if (lastGame == null) {
