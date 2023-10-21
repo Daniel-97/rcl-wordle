@@ -11,6 +11,7 @@ public class ClientConfig {
 	public static String SERVER_IP;
 	public static String MULTICAST_IP;
 	public static int MULTICAST_PORT;
+	public static int SOCKET_MS_TIMEOUT;
 	public static int WORDLE_MAX_ATTEMPTS = 6;
 
 	public static void loadConfig() {
@@ -22,6 +23,7 @@ public class ClientConfig {
 			SERVER_IP = ConfigReader.readProperty(properties, "app.tcp.ip");
 			MULTICAST_IP = ConfigReader.readProperty(properties, "app.multicast.ip");
 			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
+			SOCKET_MS_TIMEOUT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.timeout"));
 		} catch (NoSuchFieldException e) {
 			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);

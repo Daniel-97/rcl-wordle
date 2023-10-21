@@ -515,8 +515,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 */
 	public static void sendTcpMessage(TcpRequest request) throws IOException {
 		String json = JsonService.toJson(request);
-		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		socketChannel.write(command);
+		ByteBuffer buffer = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
+		socketChannel.write(buffer);
 	}
 
 	/**
