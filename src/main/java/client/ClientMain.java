@@ -177,6 +177,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
+	/**
+	 * Modalita' per utente non loggato
+	 */
 	private void guestMode() {
 
 		CLIHelper.entryMenu();
@@ -222,6 +225,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	}
 
+	/**
+	 * Modalita' per utente loggato
+	 */
 	private void userMode() {
 
 		CLIHelper.mainMenu();
@@ -278,6 +284,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
+	/**
+	 * Modalita' di gioco
+	 */
 	private void gameMode() {
 
 		System.out.println("GAME MODE! Digita in qualsiasi momento :quit per uscire dalla modalita' gioco!\n");
@@ -298,6 +307,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
+	/**
+	 * Invia una nuova guessed word al server per la verifica
+	 * @param word
+	 */
 	private void sendWord(String word) {
 
 		TcpResponse response;
@@ -361,6 +374,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	}
 
+	/**
+	 * Invia una richiesta di login al server
+	 * @param username
+	 * @param password
+	 */
 	private void login(String username, String password) {
 
 		TcpRequest requestDTO = new TcpRequest(TCPCommandEnum.LOGIN, username, password);
@@ -386,6 +404,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
+	/**
+	 * Invia una richiesta di logout al server
+	 * @param username
+	 */
 	private void logout(String username) {
 
 		TcpRequest request = new TcpRequest(TCPCommandEnum.LOGOUT, username);
@@ -409,7 +431,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	}
 
 	/**
-	 * Richiedo al server se l'utente puo' iniziare a giocare
+	 * Invia una richiesta di gioco al server
 	 */
 	private boolean playWORDLE() {
 		TcpRequest request = new TcpRequest(TCPCommandEnum.PLAY_WORDLE, username);
@@ -433,6 +455,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
+	/**
+	 * Chiama la RMI del server per poter registrare un utente.
+	 * @param username
+	 * @param password
+	 */
 	private void register(String username, String password) {
 
 		try {
@@ -445,6 +472,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
+	/**
+	 * Richiede le statistiche personali al server
+	 * @return
+	 */
 	private UserStat sendMeStatistics() {
 		TcpRequest request = new TcpRequest(TCPCommandEnum.STAT, username);
 		try {
@@ -477,13 +508,23 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 	}
 
-
+	/**
+	 * Funzione wrapper per inviare la richiesta al server in formato JSON
+	 * @param request
+	 * @throws IOException
+	 */
 	public static void sendTcpMessage(TcpRequest request) throws IOException {
 		String json = JsonService.toJson(request);
 		ByteBuffer command = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
 		socketChannel.write(command);
 	}
 
+	/**
+	 * Legge dal server la risposta JSON e la converte in un oggetto java
+	 * @return
+	 * @throws IOException
+	 * @throws RuntimeException
+	 */
 	public static TcpResponse readTcpMessage() throws IOException,RuntimeException {
 
 		final int BUFFER_SIZE = 1024;
@@ -515,6 +556,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		return response;
 	}
 
+	/**
+	 * RMI callback che viene invocata dal server in caso di cambiamenti nelle prime 3 posizioni della classifica
+	 * @param newRank
+	 * @throws RemoteException
+	 */
 	@Override
 	public void notifyUsersRank(List<UserScore> newRank) throws RemoteException {
 		logger.debug("Ricevuta classifica di gioco dal server!");

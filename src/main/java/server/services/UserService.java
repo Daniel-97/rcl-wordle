@@ -147,7 +147,6 @@ public class UserService {
 				user.online = false;
 				user.endLastGame();
 				logger.warn("Logout forzato utente " + user.getUsername() + " effettuato con successo");
-				return;
 			}
 		}
 	}

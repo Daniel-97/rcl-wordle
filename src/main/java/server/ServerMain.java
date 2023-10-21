@@ -73,8 +73,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			}
 		});
 
-		// Server start
-		server.start();
+		// Avvio il server
+		server.listen();
 	}
 
 	public ServerMain() {
@@ -142,7 +142,10 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	}
 
-	public void start() {
+	/**
+	 * Funzione principale del server, in ascolto di nuove connessioni, socket pronti in uscita e in ingresso
+	 */
+	public void listen() {
 
 		// While in ascolto sui socket
 		while (true) {
@@ -158,6 +161,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			Set<SelectionKey> selectedKeys = selector.selectedKeys();
 			// Iteratore delle chiavi
 			Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+
 			// Fino a che ci sono canali pronti continuo a ciclare
 			while (keyIterator.hasNext()) {
 				SelectionKey key = keyIterator.next();
@@ -165,7 +169,8 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 				keyIterator.remove();
 
 				try {
-					// Connessione accettata da client
+
+					// Nuova connessione dal client
 					if (key.isAcceptable()) {
 
 						ServerSocketChannel server = (ServerSocketChannel) key.channel();
@@ -185,10 +190,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 						TcpRequest clientMessage;
 						try {
+							// Leggo il messaggio in arrivo dal client
 							clientMessage = ServerMain.readTcpMessage(client);
 
+							// Se il messaggio e' vuoto potrebbe essere causato da una possibile disconnessione forzata del client
 							if (clientMessage == null) {
 								logger.warn("Disconnessione forzata del client " + clientAddress);
+								// Effettuo la disconnessione dell'utente utilizzando il suo hash code
 								userService.logout(clientAddress.hashCode());
 								client.close();
 								break;
@@ -196,7 +204,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 							// Registro il selettore per operazione di lettura
 							SelectionKey writeKey = client.register(selector, SelectionKey.OP_WRITE);
-							// Faccio gestire la richiesta del client dal pool di thread
+							// Metto in coda alla threadpool il nuovo task da gestire
 							poolExecutor.submit(new RequestTask(writeKey, clientMessage));
 
 						} catch (Exception e) {
@@ -214,6 +222,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 						TcpResponse response = (TcpResponse) key.attachment();
 
 						if (response != null) {
+							// Invio la risposta al client
 							sendTcpMessage(client, response);
 							// Registro nuovamente il client per un operazione di lettura
 							client.register(selector, SelectionKey.OP_READ, null);
@@ -221,10 +230,13 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 					}
 
 				} catch (IOException ioe) {
+					// Errore imprevisto
 					key.cancel();
 					try {
 						key.channel().close();
-					} catch (IOException ignored) {}
+					} catch (IOException e) {
+						logger.error("Errore imprevisto! " + e);
+					}
 				}
 
 			}
@@ -289,6 +301,12 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		logger.info("Utente " + username + " disiscritto da eventi asincroni!");
 	}
 
+	/**
+	 * Invia un messaggio JSON al client
+	 * @param socketChannel
+	 * @param request
+	 * @throws IOException
+	 */
 	public static void sendTcpMessage(SocketChannel socketChannel, TcpResponse request) throws IOException {
 
 		String json = JsonService.toJson(request);
@@ -296,6 +314,12 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		socketChannel.write(jsonRequest);
 	}
 
+	/**
+	 * Riceve un messaggio in formato JSON dal client e lo converte in un oggetto TcpRequest
+	 * @param socketChannel
+	 * @return
+	 * @throws IOException
+	 */
 	public static TcpRequest readTcpMessage(SocketChannel socketChannel) throws IOException {
 
 		final int BUFFER_SIZE = 1024;
