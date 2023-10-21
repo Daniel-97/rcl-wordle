@@ -48,11 +48,12 @@ public class RequestTask implements Runnable {
 			SocketAddress clientAddress = client.getRemoteAddress();
 			logger.debug("Gestisco richiesta da client " + clientAddress +": "+request.command);
 
-			if (request.command == null) {
+			// Ogni richiesta proveniente dai client deve avere obbligatoriamente il comando e lo username dell'utente
+			if (request.command == null || request.username == null || request.username.isEmpty()) {
 				key.attach(new TcpResponse(BAD_REQUEST));
 				return;
 			}
-
+			// todo qui posso controllare anche che l utente sia effettivamente valido
 			// Gestisco la richiesta
 			switch (request.command) {
 
@@ -105,11 +106,7 @@ public class RequestTask implements Runnable {
 	 */
 	private synchronized TcpResponse login(TcpRequest request) throws IOException {
 
-		if (request.arguments == null || request.arguments.length < 2) {
-			return new TcpResponse(BAD_REQUEST);
-		}
-
-		User user = this.userService.getUser(request.arguments[0]);
+		User user = this.userService.getUser(request.username);
 
 		if (user == null) {
 			return new TcpResponse(INVALID_USERNAME_PASSWORD);
@@ -121,7 +118,7 @@ public class RequestTask implements Runnable {
 
 		// Mi memorizzo hash code di indirizzo ip:porta del client, mi permette di fare logout di utente quando effettua una disconnessione forzata
 		int clientHashCode = this.client.getRemoteAddress().hashCode();
-		boolean success = this.userService.login(request.arguments[0], request.arguments[1], clientHashCode);
+		boolean success = this.userService.login(request.username, request.arguments[0], clientHashCode);
 		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
 
@@ -131,12 +128,7 @@ public class RequestTask implements Runnable {
 	 * @return
 	 */
 	private synchronized TcpResponse logout(TcpRequest request) {
-
-		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpResponse(BAD_REQUEST);
-		}
-
-		boolean success = this.userService.logout(request.arguments[0]);
+		boolean success = this.userService.logout(request.username);
 		return new TcpResponse(success ? OK : INVALID_USERNAME);
 	}
 
@@ -148,11 +140,7 @@ public class RequestTask implements Runnable {
 	 */
 	private TcpResponse playWordle(TcpRequest request) {
 
-		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpResponse(BAD_REQUEST);
-		}
-
-		User user = this.userService.getUser(request.arguments[0]);
+		User user = this.userService.getUser(request.username);
 		WordleGame lastGame = user.getLastGame();
 		TcpResponse response = new TcpResponse();
 		// Prendo la parola attuale in modo sicuro
@@ -186,9 +174,8 @@ public class RequestTask implements Runnable {
 			return new TcpResponse(BAD_REQUEST);
 		}
 
-		String username = request.arguments[0];
-		String clientWord = request.arguments[1];
-		User user = this.userService.getUser(username);
+		String clientWord = request.arguments[0];
+		User user = this.userService.getUser(request.username);
 		WordleGame lastGame = user.getLastGame();
 		// prendo la parola attuale in modo sicuro
 		String actualWord = wordleGameService.getGameWord();
@@ -248,11 +235,8 @@ public class RequestTask implements Runnable {
 	 */
 	private TcpResponse stat(TcpRequest request) {
 
-		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpResponse(BAD_REQUEST);
-		}
 
-		String username = request.arguments[0];
+		String username = request.username;
 		User user = this.userService.getUser(username);
 
 		if (user == null) {
@@ -273,11 +257,7 @@ public class RequestTask implements Runnable {
 	 */
 	private TcpResponse share(TcpRequest request) throws IOException {
 
-		if (request.arguments == null || request.arguments.length < 1) {
-			return new TcpResponse(BAD_REQUEST);
-		}
-
-		String username = request.arguments[0];
+		String username = request.username;
 		User user = this.userService.getUser(username);
 
 		if (user == null) {
