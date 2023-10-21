@@ -6,6 +6,7 @@ import server.entity.ServerConfig;
 import server.entity.User;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
+import server.exceptions.WordleException;
 import server.services.JsonService;
 import server.services.UserService;
 import server.services.WordleGameService;
@@ -240,21 +241,21 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 	 * @throws IllegalArgumentException
 	 */
 	@Override
-	public synchronized void register(String username, String password) throws RemoteException, IllegalArgumentException {
+	public synchronized void register(String username, String password) throws RemoteException, WordleException {
 
 		// Controllo parametri
 		if (username.isEmpty()) {
-			throw new IllegalArgumentException(USERNAME_REQUIRED.name());
+			throw new WordleException(USERNAME_REQUIRED);
 		}
 
 		if (password.isEmpty()) {
-			throw new IllegalArgumentException(PASSWORD_REQUIRED.name());
+			throw new WordleException(PASSWORD_REQUIRED);
 		}
 
 		// Controllo se gia' esiste un utente con lo stesso username
 		User user = this.userService.getUser(username);
 		if (user != null) {
-			throw new IllegalArgumentException(USERNAME_ALREADY_USED.name());
+			throw new WordleException(USERNAME_ALREADY_USED);
 		}
 
 		// Aggiungo nuovo utente al sistema

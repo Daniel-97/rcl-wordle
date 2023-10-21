@@ -13,6 +13,7 @@ import common.enums.TCPCommandEnum;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
 import common.utils.WordleLogger;
+import server.exceptions.WordleException;
 import server.services.JsonService;
 
 import java.io.IOException;
@@ -438,10 +439,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			serverRMI.register(username, password);
 			System.out.println("Complimenti! Registrazione completata con successo!");
 		} catch (RemoteException e) {
-			// TODO gestire il caso in cui il server si disconnette
-			throw new RuntimeException(e);
-		} catch (IllegalArgumentException e) {
-			System.out.println("Errore durante la registrazione! " + e.getMessage());
+			System.out.println("Errore sconosciuto durante la registrazione!");
+		} catch (WordleException e) {
+			System.out.println("Errore! " + e.getMessage());
 		}
 	}
 
