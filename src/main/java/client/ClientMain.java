@@ -314,7 +314,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private void sendWord(String word) {
 
 		TcpResponse response;
-		TcpRequest request = new TcpRequest(TCPCommandEnum.VERIFY_WORD, username);
+		TcpRequest request = new TcpRequest(TCPCommandEnum.VERIFY_WORD, username, word);
 		try {
 			sendTcpMessage(request);
 			response = readTcpMessage();
