@@ -363,7 +363,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private void login(String username, String password) {
 
-		TcpRequest requestDTO = new TcpRequest(TCPCommandEnum.LOGIN, username, new String[]{password});
+		TcpRequest requestDTO = new TcpRequest(TCPCommandEnum.LOGIN, username, password);
 
 		try {
 			sendTcpMessage(requestDTO);

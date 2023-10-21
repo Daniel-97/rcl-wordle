@@ -3,7 +3,6 @@ package server.tasks;
 import common.dto.*;
 import common.entity.SharedGame;
 import common.entity.WordleGame;
-import common.enums.ResponseCodeEnum;
 import common.utils.WordleLogger;
 import server.ServerMain;
 import server.entity.User;
@@ -16,10 +15,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 import static common.enums.ResponseCodeEnum.*;
 
@@ -138,7 +134,7 @@ public class RequestTask implements Runnable {
 
 		// Mi memorizzo hash code di indirizzo ip:porta del client, mi permette di fare logout di utente quando effettua una disconnessione forzata
 		int clientHashCode = this.client.getRemoteAddress().hashCode();
-		boolean success = this.userService.login(request.username, request.arguments[0], clientHashCode);
+		boolean success = this.userService.login(request.username, request.data, clientHashCode);
 
 		if (!success) {
 			throw new WordleException(INVALID_USERNAME_PASSWORD);
@@ -201,11 +197,11 @@ public class RequestTask implements Runnable {
 	 */
 	private TcpResponse verifyWord(TcpRequest request) throws WordleException {
 
-		if (request.arguments == null || request.arguments.length < 1) {
+		if (request.data == null || request.data.isEmpty()) {
 			throw new WordleException(BAD_REQUEST);
 		}
 
-		String clientWord = request.arguments[0];
+		String clientWord = request.data;
 		User user = checkUser(request.username);
 		WordleGame lastGame = user.getLastGame();
 		// prendo la parola attuale in modo sicuro

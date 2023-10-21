@@ -8,25 +8,25 @@ public class TcpRequest {
 
 	public final TCPCommandEnum command;
 	public final String username;
-	public final String[] arguments;
+	public final String data;
 
 	public TcpRequest(TCPCommandEnum command, String username) {
 		this.command = command;
 		this.username = username;
-		this.arguments = null;
+		this.data = null;
 	}
 
-	public TcpRequest(TCPCommandEnum command, String username, String[] arguments) {
+	public TcpRequest(TCPCommandEnum command, String username, String data) {
 		this.command = command;
 		this.username = username;
-		this.arguments = arguments;
+		this.data = data;
 	}
 
 	@Override
 	public String toString() {
 		return "TcpRequestDTO{" +
 				"command='" + command + '\'' +
-				", arguments=" + Arrays.toString(arguments) +
+				", data=" + data +
 				'}';
 	}
 }
