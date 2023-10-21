@@ -5,6 +5,6 @@ Progetto laboratorio reti di calcolatori Unipi
 mvn clean install
 
 # RUN
-WORDLE_CONFIG=server.config java -jar target/Server-jar-with-dependencies.jar
+WORDLE_DEBUG=true WORDLE_CONFIG=server.config java -jar target/Server-jar-with-dependencies.jar
 WORDLE_CONFIG=client.config java -jar target/Client-jar-with-dependencies.jar
 
