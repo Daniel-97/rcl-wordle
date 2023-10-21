@@ -36,6 +36,10 @@ public class RequestTask implements Runnable {
 		this.client = (SocketChannel) key.channel();
 	}
 
+	/**
+	 * Metodo principale task, eseguito dalla threadpool. Si limita a fare uno switch sul comando ricevuto dall'utente
+	 * e a smistarlo alla corretta funzione. La risposta viene salvata nell'attachment della SelectionKey.
+	 */
 	@Override
 	public void run() {
 
@@ -44,8 +48,8 @@ public class RequestTask implements Runnable {
 			SocketAddress clientAddress = client.getRemoteAddress();
 			logger.debug("Gestisco richiesta da client " + clientAddress +": "+request.command);
 
-			if (request == null || request.command == null) {
-				key.attach(new TcpResponse(INTERNAL_SERVER_ERROR));
+			if (request.command == null) {
+				key.attach(new TcpResponse(BAD_REQUEST));
 				return;
 			}
 
@@ -94,8 +98,7 @@ public class RequestTask implements Runnable {
 	}
 
 	/**
-	 * Metodo per effettuare login dell'utente. Synchronized per evitare che due client effettuino il login
-	 * con lo stesso utente da client diversi
+	 * Metodo per effettuare login dell'utente.
 	 * @param request
 	 * @return
 	 * @throws IOException
@@ -116,13 +119,17 @@ public class RequestTask implements Runnable {
 			return new TcpResponse(ALREADY_LOGGED_IN);
 		}
 
-		// Mi memorizzo hash code di indirizzo ip:porta del client, mi permette di fare logout di utente quando effettua
-		// una disconnessione forzata
+		// Mi memorizzo hash code di indirizzo ip:porta del client, mi permette di fare logout di utente quando effettua una disconnessione forzata
 		int clientHashCode = this.client.getRemoteAddress().hashCode();
 		boolean success = this.userService.login(request.arguments[0], request.arguments[1], clientHashCode);
 		return new TcpResponse(success ? ResponseCodeEnum.OK : INVALID_USERNAME_PASSWORD);
 	}
 
+	/**
+	 * Permette di effettuare il logout di un utente
+	 * @param request
+	 * @return
+	 */
 	private synchronized TcpResponse logout(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
@@ -133,6 +140,12 @@ public class RequestTask implements Runnable {
 		return new TcpResponse(success ? OK : INVALID_USERNAME);
 	}
 
+	/**
+	 * Verifica se l'utente puo' giocare alla parola attualmente estratta. In caso contrario ritorna codici di errore
+	 * specifici.
+	 * @param request
+	 * @return
+	 */
 	private TcpResponse playWordle(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
@@ -163,7 +176,7 @@ public class RequestTask implements Runnable {
 	}
 
 	/**
-	 * Metodo principale del gioco, synchronized per evitare che la parola o le statistiche cambino nel mentre
+	 * Metodo principale del gioco, verifica una nuova parola inviata dal client
 	 * @param request
 	 * @return
 	 */
@@ -228,6 +241,11 @@ public class RequestTask implements Runnable {
 		return res;
 	}
 
+	/**
+	 * Ritorna le statistiche dell'utente
+	 * @param request
+	 * @return
+	 */
 	private TcpResponse stat(TcpRequest request) {
 
 		if (request.arguments == null || request.arguments.length < 1) {
@@ -247,6 +265,12 @@ public class RequestTask implements Runnable {
 		return response;
 	}
 
+	/**
+	 * Condivide l'ultimo gioco completato dell'utente sul gruppo sociale (multicast)
+	 * @param request
+	 * @return TcpResponse
+	 * @throws IOException
+	 */
 	private TcpResponse share(TcpRequest request) throws IOException {
 
 		if (request.arguments == null || request.arguments.length < 1) {
