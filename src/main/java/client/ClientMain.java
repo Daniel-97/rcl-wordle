@@ -538,7 +538,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		while ((bytesRead = inputStream.read(buffer)) > 0) {
 			json.append(new String(Arrays.copyOfRange(buffer, 0, bytesRead)));
-			System.out.println(new String(Arrays.copyOfRange(buffer, 0, bytesRead)));
 			if (bytesRead < BUFFER_SIZE) {
 				break;
 			}
