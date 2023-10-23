@@ -14,11 +14,25 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.8.9</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>11.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>11.0.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -43,7 +57,7 @@
                             </archive>
                         </configuration>
                     </execution>
-                    <!-- Client build -->
+                    <!-- Client build CLI -->
                     <execution>
                         <id>client-build</id>
                         <phase>package</phase>
@@ -60,7 +74,35 @@
                             </archive>
                         </configuration>
                     </execution>
+
+                    <!-- Client build JavaFX -->
+                    <execution>
+                        <id>client-build-gui</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>Client-GUI</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>client/gui/LoginInterface</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+
                 </executions>
+            </plugin>
+
+             <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>client.gui.ClientGuiMain</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
