@@ -16,10 +16,11 @@ import common.utils.WordleLogger;
 import server.exceptions.WordleException;
 import server.services.JsonService;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static common.enums.ResponseCodeEnum.*;
@@ -43,7 +45,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private static Thread multicastThread;
 	private static List<UserScore> rank;
 	private static final List<SharedGame> sharedGames = new ArrayList<>();
-	private static SocketChannel socketChannel;
+	private static Socket socket;
 	private static final WordleLogger logger = new WordleLogger(ClientMain.class.getName());
 	private String username = null;
 	private ClientModeEnum mode = ClientModeEnum.GUEST_MODE;
@@ -70,7 +72,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				logger.debug("Shutdown Wordle client...");
 				try {
 					// Chiudo il socket TCP con il server
-					socketChannel.close();
+					socket.close();
 				} catch (IOException e) {
 					logger.error("Errore durante chiusura socket TCP");
 				}
@@ -124,8 +126,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 		// Inizializza connessione TCP
 		try {
-			socketChannel = SocketChannel.open();
-			socketChannel.connect(new InetSocketAddress(ClientConfig.SERVER_IP, ClientConfig.TCP_PORT));
+			socket = new Socket(ClientConfig.SERVER_IP, ClientConfig.TCP_PORT);
+			socket.setSoTimeout(ClientConfig.SOCKET_MS_TIMEOUT);
 			logger.debug("Connessione TCP con il server riuscita! "+ClientConfig.SERVER_IP+":"+ClientConfig.TCP_PORT);
 		} catch (IOException e) {
 			logger.error("Errore durante connessione TCP al server: "+ e.getMessage());
@@ -515,8 +517,9 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 */
 	public static void sendTcpMessage(TcpRequest request) throws IOException {
 		String json = JsonService.toJson(request);
-		ByteBuffer buffer = ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
-		socketChannel.write(buffer);
+		Writer writer = new OutputStreamWriter(socket.getOutputStream());
+		writer.write(json);
+		writer.flush();
 	}
 
 	/**
@@ -525,24 +528,19 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * @throws IOException
 	 * @throws RuntimeException
 	 */
-	public static TcpResponse readTcpMessage() throws IOException,RuntimeException {
+	public static TcpResponse readTcpMessage() throws IOException, RuntimeException {
 
 		final int BUFFER_SIZE = 1024;
-		ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		byte[] buffer = new byte[BUFFER_SIZE];
 		StringBuilder json = new StringBuilder();
 		int bytesRead;
+		BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
 
-		while ((bytesRead = socketChannel.read(buffer)) > 0) {
-			// Metto il buffer in modalità lettura
-			buffer.flip();
-			json.append(StandardCharsets.UTF_8.decode(buffer));
-			// Metto il buffer in modalità scrittura e lo pulisco
-			buffer.flip();
-			buffer.clear();
-
-			// Se i byte letti sono meno della dimensione del buffer allora termino
-			if(bytesRead < BUFFER_SIZE)
+		while ((bytesRead = inputStream.read(buffer)) > 0) {
+			json.append(new String(Arrays.copyOfRange(buffer, 0, bytesRead)));
+			if (bytesRead < BUFFER_SIZE) {
 				break;
+			}
 		}
 
 		if (json.length() == 0) {

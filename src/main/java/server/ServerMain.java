@@ -159,6 +159,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			}
 
 			Set<SelectionKey> selectedKeys = selector.selectedKeys();
+			// todo aggiungere timeout per connessioni dei client
 			// Iteratore delle chiavi
 			Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 

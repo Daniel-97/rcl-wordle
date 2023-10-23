@@ -125,7 +125,7 @@ public class UserService {
 
 	/**
 	 * Logout the current user
-	 * @param username
+	 * @param user
 	 * @return
 	 */
 	public boolean logout(User user) {
