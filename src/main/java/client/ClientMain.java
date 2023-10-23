@@ -5,7 +5,7 @@ import client.entity.ClientConfig;
 import client.enums.ClientModeEnum;
 import client.enums.UserCommandEnum;
 import client.services.CLIHelper;
-import client.worker.MulticastWorker;
+import client.daemon.MulticastDaemon;
 import common.dto.*;
 import common.entity.SharedGame;
 import common.enums.AnsiColor;
@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -42,7 +39,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private static ServerRmiInterface serverRMI;
 	private static NotifyEventInterface stub;
 	private static MulticastSocket multicastSocket;
-	private static Thread multicastThread;
+	private static MulticastDaemon multicastDaemon;
 	private static List<UserScore> rank;
 	private static final List<SharedGame> sharedGames = new ArrayList<>();
 	private static Socket socket;
@@ -78,7 +75,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				}
 
 				// Interrompo worker che gestisce il gruppo multicast
-				multicastThread.interrupt();
+				multicastDaemon.interrupt();
 
 				try {
 					// Disiscrivo client da eventi del server
@@ -146,9 +143,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		}
 
 		// Creo e avvio il thread che rimane in ascolto dei pacchetti multicast in arrivo
-		MulticastWorker multicastWorker = new MulticastWorker(multicastSocket, sharedGames);
-		multicastThread = new Thread(multicastWorker);
-		multicastThread.start();
+		multicastDaemon = new MulticastDaemon(multicastSocket, sharedGames);
+		multicastDaemon.start();
 
 		System.out.println("Avvio Wordle client avvenuto con successo!\n");
 	}
