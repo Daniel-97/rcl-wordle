@@ -16,27 +16,37 @@ import java.util.List;
  * Worker che rimane in ascolto di nuovi messaggi sul gruppo di multicast
  */
 public class MulticastDaemon extends Thread {
-	private final MulticastSocket multicastSocket;
+	private MulticastSocket multicastSocket;
 	private final List<SharedGame> userGames;
 	private final WordleLogger logger = new WordleLogger(MulticastDaemon.class.getName());
 
-	public MulticastDaemon(MulticastSocket ms, List<SharedGame> userGames) {
-
-		this.multicastSocket = ms;
-		this.userGames = userGames;
+	public MulticastDaemon(List<SharedGame> userGames) {
 
 		// Imposto il thread come demone
 		setDaemon(true);
-		//TODO migliorare questa parte
+		this.userGames = userGames;
+
+		// Inizializza multicast socket
+		try {
+			multicastSocket = new MulticastSocket(ClientConfig.MULTICAST_PORT);
+			InetAddress multicastAddress = InetAddress.getByName(ClientConfig.MULTICAST_IP);
+			multicastSocket.joinGroup(multicastAddress);
+			logger.debug("Join a gruppo multicast " + ClientConfig.MULTICAST_IP + " avvenuta con successo!");
+		} catch (IOException e) {
+			logger.error("Errore durante inizializzazione multicast, non sara' possibile ricevere condivisioni di gioco! " + e.getMessage());
+			// Termino il thread corrente in caso di errore di join al gruppo multicast
+			Thread.currentThread().interrupt();
+		}
+
+		// Aggiungo uno shutdown hook, chiamato appena il main thread viene interrotto
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			@Override
 			public void run() {
-				logger.info("Shutdown daemon...");
+				logger.debug("Shutdown daemon...");
 				try {
-					ms.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+					// Abbandono il gruppo multicast
+					multicastSocket.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
+				} catch (IOException ignore) {}
 			}
 		});
 	}
@@ -44,16 +54,16 @@ public class MulticastDaemon extends Thread {
 	@Override
 	public void run() {
 
-		logger.info("Multicast daemon in ascolto...");
+		logger.debug("Multicast daemon in ascolto...");
 		final int BUFFER_SIZE = 8192;
 		byte[] buffer = new byte[BUFFER_SIZE];
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
-		while (true) {
+		while (!Thread.currentThread().isInterrupted()) {
 
 			try {
 				this.multicastSocket.receive(dp);
-				logger.info("Ricevuto nuovo gioco condiviso!");
+				logger.debug("Ricevuto nuovo gioco condiviso!");
 				String json = new String(dp.getData(), 0, dp.getLength());
 
 				try {
@@ -67,13 +77,5 @@ public class MulticastDaemon extends Thread {
 				logger.error("Errore durante ricezione messaggio multicast!" + e.getMessage());
 			}
 		}
-		/*
-		try {
-			logger.info("Abbandono il gruppo di multicast...");
-			multicastSocket.leaveGroup(InetAddress.getByName(ClientConfig.MULTICAST_IP));
-		} catch (IOException e) {
-			logger.error("Impossibile abbandonare gruppo di multicast! "+e.getMessage());
-		}
-		 */
 	}
 }

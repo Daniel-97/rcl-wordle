@@ -38,8 +38,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	private static ServerRmiInterface serverRMI;
 	private static NotifyEventInterface stub;
-	private static MulticastSocket multicastSocket;
-	private static MulticastDaemon multicastDaemon;
 	private static List<UserScore> rank;
 	private static final List<SharedGame> sharedGames = new ArrayList<>();
 	private static Socket socket;
@@ -73,9 +71,6 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 				} catch (IOException e) {
 					logger.error("Errore durante chiusura socket TCP");
 				}
-
-				// Interrompo worker che gestisce il gruppo multicast
-				multicastDaemon.interrupt();
 
 				try {
 					// Disiscrivo client da eventi del server
@@ -131,19 +126,8 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			System.exit(-1);
 		}
 
-		// Inizializza multicast socket
-		try {
-			multicastSocket = new MulticastSocket(ClientConfig.MULTICAST_PORT);
-			InetAddress multicastAddress = InetAddress.getByName(ClientConfig.MULTICAST_IP);
-			multicastSocket.joinGroup(multicastAddress);
-			logger.debug("Join a gruppo multicast " + ClientConfig.MULTICAST_IP + " avvenuta con successo!");
-		} catch (IOException e) {
-			logger.error("Errore durante inizializzazione multicast! " + e.getMessage());
-			System.exit(-1);
-		}
-
 		// Creo e avvio il thread che rimane in ascolto dei pacchetti multicast in arrivo
-		multicastDaemon = new MulticastDaemon(multicastSocket, sharedGames);
+		MulticastDaemon multicastDaemon = new MulticastDaemon(sharedGames);
 		multicastDaemon.start();
 
 		System.out.println("Avvio Wordle client avvenuto con successo!\n");
