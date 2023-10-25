@@ -63,13 +63,20 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				logger.info("Shutdown Wordle server...");
-				poolExecutor.shutdown(); // Interrompo thread pool
+				logger.info("Terminazione Wordle server...");
+				poolExecutor.shutdown(); // Richiesta di terminazione graduale
+				try {
+					// Attendo che la threadpool sia terminata per un massimo di 10 secondi
+					boolean terminated = poolExecutor.awaitTermination(10,TimeUnit.SECONDS);
+					if (terminated) {
+						logger.debug("Thread pool terminata correttamente");
+					}
+				} catch (InterruptedException ignore) {}
 				wordUpdateExecutor.shutdown(); // interrompo word update
 				server.userService.saveUsers(); // Salvo utenti su file
 				server.wordleGameService.saveState(); // Salvo stato del gioco su file
 				multicastSocket.close(); // Chiudo socket multicast
-				try {socketChannel.close();} catch (IOException ignore) {}
+				try {socketChannel.close();} catch (IOException ignore) {} // Chiudo socket channel
 			}
 		});
 
@@ -138,6 +145,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Inizializza thread pool executor
 		int coreCount = Runtime.getRuntime().availableProcessors();
 		logger.debug("Creo una cached thread pool con dimensione massima " + coreCount*2);
+		//TODO tipo di coda sbagliata, sistemare
 		poolExecutor = new ThreadPoolExecutor(0, coreCount*2, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
 	}
