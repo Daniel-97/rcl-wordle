@@ -64,19 +64,24 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			@Override
 			public void run() {
 				logger.info("Terminazione Wordle server...");
-				poolExecutor.shutdown(); // Richiesta di terminazione graduale
+				// Richiesta di terminazione graduale del thread pool
+				poolExecutor.shutdown();
 				try {
 					// Attendo che la threadpool sia terminata per un massimo di 10 secondi
-					boolean terminated = poolExecutor.awaitTermination(10,TimeUnit.SECONDS);
-					if (terminated) {
+					if (poolExecutor.awaitTermination(10,TimeUnit.SECONDS)) {
 						logger.debug("Thread pool terminata correttamente");
 					}
 				} catch (InterruptedException ignore) {}
-				wordUpdateExecutor.shutdown(); // interrompo word update
-				server.userService.saveUsers(); // Salvo utenti su file
-				server.wordleGameService.saveState(); // Salvo stato del gioco su file
-				multicastSocket.close(); // Chiudo socket multicast
-				try {socketChannel.close();} catch (IOException ignore) {} // Chiudo socket channel
+				// Interrompo word update
+				wordUpdateExecutor.shutdown();
+				// Salvo utenti su file
+				server.userService.saveUsers();
+				// Salvo stato del gioco su file
+				server.wordleGameService.saveState();
+				// Chiudo socket multicast
+				multicastSocket.close();
+				// Chiudo socket channel
+				try {socketChannel.close();} catch (IOException ignore) {}
 			}
 		});
 
