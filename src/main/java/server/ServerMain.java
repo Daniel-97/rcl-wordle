@@ -150,8 +150,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Inizializza thread pool executor
 		int coreCount = Runtime.getRuntime().availableProcessors();
 		logger.debug("Creo una cached thread pool con dimensione massima " + coreCount*2);
-		//TODO tipo di coda sbagliata, sistemare
-		poolExecutor = new ThreadPoolExecutor(0, coreCount*2, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+		poolExecutor = new ThreadPoolExecutor(0, coreCount*2, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(Integer.MAX_VALUE));
 
 	}
 
@@ -172,7 +171,6 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 			}
 
 			Set<SelectionKey> selectedKeys = selector.selectedKeys();
-			// todo aggiungere timeout per connessioni dei client
 			// Iteratore delle chiavi
 			Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
