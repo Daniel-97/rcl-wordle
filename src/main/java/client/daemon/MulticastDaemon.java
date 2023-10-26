@@ -1,10 +1,10 @@
 package client.daemon;
 
 import client.entity.ClientConfig;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import common.entity.SharedGame;
 import common.utils.WordleLogger;
-import server.services.JsonService;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -67,7 +67,7 @@ public class MulticastDaemon extends Thread {
 				String json = new String(dp.getData(), 0, dp.getLength());
 
 				try {
-					SharedGame wordleGame = JsonService.fromJson(json, SharedGame.class);
+					SharedGame wordleGame = new GsonBuilder().create().fromJson(json, SharedGame.class);
 					this.userGames.add(wordleGame);
 				} catch (JsonSyntaxException e) {
 					logger.error("Errore parsing gioco condiviso da altro utente: "+e.getMessage());

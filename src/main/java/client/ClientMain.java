@@ -6,6 +6,7 @@ import client.enums.ClientModeEnum;
 import client.enums.UserCommandEnum;
 import client.services.CLIHelper;
 import client.daemon.MulticastDaemon;
+import com.google.gson.GsonBuilder;
 import common.dto.*;
 import common.entity.SharedGame;
 import common.enums.AnsiColor;
@@ -14,7 +15,6 @@ import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
 import common.utils.WordleLogger;
 import server.exceptions.WordleException;
-import server.services.JsonService;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -496,7 +496,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * @throws IOException
 	 */
 	public static void sendTcpMessage(TcpRequest request) throws IOException {
-		String json = JsonService.toJson(request);
+		String json = new GsonBuilder().create().toJson(request);
 		Writer writer = new OutputStreamWriter(socket.getOutputStream());
 		writer.write(json);
 		writer.flush();
@@ -527,7 +527,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			throw new IOException("Letti 0 bytes, il server potrebbe essere offline(?)");
 		}
 
-		TcpResponse response = JsonService.fromJson(json.toString(), TcpResponse.class);
+		TcpResponse response = new GsonBuilder().create().fromJson(json.toString(), TcpResponse.class);
 		if(response.code == INTERNAL_SERVER_ERROR) {
 			throw new RuntimeException(INTERNAL_SERVER_ERROR.name());
 		}
