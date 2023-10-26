@@ -1,5 +1,6 @@
 package server.services;
 
+import com.google.gson.JsonSyntaxException;
 import common.dto.LetterDTO;
 import common.dto.MyMemoryResponse;
 import common.dto.UserScore;
@@ -65,12 +66,13 @@ public class WordleGameService {
 		 */
 		try {
 			this.state = (WordleGameState) JsonService.readJson(WORDLE_STATE_PATH, WordleGameState.class);
-		}catch (IOException e) {
-			String word = this.extractRandomWord();
-			this.state = new WordleGameState(word, this.translateWord(word));
+		}catch (IOException | JsonSyntaxException e) {
+			logger.warn("Impossibile leggere file wordle.json, resetto WordleGameService " + e);
+			//String word = this.extractRandomWord();
+			this.state = new WordleGameState();
 		}
 
-		logger.info("Parola attuale: " + AnsiColor.WHITE_BOLD + state.word + AnsiColor.RESET + ", traduzione: " + state.translation);
+		//logger.info("Parola attuale: " + AnsiColor.WHITE_BOLD + state.word + AnsiColor.RESET + ", traduzione: " + state.translation);
 
 	}
 
@@ -216,10 +218,8 @@ public class WordleGameService {
 			}
 
 			MyMemoryResponse response = JsonService.fromJson(json.toString(), MyMemoryResponse.class);
-			if(response != null && response.responseData != null && response.responseData.translatedText != null) {
+			if (response != null && response.responseData != null && response.responseData.translatedText != null) {
 				return response.responseData.translatedText;
-			} else {
-				return null;
 			}
 
 		} catch (SocketTimeoutException e) {
@@ -229,11 +229,17 @@ public class WordleGameService {
 			logger.error("Errore durante traduzione parola "+word+": "+e);
 		}
 
-		return null;
+		// Arrivato a questo punto ci sono stati degli errori durante la traduzione della parola, best effort
+		// ritorno la parola richiesta invece che null
+		return word;
 	}
 
 	public WordleGameState getState() {
 		return state;
+	}
+
+	public void setState(WordleGameState state) {
+		this.state = state;
 	}
 
 	/**
@@ -241,11 +247,17 @@ public class WordleGameService {
 	 * @return
 	 */
 	public long getWordRemainingMinutes() {
+
+		if(state.extractedAt == null) {
+			return 0;
+		}
+
 		long diff = new Date().getTime() - state.extractedAt.getTime();
 		long minutes = diff / 1000 / 60;
 		if (minutes > ServerConfig.WORD_TIME_MINUTES) {
 			minutes = 0;
 		}
+
 		return minutes;
 
 	}

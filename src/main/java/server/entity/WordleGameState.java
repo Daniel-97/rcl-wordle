@@ -9,10 +9,10 @@ public class WordleGameState {
 	public Date extractedAt; // Indica quando e' stata estratta l'ultima parola
 	public int gameNumber;
 
-	public WordleGameState(String word, String translation) {
-		this.word = word;
-		this.translation = translation;
-		this.extractedAt = new Date();
+	public WordleGameState() {
+		this.word = null;
+		this.translation = null;
+		this.extractedAt = null;
 		this.gameNumber = 0;
 	}
 }

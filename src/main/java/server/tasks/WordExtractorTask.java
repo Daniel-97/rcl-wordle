@@ -23,16 +23,12 @@ public class WordExtractorTask implements Runnable {
 
 	@Override
 	public void run() {
-		/*
-		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(state.extractedAt);
-		cal.add(GregorianCalendar.MINUTE, ServerConfig.WORD_TIME_MINUTES);
-		*/
+
+		WordleGameState state = wordleGameService.getState();
+
 		try {
 			// Mantengo la lock sulla parola fino a che non ne ho estratta una nuova e ho salvato la traduzione
 			WordleGameService.wordLock.lock();
-
-			WordleGameState state = wordleGameService.getState();
 
 			state.word = wordleGameService.extractRandomWord();
 			state.translation = wordleGameService.translateWord(state.word);
@@ -41,7 +37,10 @@ public class WordExtractorTask implements Runnable {
 			state.gameNumber++;
 
 		} catch (Exception e){
-			logger.error(e.toString());
+			// In caso di eccezione, ripristino la vecchia parola, in modo da far proseguire il gioco e non generare errori
+			// per possibile inconsistenza dei dati
+			wordleGameService.setState(state);
+			logger.error("Errore estrazione nuova parola, ripristinata vecchia parola!" + e);
 		}
 		finally {
 			WordleGameService.wordLock.unlock();
