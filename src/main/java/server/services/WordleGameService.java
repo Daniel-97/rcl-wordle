@@ -11,11 +11,14 @@ import server.entity.WordleGameState;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -199,9 +202,12 @@ public class WordleGameService {
 	 */
 	public String translateWord(String word) {
 
+		final int CONNECTION_TIMEOUT = 1000 * 5;
 		try {
 			URL url = new URL("https://api.mymemory.translated.net/get?q="+word+"&langpair=en|it");
-			BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+			URLConnection connection = url.openConnection();
+			connection.setConnectTimeout(CONNECTION_TIMEOUT);
+			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String inputLine;
 			StringBuilder json = new StringBuilder();
 
@@ -216,7 +222,10 @@ public class WordleGameService {
 				return null;
 			}
 
-		} catch (IOException e) {
+		} catch (SocketTimeoutException e) {
+			logger.warn("Timeout raggiunto per traduzione parola!");
+		}
+		catch (IOException e) {
 			logger.error("Errore durante traduzione parola "+word+": "+e);
 		}
 
