@@ -55,8 +55,7 @@ public class MulticastDaemon extends Thread {
 	public void run() {
 
 		logger.debug("Multicast daemon in ascolto...");
-		final int BUFFER_SIZE = 8192;
-		byte[] buffer = new byte[BUFFER_SIZE];
+		byte[] buffer = new byte[16384];
 		DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
 		while (!Thread.currentThread().isInterrupted()) {
