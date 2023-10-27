@@ -8,14 +8,17 @@ import java.io.IOException;
 import java.net.Socket;
 import java.rmi.RemoteException;
 
-public class ShutdownHook extends Thread {
+/**
+ * Thread avviato alla ricezione di SIGINT o SIGTERM
+ */
+public class ClientShutdownHook extends Thread {
 
-	private final WordleLogger logger = new WordleLogger(ShutdownHook.class.getName());
+	private final WordleLogger logger = new WordleLogger(ClientShutdownHook.class.getName());
 	private final ClientMain client;
 	private final ServerRmiInterface serverRMI;
 	private final Socket socket;
 
-	public ShutdownHook(ClientMain client, ServerRmiInterface serverRMI, Socket socket) {
+	public ClientShutdownHook(ClientMain client, ServerRmiInterface serverRMI, Socket socket) {
 		this.client = client;
 		this.serverRMI = serverRMI;
 		this.socket = socket;

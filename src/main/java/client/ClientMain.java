@@ -6,7 +6,7 @@ import client.enums.ClientModeEnum;
 import client.enums.UserCommandEnum;
 import client.services.CLIHelper;
 import client.thread.MulticastDaemon;
-import client.thread.ShutdownHook;
+import client.thread.ClientShutdownHook;
 import com.google.gson.GsonBuilder;
 import common.dto.*;
 import common.entity.SharedGame;
@@ -61,7 +61,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		ClientMain client = new ClientMain();
 
 		// Hook per SIGINT e SIGTERM
-		Runtime.getRuntime().addShutdownHook(new ShutdownHook(client, serverRMI, socket));
+		Runtime.getRuntime().addShutdownHook(new ClientShutdownHook(client, serverRMI, socket));
 
 		CLIHelper.pause();
 		// Avvia il client

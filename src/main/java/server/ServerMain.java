@@ -12,6 +12,7 @@ import server.services.UserService;
 import server.services.WordleGameService;
 import server.tasks.RequestTask;
 import server.tasks.WordExtractorTask;
+import server.thread.ServerShutdownHook;
 
 import java.io.IOException;
 import java.net.*;
@@ -37,12 +38,12 @@ import static common.enums.ResponseCodeEnum.*;
 public class ServerMain extends RemoteObject implements ServerRmiInterface {
 
 	private static final WordleLogger logger = new WordleLogger(ServerMain.class.getName());
-	private static ThreadPoolExecutor poolExecutor;
-	private static ScheduledExecutorService wordUpdateExecutor;
+	public static ThreadPoolExecutor poolExecutor;
+	public static ScheduledExecutorService wordUpdateExecutor;
+	public static ServerSocketChannel socketChannel;
+	public static MulticastSocket multicastSocket;
 	private static final HashMap<String, NotifyEventInterface> clients = new HashMap<>();
 	private static Selector selector;
-	private static ServerSocketChannel socketChannel;
-	private static MulticastSocket multicastSocket;
 	private final UserService userService;
 	private final WordleGameService wordleGameService;
 
@@ -60,30 +61,7 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Inizializza il server
 		ServerMain server = new ServerMain();
 		// Hook per SIGINT e SIGTERM
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				logger.info("Terminazione Wordle server...");
-				// Richiesta di terminazione graduale del thread pool
-				poolExecutor.shutdown();
-				try {
-					// Attendo che la threadpool sia terminata per un massimo di 10 secondi
-					if (poolExecutor.awaitTermination(10,TimeUnit.SECONDS)) {
-						logger.debug("Thread pool terminata correttamente");
-					}
-				} catch (InterruptedException ignore) {}
-				// Interrompo word update
-				wordUpdateExecutor.shutdown();
-				// Salvo utenti su file
-				server.userService.saveUsers();
-				// Salvo stato del gioco su file
-				server.wordleGameService.saveState();
-				// Chiudo socket multicast
-				multicastSocket.close();
-				// Chiudo socket channel
-				try {socketChannel.close();} catch (IOException ignore) {}
-			}
-		});
+		Runtime.getRuntime().addShutdownHook(new ServerShutdownHook());
 
 		// Avvio il server
 		server.listen();
