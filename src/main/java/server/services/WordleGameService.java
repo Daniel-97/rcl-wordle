@@ -93,24 +93,6 @@ public class WordleGameService {
 		return this.dictionary.get(new Random().nextInt(this.dictionary.size()));
 	}
 
-	/**
-	 * Ritorna la parola attuale del gioco, prima tenta di prendere la lock, altrimenti significa che un altro
-	 * thread ci sta lavorando sopra (get oppure aggiornamento)
-	 * @return
-	 */
-	public String getGameWord() {
-		String word;
-
-		try {
-			wordLock.lock();
-			word = this.state.word;
-		} finally {
-			wordLock.unlock();
-		}
-
-		return word;
-	}
-
 	public int getGameNumber() {
 		return this.state.gameNumber;
 	}
@@ -167,10 +149,6 @@ public class WordleGameService {
 				return true;
 		}
 		return false;
-	}
-
-	public String getWordTranslation() {
-		return this.state.translation;
 	}
 
 	/**
@@ -234,8 +212,24 @@ public class WordleGameService {
 		return word;
 	}
 
+	/**
+	 * Ritorna lo stato attuale del gioco, prima tenta di prendere la lock, altrimenti significa che un altro
+	 * thread ci sta lavorando sopra (get oppure aggiornamento)
+	 * @return
+	 */
 	public WordleGameState getState() {
+
+		WordleGameState state;
+
+		try {
+			wordLock.lock();
+			state = this.state;
+		} finally {
+			wordLock.unlock();
+		}
+
 		return state;
+
 	}
 
 	public void setState(WordleGameState state) {

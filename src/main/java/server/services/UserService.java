@@ -88,7 +88,7 @@ public class UserService {
 	 * @param username
 	 * @return
 	 */
-	public User getUser(String username) {
+	public synchronized User getUser(String username) {
 		for(User user: this.users) {
 			if (user.getUsername().equals(username)) {
 				return user;

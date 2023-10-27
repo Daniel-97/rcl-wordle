@@ -6,6 +6,7 @@ import common.entity.WordleGame;
 import common.utils.WordleLogger;
 import server.ServerMain;
 import server.entity.User;
+import server.entity.WordleGameState;
 import server.exceptions.WordleException;
 import server.services.JsonService;
 import server.services.UserService;
@@ -171,7 +172,8 @@ public class RequestTask implements Runnable {
 		WordleGame lastGame = user.getLastGame();
 		TcpResponse response = new TcpResponse();
 		// Prendo la parola attuale in modo sicuro
-		String actualWord = wordleGameService.getGameWord();
+		WordleGameState state = wordleGameService.getState();
+		String actualWord = state.word;
 
 		// Aggiunto gioco al giocatore attuale
 		if (lastGame == null || !lastGame.word.equals(actualWord)) {
@@ -205,7 +207,8 @@ public class RequestTask implements Runnable {
 		User user = checkUser(request.username);
 		WordleGame lastGame = user.getLastGame();
 		// prendo la parola attuale in modo sicuro
-		String actualWord = wordleGameService.getGameWord();
+		WordleGameState state = wordleGameService.getState();
+		String actualWord = state.word;
 		TcpResponse res = new TcpResponse();
 		res.remainingAttempts = lastGame.getRemainingAttempts();
 
@@ -243,7 +246,7 @@ public class RequestTask implements Runnable {
 		// Se la partita e' finita lo comunico al client
 		if (lastGame.finished) {
 			res.code = lastGame.won ? GAME_WON : GAME_LOST;
-			res.wordTranslation = wordleGameService.getWordTranslation();
+			res.wordTranslation = state.translation;
 			if (wordleGameService.isRankChanged(oldRank, newRank)) {
 				ServerMain.notifyRankToClient(userService.getRank());
 			}
