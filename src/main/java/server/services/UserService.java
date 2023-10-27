@@ -143,7 +143,7 @@ public class UserService {
 	 */
 	public synchronized void logout(int clientHashCode) {
 		for (User user: this.users) {
-			if(clientHashCode == user.clientHashCode) {
+			if(clientHashCode == user.clientHashCode && user.online) {
 				user.online = false;
 				user.endLastGame();
 				logger.warn("Logout forzato utente " + user.getUsername() + " effettuato con successo");

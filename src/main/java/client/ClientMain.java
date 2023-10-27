@@ -5,7 +5,8 @@ import client.entity.ClientConfig;
 import client.enums.ClientModeEnum;
 import client.enums.UserCommandEnum;
 import client.services.CLIHelper;
-import client.daemon.MulticastDaemon;
+import client.thread.MulticastDaemon;
+import client.thread.ShutdownHook;
 import com.google.gson.GsonBuilder;
 import common.dto.*;
 import common.entity.SharedGame;
@@ -42,7 +43,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	private static final List<SharedGame> sharedGames = new ArrayList<>();
 	private static Socket socket;
 	private static final WordleLogger logger = new WordleLogger(ClientMain.class.getName());
-	private String username = null;
+	public String username = null;
 	private ClientModeEnum mode = ClientModeEnum.GUEST_MODE;
 	private int remainingAttempts;
 	private LetterDTO[][] guesses;
@@ -60,30 +61,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 		ClientMain client = new ClientMain();
 
 		// Hook per SIGINT e SIGTERM
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-
-				logger.debug("Shutdown Wordle client...");
-				try {
-					// Chiudo il socket TCP con il server
-					socket.close();
-				} catch (IOException e) {
-					logger.error("Errore durante chiusura socket TCP");
-				}
-
-				try {
-					// Disiscrivo client da eventi del server
-					if (client.username != null) {
-						serverRMI.unsubscribeClientFromEvent(client.username);
-					}
-				} catch (RemoteException e) {
-					logger.error("Errore chiamata RMI unsubscribeClientFromEvent()");
-				}
-
-				System.out.println("Grazie per aver usato Wordle client! Torna presto!");
-			}
-		});
+		Runtime.getRuntime().addShutdownHook(new ShutdownHook(client, serverRMI, socket));
 
 		CLIHelper.pause();
 		// Avvia il client
@@ -228,7 +206,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			}
 
 			case LOGOUT: {
-				this.logout(username);
+				this.logout();
 				break;
 			}
 
@@ -293,7 +271,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * Invia una nuova guessed word al server per la verifica
 	 * @param word
 	 */
-	private void sendWord(String word) {
+	public void sendWord(String word) {
 
 		TcpResponse response;
 		TcpRequest request = new TcpRequest(TCPCommandEnum.VERIFY_WORD, username, word);
@@ -361,7 +339,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * @param username
 	 * @param password
 	 */
-	private void login(String username, String password) {
+	public void login(String username, String password) {
 
 		TcpRequest requestDTO = new TcpRequest(TCPCommandEnum.LOGIN, username, password);
 
@@ -388,11 +366,10 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 
 	/**
 	 * Invia una richiesta di logout al server
-	 * @param username
 	 */
-	private void logout(String username) {
+	public void logout() {
 
-		TcpRequest request = new TcpRequest(TCPCommandEnum.LOGOUT, username);
+		TcpRequest request = new TcpRequest(TCPCommandEnum.LOGOUT, this.username);
 
 		try {
 			sendTcpMessage(request);
@@ -400,10 +377,11 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			TcpResponse response = readTcpMessage();
 			if (response.code == OK) {
 				System.out.println("Logout completato con successo");
+				// Disiscrive l'utente alle callback dal server
+				serverRMI.unsubscribeClientFromEvent(this.username);
+				// Resetto username e client mode
 				this.username = null;
 				this.mode = ClientModeEnum.GUEST_MODE;
-				// Disiscrive l'utente alle callback dal server
-				serverRMI.unsubscribeClientFromEvent(username);
 			} else {
 				System.out.println("Errore durante il logout!");
 			}
@@ -415,7 +393,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	/**
 	 * Invia una richiesta di gioco al server
 	 */
-	private boolean playWORDLE() {
+	public boolean playWORDLE() {
 		TcpRequest request = new TcpRequest(TCPCommandEnum.PLAY_WORDLE, username);
 		try {
 			sendTcpMessage(request);
@@ -442,7 +420,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * @param username
 	 * @param password
 	 */
-	private void register(String username, String password) {
+	public void register(String username, String password) {
 
 		try {
 			serverRMI.register(username, password);
@@ -458,7 +436,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	 * Richiede le statistiche personali al server
 	 * @return
 	 */
-	private UserStat sendMeStatistics() {
+	public UserStat sendMeStatistics() {
 		TcpRequest request = new TcpRequest(TCPCommandEnum.STAT, username);
 		try {
 			sendTcpMessage(request);
@@ -476,7 +454,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 	/**
 	 * Richiede al server di condividere i risultati dell ultima partita del client sul gruppo sociale
 	 */
-	private void share() {
+	public void share() {
 		TcpRequest request = new TcpRequest(TCPCommandEnum.SHARE, username);
 		try {
 			sendTcpMessage(request);

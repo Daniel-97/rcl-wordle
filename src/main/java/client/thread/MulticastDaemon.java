@@ -1,4 +1,4 @@
-package client.daemon;
+package client.thread;
 
 import client.entity.ClientConfig;
 import com.google.gson.GsonBuilder;
