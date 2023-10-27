@@ -12,7 +12,7 @@ public class ClientConfig {
 	public static String MULTICAST_IP;
 	public static int MULTICAST_PORT;
 	public static int SOCKET_MS_TIMEOUT;
-	public static int WORDLE_MAX_ATTEMPTS = 6;
+	public static int WORDLE_MAX_ATTEMPTS = 12;
 
 	public static void loadConfig() {
 		// Leggo file di configurazione
