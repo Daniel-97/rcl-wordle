@@ -254,11 +254,19 @@ public class WordleGameService {
 
 		long diff = new Date().getTime() - state.extractedAt.getTime();
 		long minutes = diff / 1000 / 60;
-		if (minutes > ServerConfig.WORD_TIME_MINUTES) {
-			minutes = 0;
-		}
 
-		return minutes;
+		// Parola estratta nel corrente minuto
+		if (minutes == 0) {
+			return ServerConfig.WORD_TIME_MINUTES;
+		}
+		// Parola scaduta
+		else if (minutes > ServerConfig.WORD_TIME_MINUTES) {
+			return 0;
+		}
+		// Parola non ancora scaduta
+		else {
+			return minutes;
+		}
 
 	}
 }

@@ -1,10 +1,13 @@
 package client.entity;
 
 import common.utils.ConfigReader;
+import common.utils.WordleLogger;
 
 import java.util.Properties;
 
 public class ClientConfig {
+
+	private static final WordleLogger logger = new WordleLogger(ClientConfig.class.getName());
 	public static String STUB_NAME = "WORDLE-SERVER";
 	public static int TCP_PORT;
 	public static int RMI_PORT;
@@ -25,10 +28,10 @@ public class ClientConfig {
 			MULTICAST_PORT = Integer.parseInt(ConfigReader.readProperty(properties, "app.multicast.port"));
 			SOCKET_MS_TIMEOUT = Integer.parseInt(ConfigReader.readProperty(properties, "app.tcp.timeout"));
 		} catch (NoSuchFieldException e) {
-			System.out.println("Parametro di configurazione non trovato! " + e.getMessage());
+			logger.error("Parametro di configurazione non trovato! " + e.getMessage());
 			System.exit(-1);
 		} catch (NumberFormatException e) {
-			System.out.println("Parametro di configurazione malformato! " + e.getMessage());
+			logger.error("Parametro di configurazione malformato! " + e.getMessage());
 			System.exit(-1);
 		}
 	}

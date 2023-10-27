@@ -1,11 +1,13 @@
 package server;
 
 import common.dto.*;
+import common.enums.AnsiColor;
 import common.utils.WordleLogger;
 import server.entity.ServerConfig;
 import server.entity.User;
 import common.interfaces.NotifyEventInterface;
 import common.interfaces.ServerRmiInterface;
+import server.entity.WordleGameState;
 import server.exceptions.WordleException;
 import server.services.JsonService;
 import server.services.UserService;
@@ -82,6 +84,11 @@ public class ServerMain extends RemoteObject implements ServerRmiInterface {
 		// Calcolo i minuti rimanenti della parola precedentemente estratta
 		long remainingTime = wordleGameService.getWordRemainingMinutes();
 		wordUpdateExecutor.scheduleAtFixedRate(new WordExtractorTask(), remainingTime, ServerConfig.WORD_TIME_MINUTES, TimeUnit.MINUTES);
+		// Stampo la parola attuale nel caso in cui non sia ancora scaduta
+		if (remainingTime > 0) {
+			WordleGameState state = this.wordleGameService.getState();
+			logger.info("Parola attuale: " + AnsiColor.WHITE_BOLD + state.word + AnsiColor.RESET + ", traduzione: " + state.translation);
+		}
 
 		// Inizializza RMI server
 		try {
