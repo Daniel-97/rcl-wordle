@@ -256,7 +256,7 @@ public class ClientMain extends RemoteObject implements NotifyEventInterface {
 			CLICommand cliCommand = CLIHelper.waitForInput(username, false);
 			String[] args = cliCommand.args;
 
-			if (args[0].equals(":exit")) {
+			if (args[0].equals(":quit")) {
 				this.mode = ClientModeEnum.USER_MODE;
 				break;
 			}
