@@ -288,7 +288,6 @@ public class RequestTask implements Runnable {
 
 		// Invio ultima partita dell'utente su gruppo multicast
 		logger.debug("Invio ultima partita dell'utente " + username + " sul gruppo sociale. word: "+lastGame.word + ",wordle n."+lastGame.gameNumber);
-		System.out.println(lastGame.getUserGuess().toString());
 		SharedGame share = new SharedGame(username, lastGame.gameNumber, wordleGameService.buildUserHint(lastGame.getUserGuess(), lastGame.word));
 		ServerMain.sendMulticastMessage(JsonService.toJson(share));
 		return new TcpResponse(OK);

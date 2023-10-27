@@ -187,6 +187,7 @@ public class CLIHelper {
 				System.out.print((i+1) + ") Wordle "+game.gameNumber+": " +
 						game.hints.length + "/" + ClientConfig.WORDLE_MAX_ATTEMPTS + " ("+game.username+")");
 				printServerWord(game.hints, false);
+				System.out.println();
 		}
 	}
 
